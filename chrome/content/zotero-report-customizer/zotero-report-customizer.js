@@ -1,8 +1,6 @@
 Zotero.ReportCustomizer = {
+  prefs: Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.zotero-report-customizer."),
   discardableFields: [],
-  deleteFields: [],
-  removeTags: null,
-  removeAttachments: null,
 
 	init: function () {
     for (field of ['abstractNote', 'accessDate', 'applicationNumber', 'archive',
@@ -32,14 +30,6 @@ Zotero.ReportCustomizer = {
       Zotero.ReportCustomizer.discardableFields[field] = Zotero.getString('itemFields.' + field);
     }
 
-    Zotero.ReportCustomizer.deleteFields = ['callNumber', 'ISBN', 'ISSN', 'issue', 'journalAbbreviation',
-                                            'libraryCatalog', 'numPages', 'pages', 'place', 'publicationTitle',
-                                            'publisher', 'series', 'seriesNumber', 'shortTitle', 'thesisType',
-                                            'volume', 'language', 'url', 'rights', 'websiteType', 'accessDate',
-                                            'dateAdded', 'dateModified', 'DOI'];
-    Zotero.ReportCustomizer.removeTags = true;
-    Zotero.ReportCustomizer.removeAttachments = true;
-
     // monkey-patch Zotero.Report.generateHTMLDetails to modify the generated report
     Zotero.Report.generateHTMLDetails = (function (self, original) {
       return function (items, combineChildItems) {
@@ -50,7 +40,7 @@ Zotero.ReportCustomizer = {
         var unlinkNodes = [];
 
         try {
-          var unlinkRows = [Zotero.ReportCustomizer.discardableFields[field] for (field of Zotero.ReportCustomizer.deleteFields)];
+          var unlinkRows = [Zotero.ReportCustomizer.discardableFields[field] for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) if Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + field)];
           unlinkRows = [text for (text of unlinkRows) if ((typeof text) != 'undefined' && text != null && text != '')];
 
           var node;
@@ -66,11 +56,12 @@ Zotero.ReportCustomizer = {
           console.log('Scrub failed: ' + err);
         }
 
-        if (Zotero.ReportCustomizer.removeAttachments) {
+        if (Zotero.ReportCustomizer.prefs.getBoolPref('remove.attachments')) {
           nodes = report.evaluate("//ul[@class='attachments']", report, null, XPathResult.ANY_TYPE, null );
           while (node = nodes.iterateNext()) { unlinkNodes.push(node); }
         }
-        if (Zotero.ReportCustomizer.removeTags) {
+
+        if (Zotero.ReportCustomizer.prefs.getBoolPref('remove.tags')) {
           nodes = report.evaluate("//h3[@class='tags']", report, null, XPathResult.ANY_TYPE, null );
           while (node = nodes.iterateNext()) { unlinkNodes.push(node); }
           nodes = report.evaluate("//ul[@class='tags']", report, null, XPathResult.ANY_TYPE, null );
