@@ -1,6 +1,25 @@
 Zotero.ReportCustomizer = {
   prefs: Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.zotero-report-customizer."),
-  discardableFields: [],
+  discardableFields: {},
+
+  remove: function(key) {
+    try {
+      return Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + key);
+    } catch (err) {
+      console.log('Zotero.ReportCustomizer: could not get pref ' + key + ' (' + err + ')');
+      return false;
+    }
+  },
+
+  openPreferenceWindow: function (paneID, action) {
+    var io = {
+      pane: paneID,
+      action: action
+    };
+    window.openDialog('chrome://zotero-report-customizer/content/options.xul',
+      'zotero-report-custimizer-options',
+      'chrome,titlebar,toolbar,centerscreen'+ Zotero.Prefs.get('browser.preferences.instantApply', true) ? 'dialog=no' : 'modal',io);
+  },
 
 	init: function () {
     for (field of ['abstractNote', 'accessDate', 'applicationNumber', 'archive',
@@ -40,7 +59,7 @@ Zotero.ReportCustomizer = {
         var unlinkNodes = [];
 
         try {
-          var unlinkRows = [Zotero.ReportCustomizer.discardableFields[field] for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) if Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + field)];
+          var unlinkRows = [Zotero.ReportCustomizer.discardableFields[field] for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) if (Zotero.ReportCustomizer.remove(field))];
           unlinkRows = [text for (text of unlinkRows) if ((typeof text) != 'undefined' && text != null && text != '')];
 
           var node;
