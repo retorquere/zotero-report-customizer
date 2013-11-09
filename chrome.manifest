@@ -1,0 +1,5 @@
+content	zotero-report-customizer				chrome/content/zotero-report-customizer/
+locale	zotero-report-customizer	en-US		chrome/locale/en-US/zotero-report-customizer/
+skin	zotero-report-customizer	default		chrome/skin/default/zotero-report-customizer/
+
+overlay	chrome://zotero/content/zoteroPane.xul	chrome://zotero-report-customizer/content/overlay.xul
