@@ -6,7 +6,7 @@ Zotero.ReportCustomizer = {
     try {
       return Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + key);
     } catch (err) {
-      console.log('Zotero.ReportCustomizer: could not get pref ' + key + ' (' + err + ')');
+      // console.log('Zotero.ReportCustomizer: could not get pref ' + key + ' (' + err + ')');
       return false;
     }
   },
@@ -19,6 +19,55 @@ Zotero.ReportCustomizer = {
     window.openDialog('chrome://zotero-report-customizer/content/options.xul',
       'zotero-report-custimizer-options',
       'chrome,titlebar,toolbar,centerscreen'+ Zotero.Prefs.get('browser.preferences.instantApply', true) ? 'dialog=no' : 'modal',io);
+  },
+
+  script: function() {
+    var unlinkRows = [Zotero.ReportCustomizer.discardableFields[field] for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) if (Zotero.ReportCustomizer.remove(field))];
+    unlinkRows = [text for (text of unlinkRows) if ((typeof text) != 'undefined' && text != null && text != '')];
+
+    return '<script type="text/javascript">'
+      + 'var scrub = ' + Zotero.ReportCustomizer.scrub.toString() + ";\n"
+      + 'try { scrub('
+        + JSON.stringify(unlinkRows) + ','
+        + JSON.stringify(Zotero.ReportCustomizer.prefs.getBoolPref('remove.attachments')) + ','
+        + JSON.stringify(Zotero.ReportCustomizer.prefs.getBoolPref('remove.tags')) + "); } catch (err) { console.log(err); } \n"
+      + '</script>';
+  },
+
+  scrub: function(unlinkRows, removeAttachments, removeTags) {
+    var unlinkNodes = [];
+
+    var getNodes = function(name, klass) {
+      var nodes = [];
+      var elements = document.getElementsByTagName(name); 
+      for (var i = 0; i < elements.length; i++) { 
+        if (!klass || elements[i].getAttribute('class') == klass) {
+          nodes.push(elements[i]);
+        }
+      }
+      return nodes;
+    };
+
+    for (node of getNodes('th')) {
+      if (unlinkRows.indexOf(node.textContent) > -1) {
+        unlinkNodes.push(node.parentNode);
+      }
+    }
+
+    if (removeAttachments) {
+      unlinkNodes = unlinkNodes.concat(getNodes('ul', 'attachments'));
+    }
+
+    if (removeTags) {
+      unlinkNodes = unlinkNodes.concat(getNodes('h3', 'tags'));
+      unlinkNodes = unlinkNodes.concat(getNodes('ul', 'tags'));
+    }
+        
+    for (node of unlinkNodes) {
+      try {
+        node.parentNode.removeChild(node);
+      } catch (err) { }
+    }
   },
 
 	init: function () {
@@ -52,49 +101,17 @@ Zotero.ReportCustomizer = {
     // monkey-patch Zotero.Report.generateHTMLDetails to modify the generated report
     Zotero.Report.generateHTMLDetails = (function (self, original) {
       return function (items, combineChildItems) {
-        var parser = new DOMParser(); 
-        var report = parser.parseFromString(original.apply(this, arguments), 'text/html');
+        var report = original.apply(this, arguments);
 
         console.log('Scrubbing report');
-        var unlinkNodes = [];
 
         try {
-          var unlinkRows = [Zotero.ReportCustomizer.discardableFields[field] for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) if (Zotero.ReportCustomizer.remove(field))];
-          unlinkRows = [text for (text of unlinkRows) if ((typeof text) != 'undefined' && text != null && text != '')];
-
-          var node;
-          var nodes
-          
-          nodes = report.evaluate('//th', report, null, XPathResult.ANY_TYPE, null );
-          while (node = nodes.iterateNext()) {
-            if (unlinkRows.indexOf(node.textContent) > -1) {
-              unlinkNodes.push(node.parentNode);
-            }
-          }
+          report = report.replace(/<\/body>/i, Zotero.ReportCustomizer.script() + '</body>');
         } catch (err) {
-          console.log('Scrub failed: ' + err);
+          console.log('Scrub failed: ' + err + "\n" + err.stack);
         }
 
-        if (Zotero.ReportCustomizer.prefs.getBoolPref('remove.attachments')) {
-          nodes = report.evaluate("//ul[@class='attachments']", report, null, XPathResult.ANY_TYPE, null );
-          while (node = nodes.iterateNext()) { unlinkNodes.push(node); }
-        }
-
-        if (Zotero.ReportCustomizer.prefs.getBoolPref('remove.tags')) {
-          nodes = report.evaluate("//h3[@class='tags']", report, null, XPathResult.ANY_TYPE, null );
-          while (node = nodes.iterateNext()) { unlinkNodes.push(node); }
-          nodes = report.evaluate("//ul[@class='tags']", report, null, XPathResult.ANY_TYPE, null );
-          while (node = nodes.iterateNext()) { unlinkNodes.push(node); }
-        }
-        
-        for (node of unlinkNodes) {
-          try {
-            node.parentNode.removeChild(node);
-          } catch (err) {
-          }
-        }
-        var ser = new XMLSerializer();
-        return ser.serializeToString(report);
+        return report;
       }
     })(this, Zotero.Report.generateHTMLDetails);
 	}
