@@ -22,15 +22,33 @@ Zotero.ReportCustomizer = {
   },
 
   script: function() {
-    var unlinkRows = [Zotero.ReportCustomizer.discardableFields[field] for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) if (Zotero.ReportCustomizer.remove(field))];
-    unlinkRows = [text for (text of unlinkRows) if ((typeof text) != 'undefined' && text != null && text != '')];
+    var unlinkRows = [];
+    var text;
+
+    for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) {
+      if (Zotero.ReportCustomizer.remove(field)) {
+        text = Zotero.ReportCustomizer.discardableFields[field];
+        if ((typeof text) != 'undefined' && text != null && text != '') {
+          unlinkRows.push(text);
+        }
+      }
+    }
+
+    var remove = {}
+    for (p of ['attachments', 'tags']) {
+      try {
+        remove[p] = Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + p);
+      } catch (err) {
+        remove[p] = false;
+      }
+    }
 
     return '<script type="text/javascript">'
       + 'var scrub = ' + Zotero.ReportCustomizer.scrub.toString() + ";\n"
       + 'try { scrub('
         + JSON.stringify(unlinkRows) + ','
-        + JSON.stringify(Zotero.ReportCustomizer.prefs.getBoolPref('remove.attachments')) + ','
-        + JSON.stringify(Zotero.ReportCustomizer.prefs.getBoolPref('remove.tags')) + "); } catch (err) { console.log(err); } \n"
+        + JSON.stringify(remove['attachments']) + ','
+        + JSON.stringify(remove['tags']) + "); } catch (err) { console.log(err); } \n"
       + '</script>';
   },
 
@@ -55,6 +73,7 @@ Zotero.ReportCustomizer = {
     }
 
     if (removeAttachments) {
+      unlinkNodes = unlinkNodes.concat(getNodes('h3', 'attachments'));
       unlinkNodes = unlinkNodes.concat(getNodes('ul', 'attachments'));
     }
 
