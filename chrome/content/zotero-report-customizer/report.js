@@ -28,32 +28,32 @@ Zotero.Report = new function() {
 		elt.appendChild(this.doc.createTextNode(text));
 	}
 
-  this.addElement = function(parent,child) {
-    if (typeof child == 'string') {
-		  child = this.doc.createElement(child);
-    }
-    // for no indentation, just do
-    // parent.appendChild(child);
-    // return child;
+	this.addElement = function(parent,child) {
+		if (typeof child == 'string') {
+				child = this.doc.createElement(child);
+		}
+		// for no indentation, just do
+		// parent.appendChild(child);
+		// return child;
 
-    var indent = '', elem = parent;
+		var indent = '', elem = parent;
 
-    while (elem.parentNode) {
-      indent += '  ';
-      elem = elem.parentNode;
-    }
+		while (elem.parentNode) {
+			indent += '  ';
+			elem = elem.parentNode;
+		}
 
-    if (parent.hasChildNodes()) { // && parent.lastChild.nodeType === 3 && /^\s*[\r\n]\s*$/.test(parent.lastChild.textContent)) {
-      parent.insertBefore(this.doc.createTextNode("\n" + indent), parent.lastChild);
-      parent.insertBefore(child, parent.lastChild);
-    } else {
-      parent.appendChild(this.doc.createTextNode("\n" + indent));
-      parent.appendChild(child);
-      parent.appendChild(this.doc.createTextNode("\n" + indent.slice(0,-2)));
-    }
+		if (parent.hasChildNodes()) { // && parent.lastChild.nodeType === 3 && /^\s*[\r\n]\s*$/.test(parent.lastChild.textContent)) {
+			parent.insertBefore(this.doc.createTextNode("\n" + indent), parent.lastChild);
+			parent.insertBefore(child, parent.lastChild);
+		} else {
+			parent.appendChild(this.doc.createTextNode("\n" + indent));
+			parent.appendChild(child);
+			parent.appendChild(this.doc.createTextNode("\n" + indent.slice(0,-2)));
+		}
 
-    return child;
-  }
+		return child;
+	}
 
 	function addNote(elt, note)
 	{
@@ -72,7 +72,7 @@ Zotero.Report = new function() {
 			p.setAttribute('class', 'plaintext');
 			this.fillElement(p, arr.note);
 		} else { // Otherwise render markup normally
-      this.addElement(elt, note);
+			this.addElement(elt, note);
 		}
 	}
 	
@@ -182,11 +182,12 @@ Zotero.Report = new function() {
 	
 	this._generateMetadataTable = function(root, arr) {
 		var table = this.addElement(root, 'table');
-		var add = false;
+		var unlink = true;
+    // add and optionally unlink or the indentation is off
 		
 		// Item type
 		var tr = this.addElement(table, 'tr');
-    tr.setAttribute('class', 'itemType');
+		tr.setAttribute('class', 'itemType');
 		var th = this.addElement(tr, 'th');
 		this.fillElement(th, Zotero.getString('itemFields.itemType'));
 		var td = this.addElement(tr, 'td');
@@ -194,7 +195,7 @@ Zotero.Report = new function() {
 
 		// Creators
 		if (arr['creators']) {
-			add = true;
+			unlink = false;
 			var displayText;
 			
 			for each(var creator in arr['creators']) {
@@ -266,8 +267,7 @@ Zotero.Report = new function() {
 				continue;
 			}
 			
-			add = true;
-
+			unlink = false;
 
 			var tr = this.addElement(table, 'tr');
 			tr.setAttribute('class', i);
@@ -296,7 +296,7 @@ Zotero.Report = new function() {
 			}
 		}
 		
-		if (!add) { root.removeChild(table); }
+		if (unlink) { root.removeChild(table); }
 	}
 	
 	this._generateTagsList = function(root, arr) {
