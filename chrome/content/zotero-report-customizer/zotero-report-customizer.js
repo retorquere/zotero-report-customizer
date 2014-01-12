@@ -1,5 +1,7 @@
 Zotero.ReportCustomizer = {
   prefs: Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.zotero-report-customizer."),
+  parser: Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser),
+  serializer: Components.classes["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Components.interfaces.nsIDOMSerializer),
   discardableFields: {},
 
   remove: function(key) {
@@ -19,74 +21,6 @@ Zotero.ReportCustomizer = {
     window.openDialog('chrome://zotero-report-customizer/content/options.xul',
       'zotero-report-custimizer-options',
       'chrome,titlebar,toolbar,centerscreen'+ Zotero.Prefs.get('browser.preferences.instantApply', true) ? 'dialog=no' : 'modal',io);
-  },
-
-  script: function() {
-    var unlinkRows = [];
-    var text;
-
-    for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) {
-      if (Zotero.ReportCustomizer.remove(field)) {
-        text = Zotero.ReportCustomizer.discardableFields[field];
-        if ((typeof text) != 'undefined' && text != null && text != '') {
-          unlinkRows.push(text);
-        }
-      }
-    }
-
-    var remove = {}
-    for (p of ['attachments', 'tags']) {
-      try {
-        remove[p] = Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + p);
-      } catch (err) {
-        remove[p] = false;
-      }
-    }
-
-    return '<script type="text/javascript">'
-      + 'var scrub = ' + Zotero.ReportCustomizer.scrub.toString() + ";\n"
-      + 'try { scrub('
-        + JSON.stringify(unlinkRows) + ','
-        + JSON.stringify(remove['attachments']) + ','
-        + JSON.stringify(remove['tags']) + "); } catch (err) { console.log(err); } \n"
-      + '</script>';
-  },
-
-  scrub: function(unlinkRows, removeAttachments, removeTags) {
-    var unlinkNodes = [];
-
-    var getNodes = function(name, klass) {
-      var nodes = [];
-      var elements = document.getElementsByTagName(name); 
-      for (var i = 0; i < elements.length; i++) { 
-        if (!klass || elements[i].getAttribute('class') == klass) {
-          nodes.push(elements[i]);
-        }
-      }
-      return nodes;
-    };
-
-    for (node of getNodes('th')) {
-      if (unlinkRows.indexOf(node.textContent) > -1) {
-        unlinkNodes.push(node.parentNode);
-      }
-    }
-
-    if (removeAttachments) {
-      unlinkNodes = unlinkNodes.concat(getNodes('h3', 'attachments'));
-      unlinkNodes = unlinkNodes.concat(getNodes('ul', 'attachments'));
-    }
-
-    if (removeTags) {
-      unlinkNodes = unlinkNodes.concat(getNodes('h3', 'tags'));
-      unlinkNodes = unlinkNodes.concat(getNodes('ul', 'tags'));
-    }
-        
-    for (node of unlinkNodes) {
-      try {
-        node.parentNode.removeChild(node);
-      } catch (err) { }
-    }
   },
 
 	init: function () {
@@ -125,7 +59,21 @@ Zotero.ReportCustomizer = {
         console.log('Scrubbing report');
 
         try {
-          report = report.replace(/<\/body>/i, Zotero.ReportCustomizer.script() + '</body>');
+		      var doc = Zotero.ReportCustomizer.parser.parseFromString(report, 'text/html');
+
+          var remove = []
+          for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) {
+            if (Zotero.ReportCustomizer.remove(field)) {
+              remove.push('.' + field);
+            }
+          }
+          if (remove.length != 0) {
+		        var head = doc.getElementsByTagName('head')[0];
+            var style = doc.createElement('style');
+            head.appendChild(style);
+		        style.appendChild(doc.createTextNode(remove.join(', ') + '{display:none;}'));
+          }
+          report = Zotero.ReportCustomizer.serializer.serializeToString(doc);
         } catch (err) {
           console.log('Scrub failed: ' + err + "\n" + err.stack);
         }
