@@ -1,29 +1,63 @@
-alert('hey!);
+Array.prototype.collect = function(transform)
+{
+  "use strict";
+  var result = [];
+
+  if (this === void 0 || this === null) throw new TypeError();
+
+  var t = Object(this);
+  var len = t.length >>> 0;
+  if (typeof transform !== "function") throw new TypeError();
+  var thisArg = void 0;
+
+  for (var i = 0; i < len; i++) {
+    if (i in t) result.push(transform.call(thisArg, t[i]));
+  }
+
+  return result;
+}
 
 function setLabels() {
-  alert('load');
+  const XUL = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
   // var rc_stringsBundle = document.getElementById('zotero-report-customizer-options');
   var z_stringsBundle = document.getElementById('zotero-options');
 
   var itemTypes = document.getElementById('itemTypes');
-  var field, label, id, checkbox;
-  for (field of Object.keys(Zotero.ReportCustomizer.discardableFields)) {
-    id = 'id-zotero-report-customizer_remove_' + field;
-    label = z_stringsBundle.getString('itemFields.' + field) + ' (' + field + ')';
 
-    var treeItem = document.createElement('treeItem'); itemTypes.appendChild(treeItem);
+  console.log('setLabels: itemType = ' + itemTypes);
+
+  var collation = Zotero.getLocaleCollation();
+  var t = Zotero.ItemTypes.getSecondaryTypes();
+  var types = [];
+  for (var i=0; i<t.length; i++) {
+    types.push({ id: t[i].id, name: t[i].name, localized: Zotero.ItemTypes.getLocalizedString(t[i].id) });
+  }
+  types.sort(function(a, b) { return collation.compareString(1, a.localized, b.localized); });
+  
+  for (var type of types) {
+    var treeItem = document.createElementNS(XUL, 'treeitem'); itemTypes.appendChild(treeItem);
     treeItem.setAttribute('container', 'true');
 
-    var treeRow = document.createElement('treerow'); treeItem.appendChild(treeRow);
-    var treeCell = document.createElement('treecell'); treeRow.appendChild(treeCell);
-    treeCell.setAttribute('label', field);
-    var treeCell = document.createElement('treecell'); treeRow.appendChild(treeCell);
-    treeCell.setAttribute('editable', false);
+    // Zotero.getString('itemFields.itemType')
+    // Zotero.ItemTypes.getLocalizedString(type.itemType)
 
-    var treeChildren = document.createElement('treechildren'); treeItem.appendChild(treeChildren);
-    var treeItem = document.createElement('treeItem'); treeChildren.appendChild(treeItem);
-    var treeRow = document.createElement('treerow'); treeItem.appendChild(treeRow);
-    var treeCell = document.createElement('treecell'); treeRow.appendChild(treeCell);
-    treeCell.setAttribute('label', field);
+    console.log(type.localized);
+
+    var treeRow = document.createElementNS(XUL, 'treerow'); treeItem.appendChild(treeRow);
+    var treeCell = document.createElementNS(XUL, 'treecell'); treeRow.appendChild(treeCell);
+    treeCell.setAttribute('editable', false);
+    var treeCell = document.createElementNS(XUL, 'treecell'); treeRow.appendChild(treeCell);
+    treeCell.setAttribute('label', type.localized);
+
+    var fields = Zotero.ItemFields.getItemTypeFields(type.id);
+    for each(var field in fields) {
+      // label = z_stringsBundle.getString('itemFields.' + field) + ' (' + field + ')';
+      var treeChildren = document.createElementNS(XUL, 'treechildren'); treeItem.appendChild(treeChildren);
+      var treeItem = document.createElementNS(XUL, 'treeitem'); treeChildren.appendChild(treeItem);
+      var treeRow = document.createElementNS(XUL, 'treerow'); treeItem.appendChild(treeRow);
+      var treeCell = document.createElementNS(XUL, 'treecell'); treeRow.appendChild(treeCell);
+      var treeCell = document.createElementNS(XUL, 'treecell'); treeRow.appendChild(treeCell);
+      treeCell.setAttribute('label', Zotero.ItemFields.getLocalizedString(type.id, fields[i]));
+    }
   }
 }

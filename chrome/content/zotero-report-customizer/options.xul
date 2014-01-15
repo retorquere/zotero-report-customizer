@@ -125,22 +125,22 @@
       <caption label="&zotero-report-customizer.remove;" />
       <tree flex="1"  id="treeCollection" hidecolumnpicker="true" height="200"  editable="true">
         <treecols>
-          <treecol id="item" primary="true" label="Type" editable="false" flex="1"/>
-          <treecol id="show" type="checkbox" label="Show" editable="true"/>
+          <treecol id="show" primary="true" type="checkbox" label="Show" editable="true" width="40"/>
+          <treecol id="field" label="Field" editable="false" flex="1"/>
         </treecols>
 
         <treechildren id="itemTypes">
           <!-- Make sure to set container="true" -->
           <treeitem container="true" open="true">
             <treerow>
-              <treecell label="1"/>
               <treecell editable="false"/>
+              <treecell label="1"/>
             </treerow>
             <treechildren>
               <treeitem>
                 <treerow>
-                  <treecell label="2a"/>
                   <treecell/>
+                  <treecell label="2a"/>
                 </treerow>
               </treeitem>
             </treechildren>
@@ -152,5 +152,4 @@
   <script src="options.js" />
   <script src="chrome://zotero/content/include.js" />
   <script src="chrome://zotero-report-customizer/content/include.js" />
-  <script src="chrome://zotero-report-customizer/content/options.js" />
 </prefwindow>
