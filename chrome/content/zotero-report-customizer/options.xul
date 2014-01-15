@@ -1,5 +1,6 @@
 <?xml version="1.0"?>
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
+<?xml-stylesheet href="chrome://zotero-report-customizer/skin/options.css"?>
 <!DOCTYPE window SYSTEM "chrome://zotero-report-customizer/locale/zotero-report-customizer.dtd">
 <prefwindow id="zotero-report-customizer-perf" title="&zotero-report-customizer.name;" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="setLabels();">
   <stringbundleset id="stringbundleset">
@@ -121,126 +122,35 @@
       <preference id="pref-zotero-report-customizer_remove_archive" name="extensions.zotero-report-customizer.remove.archive" type="bool" />
     </preferences>
     <groupbox>
-      <caption>&zotero-report-customizer.remove;</caption>
-      <grid >
-        <columns><column flex="1" /></columns>
-        <rows flex="1" maxheight="400" width="400" style="overflow-x: hidden; overflow-y: auto">
-          <checkbox id="id-zotero-report-customizer_remove_abstractNote" label="abstractNote" preference="pref-zotero-report-customizer_remove_abstractNote" />
-          <checkbox id="id-zotero-report-customizer_remove_accessDate" label="accessDate" preference="pref-zotero-report-customizer_remove_accessDate" />
-          <checkbox id="id-zotero-report-customizer_remove_applicationNumber" label="applicationNumber" preference="pref-zotero-report-customizer_remove_applicationNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_archive" label="archive" preference="pref-zotero-report-customizer_remove_archive" />
-          <checkbox id="id-zotero-report-customizer_remove_archiveLocation" label="archiveLocation" preference="pref-zotero-report-customizer_remove_archiveLocation" />
-          <checkbox id="id-zotero-report-customizer_remove_artworkMedium" label="artworkMedium" preference="pref-zotero-report-customizer_remove_artworkMedium" />
-          <checkbox id="id-zotero-report-customizer_remove_artworkSize" label="artworkSize" preference="pref-zotero-report-customizer_remove_artworkSize" />
-          <checkbox id="id-zotero-report-customizer_remove_assignee" label="assignee" preference="pref-zotero-report-customizer_remove_assignee" />
-          <checkbox id="id-zotero-report-customizer_remove_attachments" label="attachments" preference="pref-zotero-report-customizer_remove_attachments" />
-          <checkbox id="id-zotero-report-customizer_remove_audioFileType" label="audioFileType" preference="pref-zotero-report-customizer_remove_audioFileType" />
-          <checkbox id="id-zotero-report-customizer_remove_audioRecordingFormat" label="audioRecordingFormat" preference="pref-zotero-report-customizer_remove_audioRecordingFormat" />
-          <checkbox id="id-zotero-report-customizer_remove_billNumber" label="billNumber" preference="pref-zotero-report-customizer_remove_billNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_blogTitle" label="blogTitle" preference="pref-zotero-report-customizer_remove_blogTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_bookTitle" label="bookTitle" preference="pref-zotero-report-customizer_remove_bookTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_callNumber" label="callNumber" preference="pref-zotero-report-customizer_remove_callNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_caseName" label="caseName" preference="pref-zotero-report-customizer_remove_caseName" />
-          <checkbox id="id-zotero-report-customizer_remove_code" label="code" preference="pref-zotero-report-customizer_remove_code" />
-          <checkbox id="id-zotero-report-customizer_remove_codeNumber" label="codeNumber" preference="pref-zotero-report-customizer_remove_codeNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_codePages" label="codePages" preference="pref-zotero-report-customizer_remove_codePages" />
-          <checkbox id="id-zotero-report-customizer_remove_codeVolume" label="codeVolume" preference="pref-zotero-report-customizer_remove_codeVolume" />
-          <checkbox id="id-zotero-report-customizer_remove_committee" label="committee" preference="pref-zotero-report-customizer_remove_committee" />
-          <checkbox id="id-zotero-report-customizer_remove_company" label="company" preference="pref-zotero-report-customizer_remove_company" />
-          <checkbox id="id-zotero-report-customizer_remove_conferenceName" label="conferenceName" preference="pref-zotero-report-customizer_remove_conferenceName" />
-          <checkbox id="id-zotero-report-customizer_remove_country" label="country" preference="pref-zotero-report-customizer_remove_country" />
-          <checkbox id="id-zotero-report-customizer_remove_court" label="court" preference="pref-zotero-report-customizer_remove_court" />
-          <checkbox id="id-zotero-report-customizer_remove_dateAdded" label="dateAdded" preference="pref-zotero-report-customizer_remove_dateAdded" />
-          <checkbox id="id-zotero-report-customizer_remove_dateDecided" label="dateDecided" preference="pref-zotero-report-customizer_remove_dateDecided" />
-          <checkbox id="id-zotero-report-customizer_remove_dateEnacted" label="dateEnacted" preference="pref-zotero-report-customizer_remove_dateEnacted" />
-          <checkbox id="id-zotero-report-customizer_remove_date" label="date" preference="pref-zotero-report-customizer_remove_date" />
-          <checkbox id="id-zotero-report-customizer_remove_dateModified" label="dateModified" preference="pref-zotero-report-customizer_remove_dateModified" />
-          <checkbox id="id-zotero-report-customizer_remove_dictionaryTitle" label="dictionaryTitle" preference="pref-zotero-report-customizer_remove_dictionaryTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_distributor" label="distributor" preference="pref-zotero-report-customizer_remove_distributor" />
-          <checkbox id="id-zotero-report-customizer_remove_docketNumber" label="docketNumber" preference="pref-zotero-report-customizer_remove_docketNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_documentNumber" label="documentNumber" preference="pref-zotero-report-customizer_remove_documentNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_DOI" label="DOI" preference="pref-zotero-report-customizer_remove_DOI" />
-          <checkbox id="id-zotero-report-customizer_remove_edition" label="edition" preference="pref-zotero-report-customizer_remove_edition" />
-          <checkbox id="id-zotero-report-customizer_remove_encyclopediaTitle" label="encyclopediaTitle" preference="pref-zotero-report-customizer_remove_encyclopediaTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_episodeNumber" label="episodeNumber" preference="pref-zotero-report-customizer_remove_episodeNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_extra" label="extra" preference="pref-zotero-report-customizer_remove_extra" />
-          <checkbox id="id-zotero-report-customizer_remove_filingDate" label="filingDate" preference="pref-zotero-report-customizer_remove_filingDate" />
-          <checkbox id="id-zotero-report-customizer_remove_firstPage" label="firstPage" preference="pref-zotero-report-customizer_remove_firstPage" />
-          <checkbox id="id-zotero-report-customizer_remove_forumTitle" label="forumTitle" preference="pref-zotero-report-customizer_remove_forumTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_genre" label="genre" preference="pref-zotero-report-customizer_remove_genre" />
-          <checkbox id="id-zotero-report-customizer_remove_history" label="history" preference="pref-zotero-report-customizer_remove_history" />
-          <checkbox id="id-zotero-report-customizer_remove_institution" label="institution" preference="pref-zotero-report-customizer_remove_institution" />
-          <checkbox id="id-zotero-report-customizer_remove_interviewMedium" label="interviewMedium" preference="pref-zotero-report-customizer_remove_interviewMedium" />
-          <checkbox id="id-zotero-report-customizer_remove_ISBN" label="ISBN" preference="pref-zotero-report-customizer_remove_ISBN" />
-          <checkbox id="id-zotero-report-customizer_remove_ISSN" label="ISSN" preference="pref-zotero-report-customizer_remove_ISSN" />
-          <checkbox id="id-zotero-report-customizer_remove_issueDate" label="issueDate" preference="pref-zotero-report-customizer_remove_issueDate" />
-          <checkbox id="id-zotero-report-customizer_remove_issue" label="issue" preference="pref-zotero-report-customizer_remove_issue" />
-          <checkbox id="id-zotero-report-customizer_remove_issuingAuthority" label="issuingAuthority" preference="pref-zotero-report-customizer_remove_issuingAuthority" />
-          <checkbox id="id-zotero-report-customizer_remove_itemType" label="itemType" preference="pref-zotero-report-customizer_remove_itemType" />
-          <checkbox id="id-zotero-report-customizer_remove_journalAbbreviation" label="journalAbbreviation" preference="pref-zotero-report-customizer_remove_journalAbbreviation" />
-          <checkbox id="id-zotero-report-customizer_remove_label" label="label" preference="pref-zotero-report-customizer_remove_label" />
-          <checkbox id="id-zotero-report-customizer_remove_language" label="language" preference="pref-zotero-report-customizer_remove_language" />
-          <checkbox id="id-zotero-report-customizer_remove_legalStatus" label="legalStatus" preference="pref-zotero-report-customizer_remove_legalStatus" />
-          <checkbox id="id-zotero-report-customizer_remove_legislativeBody" label="legislativeBody" preference="pref-zotero-report-customizer_remove_legislativeBody" />
-          <checkbox id="id-zotero-report-customizer_remove_letterType" label="letterType" preference="pref-zotero-report-customizer_remove_letterType" />
-          <checkbox id="id-zotero-report-customizer_remove_libraryCatalog" label="libraryCatalog" preference="pref-zotero-report-customizer_remove_libraryCatalog" />
-          <checkbox id="id-zotero-report-customizer_remove_manuscriptType" label="manuscriptType" preference="pref-zotero-report-customizer_remove_manuscriptType" />
-          <checkbox id="id-zotero-report-customizer_remove_mapType" label="mapType" preference="pref-zotero-report-customizer_remove_mapType" />
-          <checkbox id="id-zotero-report-customizer_remove_medium" label="medium" preference="pref-zotero-report-customizer_remove_medium" />
-          <checkbox id="id-zotero-report-customizer_remove_meetingName" label="meetingName" preference="pref-zotero-report-customizer_remove_meetingName" />
-          <checkbox id="id-zotero-report-customizer_remove_nameOfAct" label="nameOfAct" preference="pref-zotero-report-customizer_remove_nameOfAct" />
-          <checkbox id="id-zotero-report-customizer_remove_network" label="network" preference="pref-zotero-report-customizer_remove_network" />
-          <checkbox id="id-zotero-report-customizer_remove_notes" label="notes" preference="pref-zotero-report-customizer_remove_notes" />
-          <checkbox id="id-zotero-report-customizer_remove_number" label="number" preference="pref-zotero-report-customizer_remove_number" />
-          <checkbox id="id-zotero-report-customizer_remove_numberOfVolumes" label="numberOfVolumes" preference="pref-zotero-report-customizer_remove_numberOfVolumes" />
-          <checkbox id="id-zotero-report-customizer_remove_numPages" label="numPages" preference="pref-zotero-report-customizer_remove_numPages" />
-          <checkbox id="id-zotero-report-customizer_remove_pages" label="pages" preference="pref-zotero-report-customizer_remove_pages" />
-          <checkbox id="id-zotero-report-customizer_remove_patentNumber" label="patentNumber" preference="pref-zotero-report-customizer_remove_patentNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_place" label="place" preference="pref-zotero-report-customizer_remove_place" />
-          <checkbox id="id-zotero-report-customizer_remove_postType" label="postType" preference="pref-zotero-report-customizer_remove_postType" />
-          <checkbox id="id-zotero-report-customizer_remove_presentationType" label="presentationType" preference="pref-zotero-report-customizer_remove_presentationType" />
-          <checkbox id="id-zotero-report-customizer_remove_priorityNumbers" label="priorityNumbers" preference="pref-zotero-report-customizer_remove_priorityNumbers" />
-          <checkbox id="id-zotero-report-customizer_remove_proceedingsTitle" label="proceedingsTitle" preference="pref-zotero-report-customizer_remove_proceedingsTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_programmingLanguage" label="programmingLanguage" preference="pref-zotero-report-customizer_remove_programmingLanguage" />
-          <checkbox id="id-zotero-report-customizer_remove_programTitle" label="programTitle" preference="pref-zotero-report-customizer_remove_programTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_publicationTitle" label="publicationTitle" preference="pref-zotero-report-customizer_remove_publicationTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_publicLawNumber" label="publicLawNumber" preference="pref-zotero-report-customizer_remove_publicLawNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_publisher" label="publisher" preference="pref-zotero-report-customizer_remove_publisher" />
-          <checkbox id="id-zotero-report-customizer_remove_references" label="references" preference="pref-zotero-report-customizer_remove_references" />
-          <checkbox id="id-zotero-report-customizer_remove_related" label="related" preference="pref-zotero-report-customizer_remove_related" />
-          <checkbox id="id-zotero-report-customizer_remove_reporter" label="reporter" preference="pref-zotero-report-customizer_remove_reporter" />
-          <checkbox id="id-zotero-report-customizer_remove_reporterVolume" label="reporterVolume" preference="pref-zotero-report-customizer_remove_reporterVolume" />
-          <checkbox id="id-zotero-report-customizer_remove_reportNumber" label="reportNumber" preference="pref-zotero-report-customizer_remove_reportNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_reportType" label="reportType" preference="pref-zotero-report-customizer_remove_reportType" />
-          <checkbox id="id-zotero-report-customizer_remove_rights" label="rights" preference="pref-zotero-report-customizer_remove_rights" />
-          <checkbox id="id-zotero-report-customizer_remove_runningTime" label="runningTime" preference="pref-zotero-report-customizer_remove_runningTime" />
-          <checkbox id="id-zotero-report-customizer_remove_scale" label="scale" preference="pref-zotero-report-customizer_remove_scale" />
-          <checkbox id="id-zotero-report-customizer_remove_section" label="section" preference="pref-zotero-report-customizer_remove_section" />
-          <checkbox id="id-zotero-report-customizer_remove_series" label="series" preference="pref-zotero-report-customizer_remove_series" />
-          <checkbox id="id-zotero-report-customizer_remove_seriesNumber" label="seriesNumber" preference="pref-zotero-report-customizer_remove_seriesNumber" />
-          <checkbox id="id-zotero-report-customizer_remove_seriesText" label="seriesText" preference="pref-zotero-report-customizer_remove_seriesText" />
-          <checkbox id="id-zotero-report-customizer_remove_seriesTitle" label="seriesTitle" preference="pref-zotero-report-customizer_remove_seriesTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_session" label="session" preference="pref-zotero-report-customizer_remove_session" />
-          <checkbox id="id-zotero-report-customizer_remove_shortTitle" label="shortTitle" preference="pref-zotero-report-customizer_remove_shortTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_source" label="source" preference="pref-zotero-report-customizer_remove_source" />
-          <checkbox id="id-zotero-report-customizer_remove_studio" label="studio" preference="pref-zotero-report-customizer_remove_studio" />
-          <checkbox id="id-zotero-report-customizer_remove_subject" label="subject" preference="pref-zotero-report-customizer_remove_subject" />
-          <checkbox id="id-zotero-report-customizer_remove_system" label="system" preference="pref-zotero-report-customizer_remove_system" />
-          <checkbox id="id-zotero-report-customizer_remove_tags" label="tags" preference="pref-zotero-report-customizer_remove_tags" />
-          <checkbox id="id-zotero-report-customizer_remove_thesisType" label="thesisType" preference="pref-zotero-report-customizer_remove_thesisType" />
-          <checkbox id="id-zotero-report-customizer_remove_title" label="title" preference="pref-zotero-report-customizer_remove_title" />
-          <checkbox id="id-zotero-report-customizer_remove_university" label="university" preference="pref-zotero-report-customizer_remove_university" />
-          <checkbox id="id-zotero-report-customizer_remove_url" label="url" preference="pref-zotero-report-customizer_remove_url" />
-          <checkbox id="id-zotero-report-customizer_remove_version" label="version" preference="pref-zotero-report-customizer_remove_version" />
-          <checkbox id="id-zotero-report-customizer_remove_videoRecordingFormat" label="videoRecordingFormat" preference="pref-zotero-report-customizer_remove_videoRecordingFormat" />
-          <checkbox id="id-zotero-report-customizer_remove_volume" label="volume" preference="pref-zotero-report-customizer_remove_volume" />
-          <checkbox id="id-zotero-report-customizer_remove_websiteTitle" label="websiteTitle" preference="pref-zotero-report-customizer_remove_websiteTitle" />
-          <checkbox id="id-zotero-report-customizer_remove_websiteType" label="websiteType" preference="pref-zotero-report-customizer_remove_websiteType" />
-        </rows>
-      </grid>
+      <caption label="&zotero-report-customizer.remove;" />
+      <tree flex="1"  id="treeCollection" hidecolumnpicker="true" height="200"  editable="true">
+        <treecols>
+          <treecol id="item" primary="true" label="Type" editable="false" flex="1"/>
+          <treecol id="show" type="checkbox" label="Show" editable="true"/>
+        </treecols>
+
+        <treechildren id="itemTypes">
+          <!-- Make sure to set container="true" -->
+          <treeitem container="true" open="true">
+            <treerow>
+              <treecell label="1"/>
+              <treecell editable="false"/>
+            </treerow>
+            <treechildren>
+              <treeitem>
+                <treerow>
+                  <treecell label="2a"/>
+                  <treecell/>
+                </treerow>
+              </treeitem>
+            </treechildren>
+          </treeitem>
+        </treechildren>
+      </tree>
     </groupbox>
   </prefpane>
   <script src="options.js" />
   <script src="chrome://zotero/content/include.js" />
   <script src="chrome://zotero-report-customizer/content/include.js" />
+  <script src="chrome://zotero-report-customizer/content/options.js" />
 </prefwindow>
