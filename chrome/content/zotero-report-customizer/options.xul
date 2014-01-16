@@ -2,154 +2,25 @@
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://zotero-report-customizer/skin/options.css"?>
 <!DOCTYPE window SYSTEM "chrome://zotero-report-customizer/locale/zotero-report-customizer.dtd">
-<prefwindow id="zotero-report-customizer-perf" title="&zotero-report-customizer.name;" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="setLabels();">
+<prefwindow id="zotero-report-customizer-perf" title="&zotero-report-customizer.name;" xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul" onload="initializePrefs();">
   <stringbundleset id="stringbundleset">
     <stringbundle id="zotero-report-customizer-options" src="chrome://zotero-report-customizer/locale/options.properties" />
     <stringbundle id="zotero-options" src="chrome://zotero/locale/zotero.properties" />
   </stringbundleset>
   <prefpane label="&zotero-report-customizer.remove;" id="zotero-report-customizer-perfpane">
-    <preferences>
-      <preference id="pref-zotero-report-customizer_remove_itemType" name="extensions.zotero-report-customizer.remove.itemType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_title" name="extensions.zotero-report-customizer.remove.title" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_dateAdded" name="extensions.zotero-report-customizer.remove.dateAdded" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_dateModified" name="extensions.zotero-report-customizer.remove.dateModified" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_source" name="extensions.zotero-report-customizer.remove.source" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_notes" name="extensions.zotero-report-customizer.remove.notes" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_tags" name="extensions.zotero-report-customizer.remove.tags" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_attachments" name="extensions.zotero-report-customizer.remove.attachments" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_related" name="extensions.zotero-report-customizer.remove.related" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_url" name="extensions.zotero-report-customizer.remove.url" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_rights" name="extensions.zotero-report-customizer.remove.rights" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_series" name="extensions.zotero-report-customizer.remove.series" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_volume" name="extensions.zotero-report-customizer.remove.volume" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_issue" name="extensions.zotero-report-customizer.remove.issue" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_edition" name="extensions.zotero-report-customizer.remove.edition" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_place" name="extensions.zotero-report-customizer.remove.place" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_publisher" name="extensions.zotero-report-customizer.remove.publisher" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_pages" name="extensions.zotero-report-customizer.remove.pages" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_ISBN" name="extensions.zotero-report-customizer.remove.ISBN" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_publicationTitle" name="extensions.zotero-report-customizer.remove.publicationTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_ISSN" name="extensions.zotero-report-customizer.remove.ISSN" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_date" name="extensions.zotero-report-customizer.remove.date" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_section" name="extensions.zotero-report-customizer.remove.section" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_callNumber" name="extensions.zotero-report-customizer.remove.callNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_archiveLocation" name="extensions.zotero-report-customizer.remove.archiveLocation" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_distributor" name="extensions.zotero-report-customizer.remove.distributor" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_extra" name="extensions.zotero-report-customizer.remove.extra" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_journalAbbreviation" name="extensions.zotero-report-customizer.remove.journalAbbreviation" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_DOI" name="extensions.zotero-report-customizer.remove.DOI" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_accessDate" name="extensions.zotero-report-customizer.remove.accessDate" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_seriesTitle" name="extensions.zotero-report-customizer.remove.seriesTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_seriesText" name="extensions.zotero-report-customizer.remove.seriesText" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_seriesNumber" name="extensions.zotero-report-customizer.remove.seriesNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_institution" name="extensions.zotero-report-customizer.remove.institution" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_reportType" name="extensions.zotero-report-customizer.remove.reportType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_code" name="extensions.zotero-report-customizer.remove.code" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_session" name="extensions.zotero-report-customizer.remove.session" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_legislativeBody" name="extensions.zotero-report-customizer.remove.legislativeBody" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_history" name="extensions.zotero-report-customizer.remove.history" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_reporter" name="extensions.zotero-report-customizer.remove.reporter" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_court" name="extensions.zotero-report-customizer.remove.court" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_numberOfVolumes" name="extensions.zotero-report-customizer.remove.numberOfVolumes" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_committee" name="extensions.zotero-report-customizer.remove.committee" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_assignee" name="extensions.zotero-report-customizer.remove.assignee" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_patentNumber" name="extensions.zotero-report-customizer.remove.patentNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_priorityNumbers" name="extensions.zotero-report-customizer.remove.priorityNumbers" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_issueDate" name="extensions.zotero-report-customizer.remove.issueDate" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_references" name="extensions.zotero-report-customizer.remove.references" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_legalStatus" name="extensions.zotero-report-customizer.remove.legalStatus" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_codeNumber" name="extensions.zotero-report-customizer.remove.codeNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_artworkMedium" name="extensions.zotero-report-customizer.remove.artworkMedium" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_number" name="extensions.zotero-report-customizer.remove.number" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_artworkSize" name="extensions.zotero-report-customizer.remove.artworkSize" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_libraryCatalog" name="extensions.zotero-report-customizer.remove.libraryCatalog" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_videoRecordingFormat" name="extensions.zotero-report-customizer.remove.videoRecordingFormat" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_interviewMedium" name="extensions.zotero-report-customizer.remove.interviewMedium" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_letterType" name="extensions.zotero-report-customizer.remove.letterType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_manuscriptType" name="extensions.zotero-report-customizer.remove.manuscriptType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_mapType" name="extensions.zotero-report-customizer.remove.mapType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_scale" name="extensions.zotero-report-customizer.remove.scale" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_thesisType" name="extensions.zotero-report-customizer.remove.thesisType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_websiteType" name="extensions.zotero-report-customizer.remove.websiteType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_audioRecordingFormat" name="extensions.zotero-report-customizer.remove.audioRecordingFormat" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_label" name="extensions.zotero-report-customizer.remove.label" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_presentationType" name="extensions.zotero-report-customizer.remove.presentationType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_meetingName" name="extensions.zotero-report-customizer.remove.meetingName" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_studio" name="extensions.zotero-report-customizer.remove.studio" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_runningTime" name="extensions.zotero-report-customizer.remove.runningTime" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_network" name="extensions.zotero-report-customizer.remove.network" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_postType" name="extensions.zotero-report-customizer.remove.postType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_audioFileType" name="extensions.zotero-report-customizer.remove.audioFileType" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_version" name="extensions.zotero-report-customizer.remove.version" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_system" name="extensions.zotero-report-customizer.remove.system" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_company" name="extensions.zotero-report-customizer.remove.company" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_conferenceName" name="extensions.zotero-report-customizer.remove.conferenceName" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_encyclopediaTitle" name="extensions.zotero-report-customizer.remove.encyclopediaTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_dictionaryTitle" name="extensions.zotero-report-customizer.remove.dictionaryTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_language" name="extensions.zotero-report-customizer.remove.language" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_programmingLanguage" name="extensions.zotero-report-customizer.remove.programmingLanguage" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_university" name="extensions.zotero-report-customizer.remove.university" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_abstractNote" name="extensions.zotero-report-customizer.remove.abstractNote" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_websiteTitle" name="extensions.zotero-report-customizer.remove.websiteTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_reportNumber" name="extensions.zotero-report-customizer.remove.reportNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_billNumber" name="extensions.zotero-report-customizer.remove.billNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_codeVolume" name="extensions.zotero-report-customizer.remove.codeVolume" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_codePages" name="extensions.zotero-report-customizer.remove.codePages" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_dateDecided" name="extensions.zotero-report-customizer.remove.dateDecided" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_reporterVolume" name="extensions.zotero-report-customizer.remove.reporterVolume" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_firstPage" name="extensions.zotero-report-customizer.remove.firstPage" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_documentNumber" name="extensions.zotero-report-customizer.remove.documentNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_dateEnacted" name="extensions.zotero-report-customizer.remove.dateEnacted" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_publicLawNumber" name="extensions.zotero-report-customizer.remove.publicLawNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_country" name="extensions.zotero-report-customizer.remove.country" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_applicationNumber" name="extensions.zotero-report-customizer.remove.applicationNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_forumTitle" name="extensions.zotero-report-customizer.remove.forumTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_episodeNumber" name="extensions.zotero-report-customizer.remove.episodeNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_blogTitle" name="extensions.zotero-report-customizer.remove.blogTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_medium" name="extensions.zotero-report-customizer.remove.medium" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_caseName" name="extensions.zotero-report-customizer.remove.caseName" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_nameOfAct" name="extensions.zotero-report-customizer.remove.nameOfAct" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_subject" name="extensions.zotero-report-customizer.remove.subject" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_proceedingsTitle" name="extensions.zotero-report-customizer.remove.proceedingsTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_bookTitle" name="extensions.zotero-report-customizer.remove.bookTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_shortTitle" name="extensions.zotero-report-customizer.remove.shortTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_docketNumber" name="extensions.zotero-report-customizer.remove.docketNumber" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_numPages" name="extensions.zotero-report-customizer.remove.numPages" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_programTitle" name="extensions.zotero-report-customizer.remove.programTitle" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_issuingAuthority" name="extensions.zotero-report-customizer.remove.issuingAuthority" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_filingDate" name="extensions.zotero-report-customizer.remove.filingDate" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_genre" name="extensions.zotero-report-customizer.remove.genre" type="bool" />
-      <preference id="pref-zotero-report-customizer_remove_archive" name="extensions.zotero-report-customizer.remove.archive" type="bool" />
-    </preferences>
+    <preferences id="preferences"/>
     <groupbox>
       <caption label="&zotero-report-customizer.remove;" />
-      <tree flex="1"  id="treeCollection" hidecolumnpicker="true" height="200"  editable="true">
+      <tree flex="1" id="treeCollection" seltype="single" hidecolumnpicker="true" height="400" editable="true" onkeypress="togglePref(this);" onmousedown="togglePref(this, event);">
         <treecols>
           <treecol id="show" primary="true" type="checkbox" label="Show" editable="true" width="40"/>
           <treecol id="field" label="Field" editable="false" flex="1"/>
         </treecols>
-
-        <treechildren id="itemTypes">
-          <!-- Make sure to set container="true" -->
-          <treeitem container="true" open="true">
-            <treerow>
-              <treecell editable="false"/>
-              <treecell label="1"/>
-            </treerow>
-            <treechildren>
-              <treeitem>
-                <treerow>
-                  <treecell/>
-                  <treecell label="2a"/>
-                </treerow>
-              </treeitem>
-            </treechildren>
-          </treeitem>
-        </treechildren>
+        <treechildren id="itemTypes"/>
       </tree>
     </groupbox>
   </prefpane>
-  <script src="options.js" />
   <script src="chrome://zotero/content/include.js" />
   <script src="chrome://zotero-report-customizer/content/include.js" />
+  <script src="options.js" />
 </prefwindow>
