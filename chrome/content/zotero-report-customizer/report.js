@@ -23,115 +23,73 @@
     ***** END LICENSE BLOCK *****
 */
 
+
 Zotero.Report = new function() {
-	this.fillElement = function(elt, text) {
-		elt.appendChild(this.doc.createTextNode(text));
-	}
-
-	this.addElement = function(parent,child) {
-		if (typeof child == 'string') {
-				child = this.doc.createElement(child);
-		}
-		// for no indentation, just do
-		// parent.appendChild(child);
-		// return child;
-
-		var indent = '', elem = parent;
-
-		while (elem.parentNode) {
-			indent += '  ';
-			elem = elem.parentNode;
-		}
-
-		if (parent.hasChildNodes()) { // && parent.lastChild.nodeType === 3 && /^\s*[\r\n]\s*$/.test(parent.lastChild.textContent)) {
-			parent.insertBefore(this.doc.createTextNode("\n" + indent), parent.lastChild);
-			parent.insertBefore(child, parent.lastChild);
-		} else {
-			parent.appendChild(this.doc.createTextNode("\n" + indent));
-			parent.appendChild(child);
-			parent.appendChild(this.doc.createTextNode("\n" + indent.slice(0,-2)));
-		}
-
-		return child;
-	}
-
-	function addNote(elt, note)
-	{
-		// If not valid XML, display notes with entities encoded
-		var note = '<div>' + arr.note
-			// &nbsp; isn't valid in HTML
-			.replace(/&nbsp;/g, "&#160;")
-			// Strip control characters (for notes that were
-			// added before item.setNote() started doing this)
-			.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
-			+ '</div>';
-		var note = this.parser.parseFromString(note, 'text/html');
-		if (note.documentElement.tagName == 'parsererror') {
-			Zotero.debug(note.documentElement.textContent, 2);
-			var p = this.addElement(elt, 'p');
-			p.setAttribute('class', 'plaintext');
-			this.fillElement(p, arr.note);
-		} else { // Otherwise render markup normally
-			this.addElement(elt, note);
-		}
+	this.generateHTMLDetails = generateHTMLDetails;
+	this.generateHTMLList = generateHTMLList;
+	
+	var escapeXML = function (str) {
+		str = str.replace(/[\u0000-\u0008\u000b\u000c\u000e-\u001f\ud800-\udfff\ufffe\uffff]/g, '\u2B1A');
+		return Zotero.Utilities.htmlSpecialChars(str);
 	}
 	
-	this.generateHTMLDetails = function(items, combineChildItems) {
-		this.parser = Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser);
-		this.doc = this.parser.parseFromString('<!DOCTYPE html><html><head></head><body></body></html>', 'text/html');
-		this.serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Components.interfaces.nsIDOMSerializer);
-
-		var head = this.doc.getElementsByTagName('head')[0];
-		var body = this.doc.getElementsByTagName('body')[0];
-
-		var meta = this.addElement(head, 'meta');
-		meta.setAttribute('http-equiv', 'Content-Type');
-		meta.setAttribute('content', 'text/html; charset=utf-8');
-
-		var title = this.addElement(head, 'title');
-		this.fillElement(title, Zotero.getString('report.title.default'));
-
-		for (var props of [
-					{href: 'zotero://report/detail.css'},
-					{href: 'zotero://report/detail_screen.css', media: 'screen,projection'}, 
-					{href: 'zotero://report/detail_print.css',	media: 'print'}]) {
-			var link = this.addElement(head, 'link');
-			link.setAttribute('rel', 'stylesheet');
-			link.setAttribute('style', 'text/css');
-			link.setAttribute('href', props.href);
-			if (props.media) { link.setAttribute('media', props.media); }
-		}
-
-		var reportUL = this.addElement(body, 'ul');
-		reportUL.setAttribute('class', 'report' + (combineChildItems ? ' combineChildItems' : ''));
+	
+	function generateHTMLDetails(items, combineChildItems) {
+		var content = '<!DOCTYPE html>\n';
+		content += '<html>\n';
+		content += '<head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" />\n';
+		content += '<title>' + Zotero.getString('report.title.default') + '</title>\n';
+		content += '<link rel="stylesheet" type="text/css" href="zotero://report/detail.css"/>\n';
+		content += '<link rel="stylesheet" type="text/css" media="screen,projection" href="zotero://report/detail_screen.css"/>\n';
+		content += '<link rel="stylesheet" type="text/css" media="print" href="zotero://report/detail_print.css"/>\n';
+		content += '</head>\n\n<body>\n';
 		
+		content += '<ul class="report' + (combineChildItems ? ' combineChildItems' : '') + '">\n';
 		for each(var arr in items) {
-			var reportItem = this.addElement(reportUL, 'li');
-			reportItem.setAttribute('id', 'i' + arr.itemID);
-			reportItem.setAttribute('class', 'item ' + arr.itemType);
+			content += '\n<li id="i' + arr.itemID + '" class="item ' + arr.itemType + '">\n';
 			
 			if (arr.title) {
-				var h2 = this.addElement(reportItem, 'h2');
-				if (arr.reportSearchMatch) { // Top-level item matched search, so display title
-					this.fillElement(h2, arr.title);
+				// Top-level item matched search, so display title
+				if (arr.reportSearchMatch) {
+					content += '<h2>' + escapeXML(arr.title) + '</h2>\n';
 				}
-				else {											// Non-matching parent, so display "Parent Item: [Title]"
-					h2.setAttribute('class', 'parentItem');
-					this.fillElement(h2, Zotero.getString('report.parentItem'));
-					var span = this.addElement(h2, 'span');
-					span.setAttribute('class', 'title');
-					this.fillElement(span, arr.title);
+				// Non-matching parent, so display "Parent Item: [Title]"
+				else {
+					content += '<h2 class="parentItem">' + escapeXML(Zotero.getString('report.parentItem'))
+						+ ' <span class="title">' + escapeXML(arr.title) + '</span></h2>';
 				}
 			}
 			
 			// If parent matches search, display parent item metadata table and tags
 			if (arr.reportSearchMatch) {
-				this._generateMetadataTable(reportItem, arr);
+				content += _generateMetadataTable(arr);
 				
-				this._generateTagsList(reportItem, arr);
+				content += _generateTagsList(arr);
 				
 				// Independent note
-				if (arr['note']) { addNote(reportItem, arr.note); }
+				if (arr['note']) {
+					content += '\n';
+					
+					// If not valid XML, display notes with entities encoded
+					var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+							.createInstance(Components.interfaces.nsIDOMParser);
+					var doc = parser.parseFromString('<div>'
+						+ arr.note
+							// &nbsp; isn't valid in HTML
+							.replace(/&nbsp;/g, "&#160;")
+							// Strip control characters (for notes that were
+							// added before item.setNote() started doing this)
+							.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+					+ '</div>', "application/xml");
+					if (doc.documentElement.tagName == 'parsererror') {
+						Zotero.debug(doc.documentElement.textContent, 2);
+						content += '<p class="plaintext">' + escapeXML(arr.note) + '</p>\n';
+					}
+					// Otherwise render markup normally
+					else {
+						content += arr.note + '\n';
+					}
+				}
 			}
 			
 			// Children
@@ -140,62 +98,86 @@ Zotero.Report = new function() {
 				if (arr.reportChildren.notes.length) {
 					// Only display "Notes:" header if parent matches search
 					if (arr.reportSearchMatch) {
-						var h3 = this.addElement(reportItem, 'h3');
-						h3.setAttribute('class', 'notes');
-						this.fillElement(h3, Zotero.getString('report.notes'));
+						content += '<h3 class="notes">' + escapeXML(Zotero.getString('report.notes')) + '</h3>\n';
 					}
-					var notesUL = this.addElement(reportItem, 'ul');
-					ul.setAttribute('class', 'notes');
+					content += '<ul class="notes">\n';
 					for each(var note in arr.reportChildren.notes) {
-						var notesLI = this.addElement(notesUL, 'li');
-						notesLI.setAttribute('id', note.itemID);
-
-						addNote(notesLI, note.note);
-
+						content += '<li id="i' + note.itemID + '">\n';
+						
+						// If not valid XML, display notes with entities encoded
+						var parser = Components.classes["@mozilla.org/xmlextras/domparser;1"]
+								.createInstance(Components.interfaces.nsIDOMParser);
+						var doc = parser.parseFromString('<div>'
+							+ note.note
+								.replace(/&nbsp;/g, "&#160;")
+								// Strip control characters (for notes that were
+								// added before item.setNote() started doing this)
+								.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
+						 + '</div>', "application/xml");
+						if (doc.documentElement.tagName == 'parsererror') {
+							Zotero.debug(doc.documentElement.textContent, 2);
+							content += '<p class="plaintext">' + escapeXML(note.note) + '</p>\n';
+						}
+						// Otherwise render markup normally
+						else {
+							content += note.note + '\n';
+						}
+						
 						// Child note tags
-						this._generateTagsList(notesLI, note);
+						content += _generateTagsList(note);
+						
+						content += '</li>\n';
 					}
+					content += '</ul>\n';
 				}
 			
 				// Chid attachments
-				this._generateAttachmentsList(reportItem, arr.reportChildren);
+				content += _generateAttachmentsList(arr.reportChildren);
 			}
 			
 			// Related
 			if (arr.reportSearchMatch && arr.related && arr.related.length) {
-				var h3 = this.addElement(reportItem, 'h3');
-				h3.setAttribute('class', 'related');
-				this.fillElement(h3, Zotero.getString('itemFields.related'));
-
-				var relatedUL = this.addElement(reportItem, 'ul');
+				content += '<h3 class="related">' + escapeXML(Zotero.getString('itemFields.related')) + '</h3>\n';
+				content += '<ul class="related">\n';
 				var relateds = Zotero.Items.get(arr.related);
 				for each(var related in relateds) {
-					var relatedLI = this.addElement(relatedUL, 'li');
-					relatedLI.setAttribute('id', 'i' + related.getID());
-					this.fillElement(relatedLI, related.getDisplayTitle());
+					content += '<li id="i' + related.getID() + '">';
+					content += escapeXML(related.getDisplayTitle());
+					content += '</li>\n';
 				}
+				content += '</ul>\n';
 			}
+			
+			
+			content += '</li>\n\n';
 		}
-
-		return this.serializer.serializeToString(this.doc);
+		content += '</ul>\n';
+		content += '</body>\n</html>';
+		
+		return content;
 	}
 	
-	this._generateMetadataTable = function(root, arr) {
-		var table = this.addElement(root, 'table');
-		var unlink = true;
-    // add and optionally unlink or the indentation is off
+	
+	function generateHTMLList(items) {
+		
+	}
+	
+	
+	function _generateMetadataTable(arr) {
+		var table = false;
+		var content = '<table>\n';
 		
 		// Item type
-		var tr = this.addElement(table, 'tr');
-		tr.setAttribute('class', 'itemType');
-		var th = this.addElement(tr, 'th');
-		this.fillElement(th, Zotero.getString('itemFields.itemType'));
-		var td = this.addElement(tr, 'td');
-		this.fillElement(td, Zotero.ItemTypes.getLocalizedString(arr.itemType));
-
+		content += '<tr>\n';
+		content += '<th>'
+			+ escapeXML(Zotero.getString('itemFields.itemType'))
+			+ '</th>\n';
+		content += '<td>' + escapeXML(Zotero.ItemTypes.getLocalizedString(arr.itemType)) + '</td>\n';
+		content += '</tr>\n';
+		
 		// Creators
 		if (arr['creators']) {
-			unlink = false;
+			table = true;
 			var displayText;
 			
 			for each(var creator in arr['creators']) {
@@ -211,13 +193,12 @@ Zotero.Report = new function() {
 					// TODO
 				}
 				
-				var tr = this.addElement(table, 'tr');
-				tr.setAttribute('class', 'creator ' + creator.creatorType);
-				var th = this.addElement(tr, 'th');
-				th.setAttribute('class', creator.creatorType);
-				this.fillElement(th, Zotero.getString('creatorTypes.' + creator.creatorType));
-				var td = this.addElement(tr, 'td');
-				this.fillElement(td, displayText);
+				content += '<tr>\n';
+				content += '<th class="' + creator.creatorType + '">'
+					+ escapeXML(Zotero.getString('creatorTypes.' + creator.creatorType))
+					+ '</th>\n';
+				content += '<td>' + escapeXML(displayText) + '</td>\n';
+				content += '</tr>\n';
 			}
 		}
 		
@@ -267,69 +248,81 @@ Zotero.Report = new function() {
 				continue;
 			}
 			
-			unlink = false;
-
-			var tr = this.addElement(table, 'tr');
-			tr.setAttribute('class', i);
-			var th = this.addElement(tr, 'th');
-			th.setAttribute('class', i);
-			this.fillElement(th, localizedFieldName)
-			var td = this.addElement(tr, 'td');
-
+			table = true;
+			var fieldText;
+			
 			if (i == 'url' && arr[i].match(/^https?:\/\//)) {
-				var a = this.addElement(td, a);
-				a.setAttribute('href', arr[i]);
-				this.fillElement(a, arr[i]);
+				fieldText = '<a href="' + escapeXML(arr[i]) + '">'
+					+ escapeXML(arr[i]) + '</a>';
 			}
 			// Remove SQL date from multipart dates
 			// (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
 			else if (i=='date') {
-				this.fillElement(td, Zotero.Date.multipartToStr(arr[i]));
+				fieldText = escapeXML(Zotero.Date.multipartToStr(arr[i]));
 			}
 			// Convert dates to local format
 			else if (i=='accessDate' || i=='dateAdded' || i=='dateModified') {
 				var date = Zotero.Date.sqlToDate(arr[i], true)
-				this.fillElement(td, date.toLocaleString());
+				fieldText = escapeXML(date.toLocaleString());
 			}
 			else {
-				this.fillElement(td, arr[i]);
+				fieldText = escapeXML(arr[i]);
 			}
+			
+			content += '<tr>\n<th>' + escapeXML(localizedFieldName)
+				+ '</th>\n<td>' + fieldText + '</td>\n</tr>\n';
 		}
 		
-		if (unlink) { root.removeChild(table); }
+		content += '</table>';
+		
+		return table ? content : '';
 	}
 	
-	this._generateTagsList = function(root, arr) {
+	
+	function _generateTagsList(arr) {
+		var content = '';
 		if (arr['tags'] && arr['tags'].length) {
-			var h3 = this.addElement(root, 'h3');
-			h3.setAttribute('class', 'tags');
-			this.fillElement(h3, Zotero.getString('report.tags'));
-			var ul = this.addElement(root, 'ul');
-			ul.setAttribute('class', 'tags');
+			var str = Zotero.getString('report.tags');
+			content += '<h3 class="tags">' + escapeXML(str) + '</h3>\n';
+			content += '<ul class="tags">\n';
 			for each(var tag in arr.tags) {
-				this.fillElement(this.addElement(ul, 'li'), tag.fields.name);
+				content += '<li>' + escapeXML(tag.fields.name) + '</li>\n';
 			}
+			content += '</ul>\n';
 		}
+		return content;
 	}
-
-	this._generateAttachmentsList = function(root, arr) {
+	
+	
+	function _generateAttachmentsList(arr) {
+		var content = '';
 		if (arr.attachments && arr.attachments.length) {
-			var h3 = this.addElement(root, 'h3');
-			h3.setAttribute('class', 'attachments');
-			this.fillElement(h3, Zotero.getString('itemFields.attachments'));
-			var ul = this.addElement(root, 'ul');
-			ul.setAttribute('class', 'attachments');
+			content += '<h3 class="attachments">' + escapeXML(Zotero.getString('itemFields.attachments')) + '</h3>\n';
+			content += '<ul class="attachments">\n';
 			for each(var attachment in arr.attachments) {
-				var li = this.addElement(ul, 'li');
-				li.setAttribute('id', 'i' + attachment.itemID);
-				this.fillElement(li, attachment.title);
+				content += '<li id="i' + attachment.itemID + '">';
+				content += escapeXML(attachment.title);
 				
 				// Attachment tags
-				this._generateTagsList(li, attachment);
+				content += _generateTagsList(attachment);
 				
 				// Attachment note
-				if (attachment.note) { addNote(li, attachment.note); }
+				if (attachment.note) {
+					content += '<div class="note">';
+					if (attachment.note.substr(0, 1024).match(/<p[^>]*>/)) {
+						content += attachment.note + '\n';
+					}
+					// Wrap plaintext notes in <p>
+					else {
+						content += '<p class="plaintext">' + escapeXML(attachment.note) + '</p>\n';
+					}
+					content += '</div>';
+				}
+				
+				content += '</li>\n';
 			}
+			content += '</ul>\n';
 		}
+		return content;
 	}
 }

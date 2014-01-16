@@ -1,0 +1,21 @@
+treechildren::-moz-tree-row(odd) { background-color: #EEEEEE; }
+.hidden treechildren::-moz-tree-cell-text { color: #444444; }
+
+treechildren.itemType::-moz-tree-checkbox {
+  background-color: #6D88A8;
+}
+
+treechildren::-moz-tree-checkbox
+{
+  /* unchecked checkbox treecells. This style MUST come before treechildren::-moz-tree-checkbox(checked) otherwise it won't take effect. */
+  list-style-image: none;
+  -moz-appearance: checkbox-container;
+}
+treechildren::-moz-tree-checkbox(checked)
+{
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+}
+treechildren::-moz-tree-checkbox(disabled)
+{
+  list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
+}
