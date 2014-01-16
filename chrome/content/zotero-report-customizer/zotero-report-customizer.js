@@ -39,7 +39,18 @@ Zotero.ReportCustomizer = {
   _fields: null,
   fields: function() {
     if (!Zotero.ReportCustomizer._fields) {
-      var _fields = {tree: [], fields: {itemType: true}};
+      var _fields = {tree: [], fields: {}};
+
+      var labels = {};
+      function label(name) {
+        if (!labels[name]) { labels[name] = {name: name, label: Zotero.getString('itemFields.' + name)}; }
+        return labels[name];
+      }
+
+      function addField(type, field) {
+        type.fields.push(field);
+        _fields.fields[field.name] = true;
+      }
 
       var collation = Zotero.getLocaleCollation();                                                              
       var t = Zotero.ItemTypes.getSecondaryTypes();                                                             
@@ -47,27 +58,24 @@ Zotero.ReportCustomizer = {
         _fields.tree.push({ id: t[i].id, name: t[i].name, label: Zotero.ItemTypes.getLocalizedString(t[i].id) });
       }
       _fields.tree.sort(function(a, b) { return collation.compareString(1, a.label, b.label); });
-            
+
       for (var type of _fields.tree) {
         type.fields = [];
-        for (field of Zotero.ItemFields.getItemTypeFields(type.id)) {
-          var name = Zotero.ItemFields.getName(field);
-          type.fields.push({name: name, label: Zotero.ItemFields.getLocalizedString(type.id, field)});
-          _fields.fields[name] = true;
-        }
+        addField(type, label('itemType'));
+        // getItemTypeFields yields an iterator, not an arry, so we can't just add them
+        for (field of Zotero.ItemFields.getItemTypeFields(type.id)) { addField(type, label(Zotero.ItemFields.getName(field))); }
+        addField(type, label('tags'));
+        addField(type, label('attachments'));
       }
       _fields.fields = Object.keys(_fields.fields);
 
       Zotero.ReportCustomizer._fields = _fields;
-      console.log(Zotero.ReportCustomizer._fields.fields.length + ' fields found');
     }
 
     return Zotero.ReportCustomizer._fields;
   },
 
   init: function () {
-    console.log('initializing scrubber');
-    
     // monkey-patch Zotero.Report.generateHTMLDetails to modify the generated report
     Zotero.Report.generateHTMLDetails = (function (self, original) {
       return function (items, combineChildItems) {
@@ -79,11 +87,13 @@ Zotero.ReportCustomizer = {
           var doc = Zotero.ReportCustomizer.parser.parseFromString(report, 'text/html');
 
           var remove = []
-          for (field of Object.keys(Zotero.ReportCustomizer.fields().fields)) {
+          for (field of Zotero.ReportCustomizer.fields().fields) {
+            console.log('scrubbing ' + field);
             if (!Zotero.ReportCustomizer.show(field)) {
               remove.push('.' + field);
             }
           }
+          console.log('remove: ' + remove);
           if (remove.length != 0) {
             var head = doc.getElementsByTagName('head')[0];
             var style = doc.createElement('style');
@@ -95,6 +105,7 @@ Zotero.ReportCustomizer = {
           console.log('Scrub failed: ' + err + "\n" + err.stack);
         }
 
+        console.log('scrub finished');
         return report;
       }
     })(this, Zotero.Report.generateHTMLDetails);

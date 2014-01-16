@@ -1,3 +1,6 @@
+treechildren::-moz-tree-row(odd) { background-color: #EEEEEE; }
+.hidden treechildren::-moz-tree-cell-text { color: #444444; }
+
 treechildren.itemType::-moz-tree-checkbox {
   background-color: #6D88A8;
 }

@@ -3,7 +3,6 @@ function initializePrefs() {
   var itemTypes = document.getElementById('itemTypes');
 
   if (itemTypes.childNodes.length == 0) {
-    console.log('building prefs');
     function elt(host, name, attrs) {
       var node = document.createElementNS(XUL, name);
       if (attrs) {
@@ -17,7 +16,6 @@ function initializePrefs() {
       return node;
     }
 
-    var itemType = Zotero.getString('itemFields.itemType');
     for (var type of Zotero.ReportCustomizer.fields().tree) {
       var _type = elt(itemTypes, 'treeitem', {container: 'true'});
       var _type_row = elt(_type, 'treerow');
@@ -25,29 +23,20 @@ function initializePrefs() {
       var _type_cell = elt(_type_row, 'treecell', {editable: 'false', label: type.label});
       var _type_children = elt(_type, 'treechildren');
     
-      var _field = elt(_type_children, 'treeitem');
-      var _field_row = elt(_field, 'treerow');
-      var _field_cell = elt(_field_row, 'treecell', {'class': 'itemType checkbox'});
-      var _field_cell = elt(_field_row, 'treecell', {editable: 'false', label: itemType});
-    
       for (var field of type.fields) {
         var _field = elt(_type_children, 'treeitem');
         var _field_row = elt(_field, 'treerow');
         var _field_cell = elt(_field_row, 'treecell', {'class': field.name + ' checkbox'});
-        var _field_cell = elt(_field_row, 'treecell', {editable: 'false', label: field.name});
-      }
-
-      var preferences = document.getElementById('preferences');
-      for (field of Zotero.ReportCustomizer.fields().fields) {
-        elt(preferences, 'preference', {id: 'pref-zotero-report-customizer-show-' + field, name: 'extensions.zotero-report-customizer.show.' + field, type: 'bool'});
+        var _field_cell = elt(_field_row, 'treecell', {editable: 'false', label: field.label});
       }
     }
   }
 
   for (field of Zotero.ReportCustomizer.fields().fields) {
     var show = Zotero.ReportCustomizer.show(field);
-    for (var cb of document.getElementsByClassName('checkbox')) {
-      cb.setAttribute('value', (show ? 'true' : 'false'));
+    for (var cb of document.getElementsByClassName(field + ' checkbox')) {
+      cb.setAttribute('value', (show ? 'true' : ''));
+      // if (!show) { cb.parentNode.parentNode.setAttribute('class', cb.getAttribute('class') + ' hidden') };
     }
   }
 }
@@ -62,14 +51,15 @@ function togglePref(tree, event) {
 
   var item = tree.contentView.getItemAtIndex(row); 
   var chkbox = item.firstChild.firstChild; 
+  var cls = chkbox.getAttribute('class');
   if (chkbox.getAttribute('editable') != 'false') { 
     var show = (chkbox.getAttribute('value') == 'true');
-    var cls = chkbox.getAttribute('class');
     for (var cb of document.getElementsByClassName(cls)) {
-      cb.setAttribute('value', (show ? 'true' : 'false'));
+      cb.setAttribute('value', show ? 'true' : '');
+      // item.setAttribute('class', show ? '' : 'hidden');
     }
 
-    Zotero.ReportCustomizer.show(cls = (' ' + cls + ' ').replace(' checkbox ').trim(), show);
-  } 
+    Zotero.ReportCustomizer.show(cls.replace( /(?:^|\s)checkbox(?!\S)/g , '' ), show);
+  }
 }
 
