@@ -109,6 +109,20 @@ Zotero.ReportCustomizer = {
         return report;
       }
     })(this, Zotero.Report.generateHTMLDetails);
+
+    // monkey-patch Zotero_Report_Interface.loadCollectionReport to alter sort order
+    Zotero_Report_Interface.loadCollectionReport = (function (self, original) {
+      return function (event) {
+        return original.apply(this, arguments);
+      }
+    })(this,  Zotero_Report_Interface.loadCollectionReport);
+
+    // monkey-patch Zotero_Report_Interface.loadItemReportByIds to alter sort order
+    Zotero_Report_Interface.loadItemReportByIds = (function (self, original) {
+      return function (event) {
+        return original.apply(this, arguments);
+      }
+    })(this, Zotero_Report_Interface.loadItemReportByIds);
   }
 };
 
