@@ -1,2 +1,3 @@
 <!ENTITY zotero-report-customizer.name "Report Customizer">
-<!ENTITY zotero-report-customizer.remove "Select fields to remove from report">
+<!ENTITY zotero-report-customizer.show "Fields to show in report">
+<!ENTITY zotero-report-customizer.sort "Report sort order">

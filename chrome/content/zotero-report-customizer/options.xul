@@ -7,18 +7,34 @@
     <stringbundle id="zotero-report-customizer-options" src="chrome://zotero-report-customizer/locale/options.properties" />
     <stringbundle id="zotero-options" src="chrome://zotero/locale/zotero.properties" />
   </stringbundleset>
-  <prefpane label="&zotero-report-customizer.remove;" id="zotero-report-customizer-perfpane">
+  <prefpane label="&zotero-report-customizer.name;" id="zotero-report-customizer-perfpane">
     <preferences id="preferences"/>
-    <groupbox>
-      <caption label="&zotero-report-customizer.remove;" />
-      <tree flex="1" id="treeCollection" seltype="single" hidecolumnpicker="true" height="400" editable="true" onkeypress="togglePref(this);" onmousedown="togglePref(this, event);">
-        <treecols>
-          <treecol id="show" primary="true" type="checkbox" label="Show" editable="true" width="40"/>
-          <treecol id="field" label="Field" editable="false" flex="1"/>
-        </treecols>
-        <treechildren id="itemTypes"/>
-      </tree>
-    </groupbox>
+    <tabbox>
+      <tabs>
+        <tab label="&zotero-report-customizer.show;"/>
+        <tab label="&zotero-report-customizer.sort;"/>
+      </tabs>
+      <tabpanels>
+        <tabpanel>
+          <tree flex="1" seltype="single" hidecolumnpicker="true" height="400" editable="true" onkeypress="togglePref(this);" onmousedown="togglePref(this, event);">
+            <treecols>
+              <treecol id="show" primary="true" type="checkbox" label="Show" editable="true" width="80"/>
+              <treecol id="field" label="Field" editable="false" flex="1"/>
+            </treecols>
+            <treechildren id="itemTypes"/>
+          </tree>
+        </tabpanel>
+        <tabpanel>
+          <tree flex="1" seltype="single" hidecolumnpicker="true" height="400">
+            <treecols>
+              <treecol id="sortfield" primary="true" label="Field" editable="false" flex="1"/>
+              <treecol id="sortorder" type="checkbox" label="Order" editable="true" width="40"/>
+            </treecols>
+            <treechildren id="sortOrder"/>
+          </tree>
+        </tabpanel>
+      </tabpanels>
+    </tabbox>
   </prefpane>
   <script src="chrome://zotero/content/include.js" />
   <script src="chrome://zotero-report-customizer/content/include.js" />

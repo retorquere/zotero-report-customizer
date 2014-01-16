@@ -39,6 +39,58 @@ function initializePrefs() {
       // if (!show) { cb.parentNode.parentNode.setAttribute('class', cb.getAttribute('class') + ' hidden') };
     }
   }
+
+  var sortOrder = document.getElementById('sortOrder');
+  if (sortOrder.childNodes.length == 0) {
+    var fields = [  'title', 'firstCreator', 'date', 'accessed', 'dateAdded', 'dateModified', 'publicationTitle', 'publisher',
+                    'itemType', 'series', 'type', 'medium', 'callNumber', 'pages', 'archiveLocation', 'DOI', 'ISBN', 'ISSN',
+                    'edition', 'url', 'rights' ];
+    var order;
+    try {
+      order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort'));
+    } catch (err) {
+      order = [ {name: 'title', order: 'a'} ];
+    }
+
+    for (field of order) {
+      var i = fields.indexOf(field.name);
+      if (i > -1) {
+        fields.splice(i, 1);
+      } else {
+        field.invalid = true;
+      }
+    }
+    order = order.filter(function(field) { return !field.invalid; });
+    for (field of fields) {
+      order.push({name: field});
+    }
+
+    for (field of order) {
+      if (field.order != 'a' && field.order != 'd') { field.order = 'n'; }
+      var _field = elt(sortOrder, 'treeitem');
+      var _field_row = elt(_field, 'treerow');
+      var label;
+      switch (field.name) {
+        case 'firstCreator':
+          label = 'creatorTypes.author';
+          break;
+
+        case 'accessed':
+          label = 'itemFields.accessDate';
+          break;
+
+        case 'type':
+          label = 'itemFields.itemType';
+          break;
+
+        default:
+          label = 'itemFields.' +field.name;
+          break;
+      }
+      var _field_cell = elt(_field_row, 'treecell', {editable: 'false', label: Zotero.getString(label)});
+      var _field_cell = elt(_field_row, 'treecell', {editable: 'false', id: field.name, 'class': 'report-sort-order-' + field.order});
+    }
+  }
 }
 
 function togglePref(tree, event) {
