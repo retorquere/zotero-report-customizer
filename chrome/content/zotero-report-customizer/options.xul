@@ -1,4 +1,6 @@
 <?xml version="1.0"?>
+<!-- vim: set expandtab : -->
+<!-- vim: set ts=2 : -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
 <?xml-stylesheet href="chrome://zotero-report-customizer/skin/options.css"?>
 <!DOCTYPE window SYSTEM "chrome://zotero-report-customizer/locale/zotero-report-customizer.dtd">
@@ -16,22 +18,23 @@
       </tabs>
       <tabpanels>
         <tabpanel>
-          <tree flex="1" seltype="single" hidecolumnpicker="true" height="400" editable="true" onkeypress="togglePref(this);" onmousedown="togglePref(this, event);">
+          <tree flex="1" seltype="single" hidecolumnpicker="true" height="400" editable="true" onkeypress="toggleShowField(this);" onmousedown="toggleShowField(this, event);">
             <treecols>
-              <treecol id="show" primary="true" type="checkbox" label="Show" editable="true" width="80"/>
+              <treecol id="show" primary="true" type="checkbox" label="Show" editable="true" width="40"/>
               <treecol id="field" label="Field" editable="false" flex="1"/>
             </treecols>
             <treechildren id="itemTypes"/>
           </tree>
         </tabpanel>
         <tabpanel>
-          <tree flex="1" seltype="single" hidecolumnpicker="true" height="400">
-            <treecols>
-              <treecol id="sortfield" primary="true" label="Field" editable="false" flex="1"/>
-              <treecol id="sortorder" type="checkbox" label="Order" editable="true" width="40"/>
-            </treecols>
-            <treechildren id="sortOrder"/>
-          </tree>
+          <listbox id="sortOrder">
+            <listcols>
+              <listcol flex="1"/>
+            </listcols>
+            <listhead>
+              <listheader label="&zotero-report-customizer.field;"/>
+            </listhead>
+          </listbox>
         </tabpanel>
       </tabpanels>
     </tabbox>

@@ -88,7 +88,6 @@ Zotero.ReportCustomizer = {
 
           var remove = []
           for (field of Zotero.ReportCustomizer.fields().fields) {
-            console.log('scrubbing ' + field);
             if (!Zotero.ReportCustomizer.show(field)) {
               remove.push('.' + field);
             }
@@ -110,19 +109,57 @@ Zotero.ReportCustomizer = {
       }
     })(this, Zotero.Report.generateHTMLDetails);
 
-    // monkey-patch Zotero_Report_Interface.loadCollectionReport to alter sort order
-    Zotero_Report_Interface.loadCollectionReport = (function (self, original) {
-      return function (event) {
-        return original.apply(this, arguments);
-      }
-    })(this,  Zotero_Report_Interface.loadCollectionReport);
+    // monkey-patch ZoteroPane.getSortField to alter sort order
+    ZoteroPane.getSortField = (function (self, original) {
+      console.log('getSortField=' + ZoteroPane.getSortField);
+      return function getSortField() {
+        console.log('in getSortField');
+        var order;
+        try {
+          order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort'));
+        } catch (err) {
+          console.log('default order');
+          order = [ ];
+        }
 
-    // monkey-patch Zotero_Report_Interface.loadItemReportByIds to alter sort order
-    Zotero_Report_Interface.loadItemReportByIds = (function (self, original) {
-      return function (event) {
-        return original.apply(this, arguments);
+        var queryString = '';
+
+        for (var sort of order) {
+          if (sort.order) {
+            if (queryString != '') { queryString += ','; }
+            queryString += sort.name;
+            if (sort.order == 'd') { queryString += '/d'; }
+          }
+        }
+
+        if (queryString == '') { return original.apply(arguments); }
+        console.log('patched queryString=' + queryString);
+        return queryString;
       }
-    })(this, Zotero_Report_Interface.loadItemReportByIds);
+    })(this,  ZoteroPane.getSortField);
+    console.log('getSortField=' + ZoteroPane.getSortField);
+
+    // monkey-patch ZoteroPane.getSortDirection to alter sort order
+    ZoteroPane.getSortDirection = (function (self, original) {
+      console.log('getSortDirection=' + ZoteroPane.getSortDirection);
+      return function getSortDirection() {
+        console.log('in getSortDirection');
+        var order;
+        try {
+          order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort'));
+        } catch (err) {
+          order = [ ];
+        }
+
+        for (var sort of order) {
+          if (sort.order) {
+            return 'ascending';
+          }
+        }
+
+        return original.apply(arguments);
+      }
+    })(this,  ZoteroPane.getSortDirection);
   }
 };
 
