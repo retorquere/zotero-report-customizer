@@ -111,7 +111,6 @@ Zotero.ReportCustomizer = {
 
     // monkey-patch ZoteroPane.getSortField to alter sort order
     ZoteroPane.getSortField = (function (self, original) {
-      console.log('getSortField=' + ZoteroPane.getSortField);
       return function getSortField() {
         console.log('in getSortField');
         var order;
@@ -137,13 +136,10 @@ Zotero.ReportCustomizer = {
         return queryString;
       }
     })(this,  ZoteroPane.getSortField);
-    console.log('getSortField=' + ZoteroPane.getSortField);
 
     // monkey-patch ZoteroPane.getSortDirection to alter sort order
     ZoteroPane.getSortDirection = (function (self, original) {
-      console.log('getSortDirection=' + ZoteroPane.getSortDirection);
       return function getSortDirection() {
-        console.log('in getSortDirection');
         var order;
         try {
           order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort'));

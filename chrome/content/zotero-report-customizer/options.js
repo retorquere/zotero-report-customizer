@@ -32,6 +32,7 @@ function saveSortOrder() {
 
 function initializePrefs() {
   const XUL = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul';
+
   var itemTypes = document.getElementById('itemTypes');
 
   if (itemTypes.childNodes.length == 0) {
@@ -45,7 +46,7 @@ function initializePrefs() {
     for (var type of Zotero.ReportCustomizer.fields().tree) {
       var _type = elt(itemTypes, 'treeitem', {container: 'true'});
       var _type_row = elt(_type, 'treerow');
-      var _type_cell = elt(_type_row, 'treecell', {editable: 'false'});
+      var _type_cell = elt(_type_row, 'treecell', {properties: 'not-editable', editable: 'false'});
       var _type_cell = elt(_type_row, 'treecell', {editable: 'false', label: type.label});
       var _type_children = elt(_type, 'treechildren');
     
@@ -60,6 +61,7 @@ function initializePrefs() {
     var fields = [  'title', 'firstCreator', 'date', 'accessed', 'dateAdded', 'dateModified', 'publicationTitle', 'publisher',
                     'itemType', 'series', 'type', 'medium', 'callNumber', 'pages', 'archiveLocation', 'DOI', 'ISBN', 'ISSN',
                     'edition', 'url', 'rights' ];
+    // load stored order
     var order;
     try {
       order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort'));
@@ -67,6 +69,7 @@ function initializePrefs() {
       order = [ ];
     }
 
+    // kick out non-existing fields and remove already-ordered fields from the "fields" array
     for (field of order) {
       var i = fields.indexOf(field.name);
       if (i > -1) {
@@ -76,6 +79,8 @@ function initializePrefs() {
       }
     }
     order = order.filter(function(field) { return !field.invalid; });
+
+    // add the non-ordered fields
     for (field of fields) {
       order.push({name: field});
     }
@@ -144,7 +149,6 @@ function initializePrefs() {
       // if (!show) { cb.parentNode.parentNode.setAttribute('class', cb.getAttribute('class') + ' hidden') };
     }
   }
-
 }
 
 function toggleShowField(tree, event) {

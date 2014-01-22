@@ -5,7 +5,13 @@ treechildren.itemType::-moz-tree-checkbox {
   background-color: #6D88A8;
 }
 
-treechildren::-moz-tree-checkbox
+treechildren::-moz-tree-checkbox 
+{
+  /* unchecked checkbox treecells. This style MUST come before treechildren::-moz-tree-checkbox(checked) otherwise it won't take effect. */
+  list-style-image: url("checkbox_no.png");
+  -moz-appearance: checkbox-container;
+}
+treechildren::-moz-tree-checkbox(not-editable)
 {
   /* unchecked checkbox treecells. This style MUST come before treechildren::-moz-tree-checkbox(checked) otherwise it won't take effect. */
   list-style-image: none;
@@ -13,7 +19,7 @@ treechildren::-moz-tree-checkbox
 }
 treechildren::-moz-tree-checkbox(checked)
 {
-  list-style-image: url("chrome://global/skin/checkbox/cbox-check.gif");
+  list-style-image: url("checkbox_yes.png");
 }
 treechildren::-moz-tree-checkbox(disabled)
 {
@@ -22,5 +28,5 @@ treechildren::-moz-tree-checkbox(disabled)
 
 #sortOrder listheader { padding-left: 0px; }
 #sortOrder listitem { padding-left: 20px; }
-#sortOrder listitem.report-sort-order-a { background:url("arrow-up.png") center left no-repeat; }
-#sortOrder listitem.report-sort-order-d { background:url("arrow-down.png") center left no-repeat; }
+#sortOrder listitem.report-sort-order-a { background:url("arrow-down.png") center left no-repeat; }
+#sortOrder listitem.report-sort-order-d { background:url("arrow-up.png") center left no-repeat; }
