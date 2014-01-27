@@ -20,7 +20,7 @@
         <tabpanel>
           <tree flex="1" seltype="single" hidecolumnpicker="true" height="400" editable="true" onkeypress="toggleShowField(this);" onmousedown="toggleShowField(this, event);">
             <treecols>
-              <treecol id="show" primary="true" type="checkbox" label="Show" editable="true" width="40"/>
+              <treecol id="show" primary="true" type="checkbox" label="Show" editable="true" width="60"/>
               <treecol id="field" label="Field" editable="false" flex="1"/>
             </treecols>
             <treechildren id="itemTypes"/>

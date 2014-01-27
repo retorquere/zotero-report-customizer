@@ -55,10 +55,9 @@ Zotero.Report = new function() {
 		return child;
 	}
 
-	function addNote(elt, note)
-	{
+	this.addNote = function(elt, note) {
 		// If not valid XML, display notes with entities encoded
-		var note = '<div>' + arr.note
+		var note = '<div>' + note
 			// &nbsp; isn't valid in HTML
 			.replace(/&nbsp;/g, "&#160;")
 			// Strip control characters (for notes that were
@@ -72,7 +71,7 @@ Zotero.Report = new function() {
 			p.setAttribute('class', 'plaintext');
 			this.fillElement(p, arr.note);
 		} else { // Otherwise render markup normally
-			this.addElement(elt, note);
+			this.addElement(elt, note.documentElement);
 		}
 	}
 	
@@ -131,7 +130,7 @@ Zotero.Report = new function() {
 				this._generateTagsList(reportItem, arr);
 				
 				// Independent note
-				if (arr['note']) { addNote(reportItem, arr.note); }
+				if (arr['note']) { this.addNote(reportItem, arr.note); }
 			}
 			
 			// Children
@@ -145,12 +144,12 @@ Zotero.Report = new function() {
 						this.fillElement(h3, Zotero.getString('report.notes'));
 					}
 					var notesUL = this.addElement(reportItem, 'ul');
-					ul.setAttribute('class', 'notes');
+					notesUL.setAttribute('class', 'notes');
 					for each(var note in arr.reportChildren.notes) {
 						var notesLI = this.addElement(notesUL, 'li');
 						notesLI.setAttribute('id', note.itemID);
 
-						addNote(notesLI, note.note);
+						this.addNote(notesLI, note.note);
 
 						// Child note tags
 						this._generateTagsList(notesLI, note);
@@ -328,7 +327,7 @@ Zotero.Report = new function() {
 				this._generateTagsList(li, attachment);
 				
 				// Attachment note
-				if (attachment.note) { addNote(li, attachment.note); }
+				if (attachment.note) { this.addNote(li, attachment.note); }
 			}
 		}
 	}

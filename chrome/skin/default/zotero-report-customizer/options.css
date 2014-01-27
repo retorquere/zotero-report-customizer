@@ -1,29 +1,19 @@
 treechildren::-moz-tree-row(odd) { background-color: #EEEEEE; }
-.hidden treechildren::-moz-tree-cell-text { color: #444444; }
+treechildren.itemType::-moz-tree-checkbox { background-color: #6D88A8; }
 
-treechildren.itemType::-moz-tree-checkbox {
-  background-color: #6D88A8;
-}
-
-treechildren::-moz-tree-checkbox 
-{
-  /* unchecked checkbox treecells. This style MUST come before treechildren::-moz-tree-checkbox(checked) otherwise it won't take effect. */
+treechildren::-moz-tree-checkbox {
   list-style-image: url("checkbox_no.png");
   -moz-appearance: checkbox-container;
 }
-treechildren::-moz-tree-checkbox(not-editable)
-{
-  /* unchecked checkbox treecells. This style MUST come before treechildren::-moz-tree-checkbox(checked) otherwise it won't take effect. */
+
+treechildren::-moz-tree-checkbox(not-editable) {
   list-style-image: none;
   -moz-appearance: checkbox-container;
 }
-treechildren::-moz-tree-checkbox(checked)
-{
+
+treechildren::-moz-tree-checkbox(checked) {
   list-style-image: url("checkbox_yes.png");
-}
-treechildren::-moz-tree-checkbox(disabled)
-{
-  list-style-image: url("chrome://global/skin/checkbox/cbox-check-dis.gif");
+  -moz-appearance: checkbox-container;
 }
 
 #sortOrder listheader { padding-left: 0px; }
