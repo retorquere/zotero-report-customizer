@@ -1,8 +1,8 @@
 # Zotero Report Customizer
 
 Install by downloading the [latest
-version](https://raw.github.com/friflaj/zotero-report-customizer/master/zotero-report-customizer-0.0.14.xpi) (**0.0.14**, released
-on 2014-01-28 12:31). If you are not prompted with a Firefox installation dialog then double-click the downloaded xpi;
+version](https://raw.github.com/friflaj/zotero-report-customizer/master/zotero-report-customizer-0.1.0.xpi) (**0.1.0**, released
+on 2014-01-28 12:58). If you are not prompted with a Firefox installation dialog then double-click the downloaded xpi;
 Firefox ought to start and present you with the installation dialog.
 
 For standalone Zotero, do the following:
@@ -35,7 +35,7 @@ the sort falls back to the Zotero-default behavior.
 
 My time is extremely limited for a number of very great reasons (you shall have to trust me on this). Because of this, I
 cannot accept bug reports
-or support requests on anything but the latest version, currently at **0.0.14**. If you submit an issue report,
+or support requests on anything but the latest version, currently at **0.1.0**. If you submit an issue report,
 please include the version that you are on. By the time I get to your issue, the latest version might have bumped up
 already, and you
 will have to upgrade (you might have auto-upgraded already however) and re-verify that your issue still exists.
