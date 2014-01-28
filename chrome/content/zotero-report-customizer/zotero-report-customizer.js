@@ -66,6 +66,10 @@ Zotero.ReportCustomizer = {
         for (field of Zotero.ItemFields.getItemTypeFields(type.id)) { addField(type, label(Zotero.ItemFields.getName(field))); }
         addField(type, label('tags'));
         addField(type, label('attachments'));
+
+        addField(type, label('dateAdded'));
+        addField(type, label('dateModified'));
+        addField(type, label('accessDate'));
       }
       _fields.fields = Object.keys(_fields.fields);
 
