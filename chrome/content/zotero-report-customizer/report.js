@@ -106,7 +106,7 @@ Zotero.Report = new function() {
 		
 		for each(var arr in items) {
 			var reportItem = this.addElement(reportUL, 'li');
-			reportItem.setAttribute('id', 'i' + arr.itemID);
+			reportItem.setAttribute('id', 'item-' + arr.itemID);
 			reportItem.setAttribute('class', 'item ' + arr.itemType);
 			
 			if (arr.title) {
@@ -147,7 +147,7 @@ Zotero.Report = new function() {
 					notesUL.setAttribute('class', 'notes');
 					for each(var note in arr.reportChildren.notes) {
 						var notesLI = this.addElement(notesUL, 'li');
-						notesLI.setAttribute('id', note.itemID);
+						notesLI.setAttribute('id', 'note-' + note.itemID);
 
 						this.addNote(notesLI, note.note);
 
@@ -170,7 +170,7 @@ Zotero.Report = new function() {
 				var relateds = Zotero.Items.get(arr.related);
 				for each(var related in relateds) {
 					var relatedLI = this.addElement(relatedUL, 'li');
-					relatedLI.setAttribute('id', 'i' + related.getID());
+					relatedLI.setAttribute('id', 'related-' + related.getID());
 					this.fillElement(relatedLI, related.getDisplayTitle());
 				}
 			}
@@ -320,7 +320,7 @@ Zotero.Report = new function() {
 			ul.setAttribute('class', 'attachments');
 			for each(var attachment in arr.attachments) {
 				var li = this.addElement(ul, 'li');
-				li.setAttribute('id', 'i' + attachment.itemID);
+				li.setAttribute('id', 'attachment-' + attachment.itemID);
 				this.fillElement(li, attachment.title);
 				
 				// Attachment tags

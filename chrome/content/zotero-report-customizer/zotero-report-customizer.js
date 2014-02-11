@@ -79,11 +79,20 @@ Zotero.ReportCustomizer = {
     return Zotero.ReportCustomizer._fields;
   },
 
+  bibtexKeys: {},
+
   init: function () {
     // monkey-patch Zotero.Report.generateHTMLDetails to modify the generated report
     Zotero.Report.generateHTMLDetails = (function (self, original) {
       return function (items, combineChildItems) {
+        Zotero.ReportCustomizer.bibtexKeys = {};
+        if (Zotero.BetterBibTex) {
+          Zotero.ReportCustomizer.bibtexKeys = Zotero.BetterBibTex.getCiteKeys([Zotero.Items.get(item.id) for (item of items)]) || [];
+        }
+
         var report = original.apply(this, arguments);
+
+        Zotero.ReportCustomizer.bibtexKeys = {};
 
         console.log('Scrubbing report');
 
@@ -103,6 +112,7 @@ Zotero.ReportCustomizer = {
             head.appendChild(style);
             style.appendChild(doc.createTextNode(remove.join(', ') + '{display:none;}'));
           }
+
           report = Zotero.ReportCustomizer.serializer.serializeToString(doc);
         } catch (err) {
           console.log('Scrub failed: ' + err + "\n" + err.stack);
@@ -112,6 +122,25 @@ Zotero.ReportCustomizer = {
         return report;
       }
     })(this, Zotero.Report.generateHTMLDetails);
+
+    Zotero.Report._generateMetadataTable = (function (self, original) {
+      return function(root, arr) {
+        if (Zotero.BetterBibTex) {
+          var key = Zotero.ReportCustomizer.bibtexKeys[arr.itemID];
+          if (key) {
+            arr.bibtexKey = key.key + ' (' + (key.pinned ?  'pinned' : 'generated') + ')';
+            if (key.duplicates) {
+              arr.bibtexKey += ', ' + (key.pinned ?  'hard' : 'soft') + ' conflict';
+              if (key.default && key.default != key.key) {
+                arr.bibtexKey += ' with ' + key.default;
+              }
+            }
+          }
+        }
+
+        return original.apply([root, arr]);
+      }
+    })(this, Zotero.Report._generateMetadataTable);
 
     // monkey-patch ZoteroPane.getSortField to alter sort order
     ZoteroPane.getSortField = (function (self, original) {
