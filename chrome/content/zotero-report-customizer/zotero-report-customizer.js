@@ -1,3 +1,5 @@
+Components.utils.import("resource://gre/modules/Services.jsm");
+
 Zotero.ReportCustomizer = {
   prefs: Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.zotero-report-customizer."),
   parser: Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser),
@@ -64,6 +66,9 @@ Zotero.ReportCustomizer = {
         addField(type, label('itemType'));
         // getItemTypeFields yields an iterator, not an arry, so we can't just add them
         for (field of Zotero.ItemFields.getItemTypeFields(type.id)) { addField(type, label(Zotero.ItemFields.getName(field))); }
+        if (Zotero.BetterBibTex) {
+          addField(type, label('bibtexKey'));
+        }
         addField(type, label('tags'));
         addField(type, label('attachments'));
 
@@ -82,12 +87,44 @@ Zotero.ReportCustomizer = {
   bibtexKeys: {},
 
   init: function () {
+    // Load in the localization stringbundle for use by getString(name)
+    var appLocale = Services.locale.getApplicationLocale();
+    Zotero.ReportCustomizer.localizedStringBundle = Services.strings.createBundle("chrome://zotero-report-customizer/locale/zotero-report-customizer.properties", appLocale);
+
+    // monkey-patch Zotero.ItemFields.getLocalizedString to supply new translations
+    Zotero.ItemFields.getLocalizedString = (function (self, original) {
+      return function(itemType, field) {
+        try {
+          if (field == 'bibtexKey') {
+            return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName('itemFields.bibtexKey');
+          }
+        } catch(err) {} // pass to original for consistent error messages
+        return original.apply(this, arguments);
+      }
+    })(this, Zotero.ItemFields.getLocalizedString);
+
+    // monkey-patch Zotero.getString to supply new translations
+    Zotero.getString = (function (self, original) {
+      return function(name, params) {
+        try {
+          if (name == 'itemFields.bibtexKey') {
+            return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName(name);
+          }
+        } catch(err) {} // pass to original for consistent error messages
+        return original.apply(this, arguments);
+      }
+    })(this, Zotero.getString);
+
     // monkey-patch Zotero.Report.generateHTMLDetails to modify the generated report
     Zotero.Report.generateHTMLDetails = (function (self, original) {
       return function (items, combineChildItems) {
         Zotero.ReportCustomizer.bibtexKeys = {};
-        if (Zotero.BetterBibTex) {
-          Zotero.ReportCustomizer.bibtexKeys = Zotero.BetterBibTex.getCiteKeys([Zotero.Items.get(item.id) for (item of items)]) || [];
+        try {
+          if (Zotero.BetterBibTex) {
+            Zotero.ReportCustomizer.bibtexKeys = Zotero.BetterBibTex.getCiteKeys([Zotero.Items.get(item.itemID) for (item of items)]);
+          }
+        } catch (err)  {
+          console.log('Scrub failed: ' + err + "\n" + err.stack);
         }
 
         var report = original.apply(this, arguments);
@@ -114,11 +151,11 @@ Zotero.ReportCustomizer = {
           }
 
           report = Zotero.ReportCustomizer.serializer.serializeToString(doc);
+          console.log('scrub finished');
         } catch (err) {
           console.log('Scrub failed: ' + err + "\n" + err.stack);
         }
 
-        console.log('scrub finished');
         return report;
       }
     })(this, Zotero.Report.generateHTMLDetails);
@@ -127,6 +164,7 @@ Zotero.ReportCustomizer = {
       return function(root, arr) {
         if (Zotero.BetterBibTex) {
           var key = Zotero.ReportCustomizer.bibtexKeys[arr.itemID];
+          console.log('key = ' + key);
           if (key) {
             arr.bibtexKey = key.key + ' (' + (key.pinned ?  'pinned' : 'generated') + ')';
             if (key.duplicates) {
@@ -135,10 +173,11 @@ Zotero.ReportCustomizer = {
                 arr.bibtexKey += ' with ' + key.default;
               }
             }
+            console.log('key = ' + arr.bibtexKey);
           }
         }
 
-        return original.apply([root, arr]);
+        return original.apply(this, [root, arr]);
       }
     })(this, Zotero.Report._generateMetadataTable);
 
