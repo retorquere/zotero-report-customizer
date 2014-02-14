@@ -205,7 +205,16 @@ Zotero.ReportCustomizer = {
                   status = 'general.yes';
                   break;
               }
-              title.innerHTML += ', ' + Zotero.getString('fulltext.indexState.indexed').toLowerCase() + ': ' + Zotero.getString(status);
+
+              var a = Zotero.Report.doc.createElement('a');
+              [].forEach.call(title.childNodes, function(child) {
+                a.appendChild(child);
+              });
+              a.setAttribute('href', 'zotero://select/id/' + id);
+              title.appendChild(a);
+
+              title.appendChild(Zotero.Report.doc.createTextNode(', ' + Zotero.getString('fulltext.indexState.indexed').toLowerCase() + ': ' + Zotero.getString(status)));
+
               console.log(title.innerHTML);
             }
           });
