@@ -181,6 +181,38 @@ Zotero.ReportCustomizer = {
       }
     })(this, Zotero.Report._generateMetadataTable);
 
+    Zotero.Report._generateAttachmentsList = (function (self, original) {
+      return function(root, arr) {
+        original.apply(this, arguments);
+
+        [].forEach.call(root.getElementsByClassName('attachments'), function(attachments) {
+          [].forEach.call(attachments.getElementsByTagName('li'), function(title) {
+            var id = title.getAttribute('id');
+            if (id && id.indexOf('attachment-') == 0) {
+              id = parseInt(id.substring('attachment-'.length, id.length));
+              var status = 'fulltext.indexState.';
+              switch (Zotero.Fulltext.getIndexedState(id)) {
+                case Zotero.Fulltext.INDEX_STATE_UNAVAILABLE:
+                status += 'unavailable';
+                break;
+                case Zotero.Fulltext.INDEX_STATE_UNINDEXED:
+                  status = 'general.no';
+                  break;
+                case Zotero.Fulltext.INDEX_STATE_PARTIAL:
+                  status += 'partial';
+                  break;
+                case Zotero.Fulltext.INDEX_STATE_INDEXED:
+                  status = 'general.yes';
+                  break;
+              }
+              title.innerHTML += ', ' + Zotero.getString('fulltext.indexState.indexed').toLowerCase() + ': ' + Zotero.getString(status);
+              console.log(title.innerHTML);
+            }
+          });
+        });
+      }
+    })(this, Zotero.Report._generateAttachmentsList);
+
     // monkey-patch ZoteroPane.getSortField to alter sort order
     ZoteroPane.getSortField = (function (self, original) {
       return function getSortField() {
