@@ -206,11 +206,12 @@ Zotero.ReportCustomizer = {
                   break;
               }
 
+              var item = Zotero.Items.get(id);
               var a = Zotero.Report.doc.createElement('a');
               [].forEach.call(title.childNodes, function(child) {
                 a.appendChild(child);
               });
-              a.setAttribute('href', 'zotero://select/id/' + id);
+              a.setAttribute('href', 'zotero://select/items/' + (item.libraryID || 0) + '_' + item.key);
               title.appendChild(a);
 
               title.appendChild(Zotero.Report.doc.createTextNode(', ' + Zotero.getString('fulltext.indexState.indexed').toLowerCase() + ': ' + Zotero.getString(status)));
