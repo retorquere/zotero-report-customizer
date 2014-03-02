@@ -86,6 +86,15 @@ Zotero.ReportCustomizer = {
 
   bibtexKeys: {},
 
+  linkTo: function(node, item) {
+    var a = Zotero.Report.doc.createElement('a');
+    [].forEach.call(node.childNodes, function(child) {
+      a.appendChild(child);
+    });
+    a.setAttribute('href', 'zotero://select/items/' + (item.libraryID || 0) + '_' + item.key);
+    node.appendChild(a);
+  },
+
   init: function () {
     // Load in the localization stringbundle for use by getString(name)
     var appLocale = Services.locale.getApplicationLocale();
@@ -150,6 +159,14 @@ Zotero.ReportCustomizer = {
             style.appendChild(doc.createTextNode(remove.join(', ') + '{display:none;}'));
           }
 
+          [].forEach.call(doc.getElementsByTagName('h2'), function(title) {
+            if (!title.parentNode) { return; }
+            var id = title.parentNode.getAttribute('id');
+            if (id && id.indexOf('item-') == 0) {
+              Zotero.ReportCustomizer.linkTo(title, Zotero.Items.get(parseInt(id.substring('item-'.length, id.length))));
+            }
+          });
+
           report = Zotero.ReportCustomizer.serializer.serializeToString(doc);
           console.log('scrub finished');
         } catch (err) {
@@ -164,7 +181,6 @@ Zotero.ReportCustomizer = {
       return function(root, arr) {
         if (Zotero.BetterBibTex) {
           var key = Zotero.ReportCustomizer.bibtexKeys[arr.itemID];
-          console.log('key = ' + key);
           if (key) {
             arr.bibtexKey = key.key + ' (' + (key.pinned ?  'pinned' : 'generated') + ')';
             if (key.duplicates) {
@@ -173,7 +189,6 @@ Zotero.ReportCustomizer = {
                 arr.bibtexKey += ' with ' + key.default;
               }
             }
-            console.log('key = ' + arr.bibtexKey);
           }
         }
 
@@ -207,16 +222,10 @@ Zotero.ReportCustomizer = {
               }
 
               var item = Zotero.Items.get(id);
-              var a = Zotero.Report.doc.createElement('a');
-              [].forEach.call(title.childNodes, function(child) {
-                a.appendChild(child);
-              });
-              a.setAttribute('href', 'zotero://select/items/' + (item.libraryID || 0) + '_' + item.key);
-              title.appendChild(a);
+
+              Zotero.ReportCustomizer.linkTo(title, Zotero.Items.get(id));
 
               title.appendChild(Zotero.Report.doc.createTextNode(', ' + Zotero.getString('fulltext.indexState.indexed').toLowerCase() + ': ' + Zotero.getString(status)));
-
-              console.log(title.innerHTML);
             }
           });
         });
