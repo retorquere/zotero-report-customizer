@@ -1,8 +1,8 @@
 # Zotero Report Customizer
 
 Install by downloading the [latest
-version](https://raw.github.com/friflaj/zotero-report-customizer/master/zotero-report-customizer-0.1.4.xpi) (**0.1.4**, released
-on 2014-03-02 15:38). If you are not prompted with a Firefox installation dialog then double-click the downloaded xpi;
+version](https://raw.github.com/ReichenHack/zotero-report-customizer/master/zotero-report-customizer-0.1.4.xpi) (**0.1.4**, released
+on 2014-04-05 23:45). If you are not prompted with a Firefox installation dialog then double-click the downloaded xpi;
 Firefox ought to start and present you with the installation dialog.
 
 For standalone Zotero, do the following:
