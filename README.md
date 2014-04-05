@@ -18,9 +18,9 @@ without the copy-paste-into-website bit. Configuration panel allows you to pick 
 from the report, and they will simple not show up. Settings are synced through Firefox Sync if you
 have set it up.
 
-## Integration with [Zotero: Better BibTeX](https://github.com/friflaj/zotero-better-bibtex)
+## Integration with [Zotero: Better BibTeX](https://github.com/ReichenHack/zotero-better-bibtex)
 
-This plugin now integrates with [Zotero: Better BibTeX](https://github.com/friflaj/zotero-better-bibtex), to display the
+This plugin now integrates with [Zotero: Better BibTeX](https://github.com/ReichenHack/zotero-better-bibtex), to display the
 bibtex key plus any conflicts between them.
 
 ## Customizing the fields to display
