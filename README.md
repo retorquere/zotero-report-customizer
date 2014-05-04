@@ -34,7 +34,11 @@ untick 'Title', it will untick them for *all* item types, as 'Title' is present 
 By default, Zotero orders reports for collections in whatever order they are sorted in your library, on title by default. The second tab of the
 Resport Customizer config screen allows you to override this order. You can click the fields in order to change their sorting behavior
 (ascending, descending, or not involved), and you can drag and drop the fields to change the grouping of the sort. If all fields are set to "not involved",
-the sort falls back to the Zotero-default behavior.
+the sort falls back to the Zotero-default behavior. **NOTICE**: the plugin now no longer forces Zotero to sort a chosen
+order by fiddling with the report URL parameters (sort=) but by re-sorting the report after it has been generated. This
+means the sort= parameter will be *ineffectual*; whatever you change it to, the plugin will re-sort according to the
+plugin config. Somewhere along the line, the way I patched the sorting got broken, and I can't figure out why. This
+works, and if you're using this plugin, you probably don't want to fiddle with the URL anyhow.
 
 ## Includes indexing status of attachments
 
