@@ -64,26 +64,18 @@ function initializePrefs() {
     // load stored order
     var order;
     try {
-      order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort'));
+      // parse and remove cruft
+      order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort').filter(function(field) { return (field.order && fields.indexOf(field.name) >= 0); });
     } catch (err) {
       order = [ ];
     }
 
-    // kick out non-existing fields and remove already-ordered fields from the "fields" array
-    for (field of order) {
-      var i = fields.indexOf(field.name);
-      if (i > -1) {
-        fields.splice(i, 1);
-      } else {
-        field.invalid = true;
-      }
-    }
-    order = order.filter(function(field) { return !field.invalid; });
-
-    // add the non-ordered fields
-    for (field of fields) {
-      order.push({name: field});
-    }
+    // add all of the fields that didn't have an explicit sort order set
+    order = order.concat(fields.filter(function(name) {
+      return (order.map(function(field) { return field.name; }).indexOf(name) < 0);
+    }).map(function(name) {
+      return {name: name};
+    }));
 
     var droppable = {
       droppable:    'true',
@@ -93,14 +85,13 @@ function initializePrefs() {
     }
     var sortOrder = document.getElementById('sortOrder');
     sortOrder.setAttribute('allowevents', 'true');
-    applyAttributes(droppable);
+    applyAttributes(sortOrder, droppable);
 
     sortOrder.addEventListener("click", function(event) {
       var target = event.target;
       while (target && target.localName != "listitem") { target = target.parentNode; }
       if (!target) { return; }
 
-      var order = null;
       switch (target.getAttribute('class')) {
         case 'report-sort-order-a':
           target.setAttribute('class', 'report-sort-order-d');
