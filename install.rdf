@@ -4,7 +4,7 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>report-customizer@iris-advies.com</em:id>
 		<em:name>Zotero Report Customizer</em:name>
-		<em:version>0.1.5</em:version>
+		<em:version>0.1.6</em:version>
 		<em:description>Customize Zotero reports by scrubbing fields</em:description>
 		<em:creator>Emiliano Heyns</em:creator>
 		<em:updateURL>https://raw.github.com/ReichenHack/zotero-report-customizer/master/update.rdf</em:updateURL>
