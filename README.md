@@ -1,7 +1,7 @@
 # Zotero Report Customizer
 
 Install by downloading the [latest
-version](https://raw.github.com/ReichenHack/zotero-report-customizer/master/zotero-report-customizer-0.1.6.xpi) (**0.1.6**, released
+version](https://raw.github.com/ReichenHack/zotero-report-customizer/master/zotero-report-customizer-0.2.0.xpi) (**0.2.0**, released
 on 2014-05-04 23:20). If you are not prompted with a Firefox installation dialog then double-click the downloaded xpi;
 Firefox ought to start and present you with the installation dialog.
 
@@ -44,7 +44,7 @@ Shows indexing status of attachments, plus links to select attachment
 
 My time is extremely limited for a number of very great reasons (you shall have to trust me on this). Because of this, I
 cannot accept bug reports
-or support requests on anything but the latest version, currently at **0.1.6**. If you submit an issue report,
+or support requests on anything but the latest version, currently at **0.2.0**. If you submit an issue report,
 please include the version that you are on. By the time I get to your issue, the latest version might have bumped up
 already, and you
 will have to upgrade (you might have auto-upgraded already however) and re-verify that your issue still exists.
