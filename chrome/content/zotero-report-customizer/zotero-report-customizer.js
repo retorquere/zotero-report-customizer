@@ -6,22 +6,16 @@ Zotero.ReportCustomizer = {
   serializer: Components.classes["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Components.interfaces.nsIDOMSerializer),
 
   show: function(key, visible) {
-    if (visible !== undefined) {
-      Zotero.ReportCustomizer.prefs.setBoolPref('show.' + key, visible);
+    if (typeof visible != 'undefined') {
+      Zotero.ReportCustomizer.prefs.setBoolPref('remove.' + key, !visible);
       return visible;
     }
 
     try {
-      return Zotero.ReportCustomizer.prefs.getBoolPref('show.' + key);
+      return !Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + key);
     } catch (err) { }
 
-    var visible = true;
-    try {
-      visible = !Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + key);
-    } catch (err) { }
-
-    Zotero.ReportCustomizer.prefs.setBoolPref('show.' + key, visible);
-    return visible;
+    return true;
   },
 
   openPreferenceWindow: function (paneID, action) {
@@ -95,13 +89,33 @@ Zotero.ReportCustomizer = {
     node.appendChild(a);
   },
 
+  log: function(msg, err) {
+    if (typeof msg != 'string') { msg = JSON.stringify(msg); }
+    msg = '[report customizer] ' + msg;
+    if (err) {
+      msg += "\n" + err + "\n" + err.stack;
+    }
+    Zotero.debug(msg);
+    console.log(msg);
+  },
+
   init: function () {
+    // migrate & clear legacy data
+    var show = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.zotero-report-customizer.show.");
+    show.getChildList('', {}).forEach(function(key) {
+      try {
+        Zotero.ReportCustomizer.prefs.getBoolPref('remove.' + key);
+      } catch (err) {
+        Zotero.ReportCustomizer.show(key, show.getBoolPref(key));
+      }
+      show.clearUserPref(key);
+    });
+
     // Load in the localization stringbundle for use by getString(name)
     var appLocale = Services.locale.getApplicationLocale();
     Zotero.ReportCustomizer.localizedStringBundle = Services.strings.createBundle("chrome://zotero-report-customizer/locale/zotero-report-customizer.properties", appLocale);
 
-    // monkey-patch Zotero.ItemFields.getLocalizedString to supply new translations
-    Zotero.ItemFields.getLocalizedString = (function (self, original) {
+    Zotero.ItemFields.getLocalizedString = (function (original) {
       return function(itemType, field) {
         try {
           if (field == 'bibtexKey') {
@@ -110,10 +124,10 @@ Zotero.ReportCustomizer = {
         } catch(err) {} // pass to original for consistent error messages
         return original.apply(this, arguments);
       }
-    })(this, Zotero.ItemFields.getLocalizedString);
+    })(Zotero.ItemFields.getLocalizedString);
 
     // monkey-patch Zotero.getString to supply new translations
-    Zotero.getString = (function (self, original) {
+    Zotero.getString = (function (original) {
       return function(name, params) {
         try {
           if (name == 'itemFields.bibtexKey') {
@@ -122,10 +136,10 @@ Zotero.ReportCustomizer = {
         } catch(err) {} // pass to original for consistent error messages
         return original.apply(this, arguments);
       }
-    })(this, Zotero.getString);
+    })(Zotero.getString);
 
     // monkey-patch Zotero.Report.generateHTMLDetails to modify the generated report
-    Zotero.Report.generateHTMLDetails = (function (self, original) {
+    Zotero.Report.generateHTMLDetails = (function (original) {
       return function (items, combineChildItems) {
         Zotero.ReportCustomizer.bibtexKeys = {};
         try {
@@ -133,14 +147,12 @@ Zotero.ReportCustomizer = {
             Zotero.ReportCustomizer.bibtexKeys = Zotero.BetterBibTex.getCiteKeys([Zotero.Items.get(item.itemID) for (item of items)]);
           }
         } catch (err)  {
-          console.log('Scrub failed: ' + err + "\n" + err.stack);
+          Zotero.ReportCustomizer.log('Scrub failed', err);
         }
 
         var report = original.apply(this, arguments);
 
         Zotero.ReportCustomizer.bibtexKeys = {};
-
-        console.log('Scrubbing report');
 
         try {
           var doc = Zotero.ReportCustomizer.parser.parseFromString(report, 'text/html');
@@ -151,7 +163,7 @@ Zotero.ReportCustomizer = {
               remove.push('.' + field);
             }
           }
-          console.log('remove: ' + remove);
+          Zotero.ReportCustomizer.log('remove: ' + remove);
           if (remove.length != 0) {
             var head = doc.getElementsByTagName('head')[0];
             var style = doc.createElement('style');
@@ -167,17 +179,73 @@ Zotero.ReportCustomizer = {
             }
           });
 
+          try {
+            var order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort')).filter(function(s) { return s.order; });
+
+            if (order.length > 0) {
+              function getField(obj, field) {
+                switch (field) {
+                  case 'itemType':
+                    return Zotero.ItemTypes.getName(obj.itemTypeID);
+
+                  case 'date':
+                    return obj.getField('date', true, true);
+
+                  default:
+                    return obj[field] || obj.getField(field);
+                }
+              }
+              function compare(a, b, field, order) {
+                var order = (order == 'd' ? 1 : -1);
+
+                a = getField(a, field);
+                b = getField(b, field);
+                Zotero.ReportCustomizer.log({name: field, typea: typeof a, typeb: typeof b});
+
+                if ((typeof a) != 'number' || (typeof b) != 'number') {
+                  a = '' + a;
+                  b = '' + b;
+                }
+                if (a == b) { return 0; }
+                if (a < b) { return -order; }
+                return order;
+              }
+              var items = [];
+              [].forEach.call(doc.getElementsByClassName('item'), function(item) { items.push(item); });
+
+              items.sort(function(a, b) {
+                a = Zotero.Items.get(parseInt(a.getAttribute('id').replace(/item-/, '')));
+                b = Zotero.Items.get(parseInt(b.getAttribute('id').replace(/item-/, '')));
+                return order.map(
+                  function(s) { return compare(a, b, s.name, s.order); }
+                ).filter(
+                  function(c) { return (c != 0); }
+                ).concat(
+                  [0]
+                )[0];
+              });
+
+              var itemList = doc.getElementsByClassName('report')[0];
+              items.reverse();
+              items.forEach(function(item) {
+                itemList.appendChild(item);
+              });
+            }
+          } catch (err) {
+            Zotero.ReportCustomizer.log('reorder failed', err);
+          }
+
+
           report = Zotero.ReportCustomizer.serializer.serializeToString(doc);
-          console.log('scrub finished');
         } catch (err) {
-          console.log('Scrub failed: ' + err + "\n" + err.stack);
+          Zotero.ReportCustomizer.log('Scrub failed', err);
         }
 
         return report;
       }
-    })(this, Zotero.Report.generateHTMLDetails);
+    })(Zotero.Report.generateHTMLDetails);
 
-    Zotero.Report._generateMetadataTable = (function (self, original) {
+    Zotero.Report._generateMetadataTable = (function (original) {
       return function(root, arr) {
         if (Zotero.BetterBibTex) {
           var key = Zotero.ReportCustomizer.bibtexKeys[arr.itemID];
@@ -194,9 +262,9 @@ Zotero.ReportCustomizer = {
 
         return original.apply(this, [root, arr]);
       }
-    })(this, Zotero.Report._generateMetadataTable);
+    })(Zotero.Report._generateMetadataTable);
 
-    Zotero.Report._generateAttachmentsList = (function (self, original) {
+    Zotero.Report._generateAttachmentsList = (function (original) {
       return function(root, arr) {
         original.apply(this, arguments);
 
@@ -230,55 +298,7 @@ Zotero.ReportCustomizer = {
           });
         });
       }
-    })(this, Zotero.Report._generateAttachmentsList);
-
-    // monkey-patch ZoteroPane.getSortField to alter sort order
-    ZoteroPane.getSortField = (function (self, original) {
-      return function getSortField() {
-        console.log('in getSortField');
-        var order;
-        try {
-          order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort'));
-        } catch (err) {
-          console.log('default order');
-          order = [ ];
-        }
-
-        var queryString = '';
-
-        for (var sort of order) {
-          if (sort.order) {
-            if (queryString != '') { queryString += ','; }
-            queryString += sort.name;
-            if (sort.order == 'd') { queryString += '/d'; }
-          }
-        }
-
-        if (queryString == '') { return original.apply(arguments); }
-        console.log('patched queryString=' + queryString);
-        return queryString;
-      }
-    })(this,  ZoteroPane.getSortField);
-
-    // monkey-patch ZoteroPane.getSortDirection to alter sort order
-    ZoteroPane.getSortDirection = (function (self, original) {
-      return function getSortDirection() {
-        var order;
-        try {
-          order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort'));
-        } catch (err) {
-          order = [ ];
-        }
-
-        for (var sort of order) {
-          if (sort.order) {
-            return 'ascending';
-          }
-        }
-
-        return original.apply(arguments);
-      }
-    })(this,  ZoteroPane.getSortDirection);
+    })(Zotero.Report._generateAttachmentsList);
   }
 };
 
