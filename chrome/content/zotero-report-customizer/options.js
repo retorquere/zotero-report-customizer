@@ -57,8 +57,11 @@ function initializePrefs() {
         var _field_cell = elt(_field_row, 'treecell', {editable: 'false', label: field.label});
       }
     }
-
-    var fields = [  'title', 'firstCreator', 'date', 'accessed', 'dateAdded', 'dateModified', 'publicationTitle', 'publisher',
+    // I added 'extra' to the sort menu
+    // I also had to manually update the key @Preferences Menu, Advanced, Miscellaneous, Open about:config
+    // Key to update: extensions.zotero-report-customizer.sort
+    // To the beginning of the key array, I added after the "[": {"name":"extra","order":"a"},
+    var fields = [  'extra', 'title', 'firstCreator', 'date', 'accessed', 'dateAdded', 'dateModified', 'publicationTitle', 'publisher',
                     'itemType', 'series', 'type', 'medium', 'callNumber', 'pages', 'archiveLocation', 'DOI', 'ISBN', 'ISSN',
                     'edition', 'url', 'rights' ];
     // load stored order
