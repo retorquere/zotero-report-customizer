@@ -57,21 +57,19 @@ function initializePrefs() {
         var _field_cell = elt(_field_row, 'treecell', {editable: 'false', label: field.label});
       }
     }
-    // I added 'extra' to the sort menu
-    // I also had to manually update the key @Preferences Menu, Advanced, Miscellaneous, Open about:config
-    // Key to update: extensions.zotero-report-customizer.sort
-    // To the beginning of the key array, I added after the "[": {"name":"extra","order":"a"},
-    var fields = [  'extra', 'title', 'firstCreator', 'date', 'accessed', 'dateAdded', 'dateModified', 'publicationTitle', 'publisher',
+    var fields = [  'title', 'firstCreator', 'date', 'accessed', 'dateAdded', 'dateModified', 'publicationTitle', 'publisher',
                     'itemType', 'series', 'type', 'medium', 'callNumber', 'pages', 'archiveLocation', 'DOI', 'ISBN', 'ISSN',
-                    'edition', 'url', 'rights' ];
+                    'edition', 'url', 'rights', 'extra' ];
     // load stored order
     var order;
     try {
       // parse and remove cruft
-      order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort').filter(function(field) { return (field.order && fields.indexOf(field.name) >= 0); });
+      order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort')).filter(function(field) { return (field.order && fields.indexOf(field.name) >= 0); });
     } catch (err) {
       order = [ ];
     }
+
+    Zotero.debug('report-customizer: order = ' + JSON.stringify(order) + ' out of ' + JSON.stringify(fields));
 
     // add all of the fields that didn't have an explicit sort order set
     order = order.concat(fields.filter(function(name) {
@@ -79,6 +77,7 @@ function initializePrefs() {
     }).map(function(name) {
       return {name: name};
     }));
+    Zotero.debug('report-customizer: full order = ' + JSON.stringify(order) + ' out of ' + JSON.stringify(fields));
 
     var droppable = {
       droppable:    'true',

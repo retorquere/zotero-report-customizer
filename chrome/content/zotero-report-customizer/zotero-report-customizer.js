@@ -69,6 +69,7 @@ Zotero.ReportCustomizer = {
         addField(type, label('dateAdded'));
         addField(type, label('dateModified'));
         addField(type, label('accessDate'));
+        addField(type, label('extra'));
       }
       _fields.fields = Object.keys(_fields.fields);
 
