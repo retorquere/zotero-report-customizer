@@ -252,11 +252,8 @@ Zotero.ReportCustomizer = {
           var key = Zotero.ReportCustomizer.bibtexKeys[arr.itemID];
           if (key) {
             arr.bibtexKey = key.key + ' (' + (key.pinned ?  'pinned' : 'generated') + ')';
-            if (key.duplicates) {
-              arr.bibtexKey += ', ' + (key.pinned ?  'hard' : 'soft') + ' conflict';
-              if (key.default && key.default != key.key) {
-                arr.bibtexKey += ' with ' + key.default;
-              }
+            if (key.conflict) {
+              arr.bibtexKey += ', ' + key.conflict + ' conflict';
             }
           }
         }
