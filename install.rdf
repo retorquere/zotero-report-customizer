@@ -4,10 +4,10 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>report-customizer@iris-advies.com</em:id>
 		<em:name>Zotero Report Customizer</em:name>
-		<em:version>0.2.2</em:version>
+		<em:version>0.2.3</em:version>
 		<em:description>Customize Zotero reports by scrubbing fields</em:description>
 		<em:creator>Emiliano Heyns</em:creator>
-		<em:updateURL>https://raw.github.com/ReichenHack/zotero-report-customizer/master/update.rdf</em:updateURL>
+		<em:updateURL>https://raw.github.com/ZotPlus/zotero-report-customizer/master/update.rdf</em:updateURL>
 		<em:type>2</em:type> <!-- type=extension -->
 		
 		<!-- Requires Zotero -->
