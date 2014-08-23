@@ -1,9 +1,8 @@
 # Zotero Report Customizer
 
-Install by downloading the [latest
-version](https://raw.github.com/ZotPlus/zotero-report-customizer/master/zotero-report-customizer-0.2.3.xpi) (**0.2.3**, released
-on 2014-06-03 14:11). If you are not prompted with a Firefox installation dialog then double-click the downloaded xpi;
-Firefox ought to start and present you with the installation dialog.
+Install by downloading the [latest version](https://zotplus.github.io/report-customizer/zotero-report-customizer-0.2.5.xpi)) (**0.2.5**). If you are not
+prompted with a Firefox installation dialog then double-click the downloaded xpi; Firefox ought to start and present you
+with the installation dialog.
 
 For standalone Zotero, do the following:
 
@@ -18,9 +17,9 @@ without the copy-paste-into-website bit. Configuration panel allows you to pick 
 from the report, and they will simple not show up. Settings are synced through Firefox Sync if you
 have set it up.
 
-## Integration with [Zotero: Better BibTeX](https://github.com/ZotPlus/zotero-better-bibtex)
+## Integration with [Zotero: Better BibTeX](https://zotplus.github.io/better-bibtex/)
 
-This plugin now integrates with [Zotero: Better BibTeX](https://github.com/ZotPlus/zotero-better-bibtex), to display the
+This plugin now integrates with [Zotero: Better BibTeX](https://zotplus.github.io/better-bibtex/), to display the
 bibtex key plus any conflicts between them.
 
 ## Customizing the fields to display
@@ -48,7 +47,7 @@ Shows indexing status of attachments, plus links to select attachment
 
 My time is extremely limited for a number of very great reasons (you shall have to trust me on this). Because of this, I
 cannot accept bug reports
-or support requests on anything but the latest version, currently at **0.2.3**. If you submit an issue report,
+or support requests on anything but the latest version, currently at **0.2.5**. If you submit an issue report,
 please include the version that you are on. By the time I get to your issue, the latest version might have bumped up
 already, and you
 will have to upgrade (you might have auto-upgraded already however) and re-verify that your issue still exists.
