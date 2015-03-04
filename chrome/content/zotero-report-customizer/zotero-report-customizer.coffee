@@ -122,43 +122,41 @@ class Zotero.ReportCustomizer.XmlNode
   set: (node, attrs...) ->
     for attr in attrs
       for own name, value of attr
-        if name == ''
-          if typeof value == 'function'
+        switch
+          when typeof value == 'function'
             value.call(new @Node(@namespace, node, @doc))
-          else node.appendChild(@doc.createTextNode('' + v))
-        else
-          node.setAttribute(name, '' + value)
+
+          when name == ''
+            node.appendChild(@doc.createTextNode('' + v))
+
+          else
+            node.setAttribute(name, '' + value)
     return
 
   add: (content...) ->
-    for what in content
-      switch
-        when typeof what == 'string'
-          @root.appendChild(@doc.createTextNode(what))
-          continue
-
-        when typeof what == 'function'
-          what.call(new @Node(@namespace, @root, @doc))
-          continue
-
-        when what.appendChild
-          @root.appendChild(what)
-          continue
-
-      for own name, value of what
+    if typeof content[0] == 'object'
+      for own name, attrs of content[0]
         Zotero.ReportCustomizer.log("creating node #{name}")
         node = @doc.createElementNS(@namespace, name)
         @root.appendChild(node)
+        content = [attrs].concat(content.slice(1))
+        break # there really should only be one pair here!
+    else
+      node = @root
 
-        switch typeof value
-          when 'function'
-            value.call(new @Node(@namespace, node, @doc))
+    for attrs in content
+      switch
+        when typeof attrs == 'string'
+          node.appendChild(@doc.createTextNode(attrs))
 
-          when 'string', 'number'
-            node.appendChild(@doc.createTextNode('' + value))
+        when typeof what == 'function'
+          attrs.call(new @Node(@namespace, node, @doc))
 
-          else # assume node with attributes
-            @set(node, value)
+        when attrs.appendChild
+          node.appendChild(attrs)
+
+        else
+          @set(node, attrs)
 
     return
 
