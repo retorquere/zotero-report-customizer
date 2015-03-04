@@ -113,40 +113,49 @@ class Zotero.ReportCustomizer.XmlNode
 
   alias: (names) ->
     for name in names.trim().split(/\s+/)
-      @[name] = (content) ->
+      @Node::[name] = (content) ->
         return @add({name: content})
     return
 
-  add: (what) ->
-    switch
-      when typeof what == 'string'
-        @root.appendChild(@doc.createTextNode(what))
-        return
+  set: (node, attrs...) ->
+    for attr in attrs
+      for own name, value of attr
+        if name == ''
+          if typeof value == 'function'
+            value.call(new @Node(@namespace, node, @doc))
+          else node.appendChild(@doc.createTextNode('' + v))
+        else
+          node.setAttribute(k, '' + v)
+    return
 
-      when what.appendChild
-        @root.appendChild(what)
-        return
+  add: (content...) ->
+    for what in content
+      switch
+        when typeof what == 'string'
+          @root.appendChild(@doc.createTextNode(what))
+          continue
 
-    for own name, content of what
-      node = @doc.createElementNS(@namespace, name)
-      @root.appendChild(node)
+        when typeof what == 'function'
+          what.call(new @Node(@namespace, @root, @doc))
+          continue
 
-      switch typeof content
-        when 'function'
-          content.call(new @Node(@namespace, node, @doc))
+        when what.appendChild
+          @root.appendChild(what)
+          continue
 
-        when 'string', 'number'
-          node.appendChild(@doc.createTextNode('' + content))
+      for own name, value of what
+        node = @doc.createElementNS(@namespace, name)
+        @root.appendChild(node)
 
-        else # assume node with attributes
-          for own k, v of content
-            if k == ''
-              if typeof v == 'function'
-                v.call(new @Node(@namespace, node, @doc))
-              else
-                node.appendChild(@doc.createTextNode('' + v))
-            else
-              node.setAttribute(k, '' + v)
+        switch typeof value
+          when 'function'
+            value.call(new @Node(@namespace, node, @doc))
+
+          when 'string', 'number'
+            node.appendChild(@doc.createTextNode('' + value))
+
+          else # assume node with attributes
+            @set(node, value)
 
     return
 

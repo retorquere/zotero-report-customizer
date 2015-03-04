@@ -34,7 +34,6 @@ Zotero.Report = {
 class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
   constructor: (@namespace, @root, @doc) ->
     super(@namespace, @root, @doc)
-    @alias('head meta title link body table tr th td a h2 h3 ul li p span')
 
   Node: ReportNode
 
@@ -186,6 +185,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
           @li({id: "related-#{related.getID()}", '': related.getDisplayTitle()}) for related in Zotero.Items.get(item.related)
         )
     })
+Zotero.ReportCustomizer.ReportNode::alias('head meta title link body table tr th td a h2 h3 ul li p span')
 
 class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.ReportNode
   constructor: (items, combineChildItems) ->

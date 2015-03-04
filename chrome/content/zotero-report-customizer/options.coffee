@@ -1,8 +1,5 @@
-applyAttributes = (node, attrs) ->
-  return unless attrs
-  for own key, value of attrs
-    node.setAttribute(key, value)
-  return
+# coffeelint: disable=no_implicit_braces
+# coffeelint: disable=no_implicit_returns
 
 saveSortOrder = ->
   sortOrder = document.getElementById('sortOrder')
@@ -19,28 +16,28 @@ saveSortOrder = ->
   Zotero.ReportCustomizer.prefs.setCharPref('sort', JSON.stringify(save))
   return
 
-initializePrefs = ->
-  XUL = 'http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul'
+setup = ->
   itemTypes = document.getElementById('itemTypes')
-  if itemTypes.childNodes.length is 0
-    elt = (host, name, attrs) ->
-      node = document.createElementNS(XUL, name)
-      applyAttributes(node, attrs)
-      host.appendChild(node)
-      return node
+  if itemTypes.childNodes.length == 0
+    pane = new Zotero.ReportCustomizer.OptionsPane('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', itemTypes, document)
 
-    for type in Zotero.ReportCustomizer.fields.tree
-      _type = elt(itemTypes, 'treeitem', {container: 'true'})
-      _type_row = elt(_type, 'treerow')
-      _type_cell = elt(_type_row, 'treecell', {properties: 'not-editable', editable: 'false'})
-      _type_cell = elt(_type_row, 'treecell', {editable: 'false', label: type.label})
-      _type_children = elt(_type, 'treechildren')
+    for type in Zotero.ReportCustomizer.tree
+      pane.treeitem({container: 'true', '': ->
+        @treerow(->
+          @treecell({properties: 'not-editable', editable: 'false'})
+          @treecell({editable: 'false', label: type.label})
+          @treechildren(->
+            for field in type.fields
+              @treeitem(->
+                @treerow(->
+                  @treecell({class: "#{field.name} checkbox"})
+                  @treecell({editable: 'false', label: field.label})
+                )
+              )
+          )
+        )
+      })
 
-      for field in type.fields
-        _field = elt(_type_children, 'treeitem')
-        _field_row = elt(_field, 'treerow')
-        _field_cell = elt(_field_row, 'treecell', {class: field.name + ' checkbox'})
-        _field_cell = elt(_field_row, 'treecell', {editable: 'false', label: field.label})
     fields = [
       'title'
       'firstCreator'
@@ -69,13 +66,13 @@ initializePrefs = ->
     # load stored order
     try
       # parse and remove cruft
-      order = (field for field in JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort')) when field.order && fields.indexOf(field.name) >= 0)
+      order = (field for field in JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort')) when field.order && field.name in fields)
     catch err
       order = []
     Zotero.debug("report-customizer: order = #{JSON.stringify(order)} out of #{JSON.stringify(fields)}")
 
     # add all of the fields that didn't have an explicit sort order set
-    order = order.concat(({name: field} for field in fields when (1 for sorted in order when sorted.name == field).size == 0))
+    order = order.concat(({name: field} for field in fields when not field in (sort.name for sort in order)))
 
     Zotero.debug("report-customizer: full order = #{JSON.stringify(order)} out of #{JSON.stringify(fields)}")
     droppable = {
@@ -87,11 +84,11 @@ initializePrefs = ->
 
     sortOrder = document.getElementById('sortOrder')
     sortOrder.setAttribute('allowevents', 'true')
-    applyAttributes(sortOrder, droppable)
+    Zotero.ReportCustomizer.OptionsPane::set(sortOrder, {allowevents: 'true'}, droppable)
 
     sortOrder.addEventListener('click', ((event) ->
       target = event.target
-      target = target.parentNode  while target and target.localName isnt 'listitem'
+      target = target.parentNode  while target and target.localName != 'listitem'
       return  unless target
 
       switch target.getAttribute('class')
@@ -105,32 +102,30 @@ initializePrefs = ->
       return
     ), false)
 
+    pane = new Zotero.ReportCustomizer.OptionsPane('http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul', sortOrder, document)
     for field in order
-      switch field.name
-        when 'firstCreator'
-          label = 'creatorTypes.author'
-        when 'accessed'
-          label = 'itemFields.accessDate'
-        when 'type'
-          label = 'itemFields.itemType'
-        else
-          label = 'itemFields.' + field.name
-      label = Zotero.getString(label)
+      label = Zotero.getString(switch field.name
+        when 'firstCreator' then 'creatorTypes.author'
+        when 'accessed'     then 'itemFields.accessDate'
+        when 'type'         then 'itemFields.itemType'
+        else                     "itemFields.#{field.name}"
+      )
 
       attrs = {
         id: field.name
         label: label
         draggable: 'true'
       }
+      attrs['class'] = "report-sort-order-#{field.order}" if field.order in ['a', 'd']
+      pane.listitem(attrs, droppable)
 
-      attrs['class'] = 'report-sort-order-' + field.order  if field.order is 'a' or field.order is 'd'
-      _field = elt(sortOrder, 'listitem', attrs)
-      applyAttributes(_field, droppable)
+initializePrefs = ->
+  setup()
 
-  for field in Zotero.ReportCustomizer.fields.fields
+  for field in Zotero.ReportCustomizer.fields
     show = Zotero.ReportCustomizer.show(field)
 
-    for cb in document.getElementsByClassName(field + ' checkbox')
+    for cb in document.getElementsByClassName("#{field} checkbox")
       cb.setAttribute('value', (if show then 'true' else ''))
   return
 
@@ -143,8 +138,8 @@ toggleShowField = (tree, event) ->
   item = tree.contentView.getItemAtIndex(row)
   chkbox = item.firstChild.firstChild
   cls = chkbox.getAttribute('class')
-  unless chkbox.getAttribute('editable') is 'false'
-    show = (chkbox.getAttribute('value') is 'true')
+  unless chkbox.getAttribute('editable') == 'false'
+    show = (chkbox.getAttribute('value') == 'true')
 
     for cb in document.getElementsByClassName(cls)
       cb.setAttribute('value', (if show then 'true' else ''))
@@ -155,7 +150,7 @@ toggleShowField = (tree, event) ->
 
 ReportSort_onDragStart = (event) ->
   target = event.target
-  target = target.parentNode  while target and target.localName isnt 'listitem'
+  target = target.parentNode  while target and target.localName != 'listitem'
   return  unless target
   event.dataTransfer.setData('text/plain', 'sortkey:' + target.getAttribute('id'))
   event.dataTransfer.effectAllowed = 'move'
@@ -164,19 +159,28 @@ ReportSort_onDragStart = (event) ->
 ReportSort_onDragOver = (event) ->
   event.preventDefault()
   moved = event.dataTransfer.mozGetDataAt('text/plain', 0)
-  return false if moved.indexOf('sortkey:') is 0
+  return false if moved.indexOf('sortkey:') == 0
   return
 
 ReportSort_onDrop = (event) ->
   moved = event.dataTransfer.mozGetDataAt('text/plain', 0)
-  return  unless moved.indexOf('sortkey:') is 0
+  return  unless moved.indexOf('sortkey:') == 0
   moved = moved.split(':')[1]
   moved = document.getElementById(moved)
   target = event.target
-  if target.nodeName.toLowerCase() is 'listbox'
+  if target.nodeName.toLowerCase() == 'listbox'
     target.appendChild(moved)
   else
     target.parentNode.insertBefore(moved, target.nextSibling)
   event.preventDefault()
   saveSortOrder()
   return
+
+
+class Zotero.ReportCustomizer.OptionsPane extends Zotero.ReportCustomizer.XmlNode
+  constructor: (@namespace, @root, @doc) ->
+    super(@namespace, @root, @doc)
+
+  Node: OptionsPane
+
+Zotero.ReportCustomizer.OptionsPane::alias('treerow treeitem treecell treechildren listitem')
