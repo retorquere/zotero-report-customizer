@@ -6,157 +6,144 @@ Zotero.ReportCustomizer =
   serializer: Components.classes["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Components.interfaces.nsIDOMSerializer)
 
   show: (key, visible) ->
-    unless typeof visible is "undefined"
-      Zotero.ReportCustomizer.prefs.setBoolPref "remove." + key, not visible
-      return visible
-    try
-      return not Zotero.ReportCustomizer.prefs.getBoolPref("remove." + key)
-    true
+    if typeof visible == 'undefined' # get state
+      try
+        return not Zotero.ReportCustomizer.prefs.getBoolPref("remove." + key)
+      return true
+
+    # set state
+    Zotero.ReportCustomizer.prefs.setBoolPref("remove.#{key}", not visible)
+    return visible
 
   openPreferenceWindow: (paneID, action) ->
-    io =
+    io = {
       pane: paneID
       action: action
-
-    window.openDialog "chrome://zotero-report-customizer/content/options.xul", "zotero-report-custimizer-options", (if "chrome,titlebar,toolbar,centerscreen" + Zotero.Prefs.get("browser.preferences.instantApply", true) then "dialog=no" else "modal"), io
+    }
+    window.openDialog(
+      "chrome://zotero-report-customizer/content/options.xul",
+      "zotero-report-customizer-options",
+      "chrome,titlebar,toolbar,centerscreen" + (if Zotero.Prefs.get("browser.preferences.instantApply", true) then "dialog=no" else "modal"),
+      io
+    )
     return
 
-  
-  # deferred because I get a 
-  #   * Error: [Exception... "Component returned failure code: 0x8052000e (NS_ERROR_FILE_IS_LOCKED) [mozIStorageStatement.executeStep]"  nsresult: "0x8052000e (NS_ERROR_FILE_IS_LOCKED)"  location: "JS frame :: chrome://zotero/content/xpcom/db.js :: Zotero.DBConnection.prototype.query :: line 140"  data: no] [QUERY: SELECT itemTypeID AS id, typeName AS name, custom FROM itemTypesCombined WHERE display IN (1,2)] [ERROR: database table is locked: itemTypesCombined]
-  #   * error
-  #   
-  _fields: null
-  fields: ->
-    unless Zotero.ReportCustomizer._fields
-      label = (name) ->
-        unless labels[name]
-          labels[name] =
-            name: name
-            label: Zotero.getString("itemFields." + name)
-        labels[name]
-      addField = (type, field) ->
-        type.fields.push field
-        _fields.fields[field.name] = true
-        return
-      _fields =
-        tree: []
-        fields: {}
+  label: (name) ->
+    @labels ?= Object.create(null)
+    @labels[name] ?= {
+      name: name
+      label: Zotero.getString("itemFields.#{name}")
+    }
+    return @labels[name]
 
-      labels = {}
-      collation = Zotero.getLocaleCollation()
-      t = Zotero.ItemTypes.getSecondaryTypes()
-      i = 0
+  addField: (type, field) ->
+    type.fields.push(field)
+    @fields.fields[field.name] = true
+    return
 
-      while i < t.length
-        _fields.tree.push
-          id: t[i].id
-          name: t[i].name
-          label: Zotero.ItemTypes.getLocalizedString(t[i].id)
+  initFields: ->
+    @fields = {
+      tree: []
+      fields: {}
+    }
+    collation = Zotero.getLocaleCollation()
 
-        i++
-      _fields.tree.sort (a, b) ->
-        collation.compareString 1, a.label, b.label
+    for type in Zotero.ItemTypes.getSecondaryTypes()
+      @fields.tree.push({
+        id: type.id
+        name: type.name
+        label: Zotero.ItemTypes.getLocalizedString(type.id)
+      })
+    @fields.tree.sort((a, b) -> collation.compareString(1, a.label, b.label))
 
-      
-      for type in _fields.tree
-        type.fields = []
-        addField type, label("itemType")
-        
-        # getItemTypeFields yields an iterator, not an arry, so we can't just add them
-        for field in Zotero.ItemFields.getItemTypeFields(type.id)
-          addField type, label(Zotero.ItemFields.getName(field))
-        addField type, label("bibtexKey")  if Zotero.BetterBibTex
-        addField type, label("tags")
-        addField type, label("attachments")
-        addField type, label("dateAdded")
-        addField type, label("dateModified")
-        addField type, label("accessDate")
-        addField type, label("extra")
-      _fields.fields = Object.keys(_fields.fields)
-      Zotero.ReportCustomizer._fields = _fields
-    Zotero.ReportCustomizer._fields
+    for type in @fields.tree
+      type.fields = []
+      @addField(type, @label("itemType"))
 
-  bibtexKeys: {}
+      # getItemTypeFields yields an iterator, not an arry, so we can't just add them
+      @addField(type, @label(Zotero.ItemFields.getName(field))) for field in Zotero.ItemFields.getItemTypeFields(type.id)
+      @addField(type, @label("bibtexKey")) if Zotero.BetterBibTex
+      @addField(type, @label("tags"))
+      @addField(type, @label("attachments"))
+      @addField(type, @label("dateAdded"))
+      @addField(type, @label("dateModified"))
+      @addField(type, @label("accessDate"))
+      @addField(type, @label("extra"))
+    @fields.fields = Object.keys(@fields.fields)
+    return
+
+  bibtexKeys: Object.create(null)
+
   linkTo: (node, item) ->
     a = Zotero.Report.doc.createElement("a")
-    [].forEach.call node.childNodes, (child) ->
-      a.appendChild child
-      return
-
-    a.setAttribute "href", "zotero://select/items/" + (item.libraryID or 0) + "_" + item.key
-    node.appendChild a
+    [].forEach.call(node.childNodes, (child) -> a.appendChild(child))
+    a.setAttribute("href", "zotero://select/items/#{item.libraryID || 0}_#{item.key}")
+    node.appendChild(a)
     return
 
-  log: (msg, err) ->
-    msg = JSON.stringify(msg)  unless typeof msg is "string"
-    msg = "[report customizer] " + msg
-    msg += "\n" + err + "\n" + err.stack  if err
-    Zotero.debug msg
-    console.log msg
+  log: (msg...) ->
+    msg = for m in msg
+      switch
+        when (typeof m) in ['string', 'number'] then '' + m
+        when Array.isArray(m) then JSON.stringify(m)
+        when m instanceof Error and m.name then "#{m.name}: #{m.message} \n(#{m.fileName}, #{m.lineNumber})\n#{m.stack}"
+        when m instanceof Error then "#{e}\n#{e.stack}"
+        when (typeof m) == 'object' then JSON.stringify(Zotero.BetterBibTeX.inspect(m)) # unpacks db query objects
+        else JSON.stringify(m)
+
+    Zotero.debug("[report-customizer] #{msg.join(' ')}")
     return
 
   init: ->
-    
-    # migrate & clear legacy data
-    show = Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.zotero-report-customizer.show.")
-    show.getChildList("", {}).forEach (key) ->
-      try
-        Zotero.ReportCustomizer.prefs.getBoolPref "remove." + key
-      catch err
-        Zotero.ReportCustomizer.show key, show.getBoolPref(key)
-      show.clearUserPref key
-      return
+    @initFields()
 
-    
     # Load in the localization stringbundle for use by getString(name)
-    appLocale = Services.locale.getApplicationLocale()
-    Zotero.ReportCustomizer.localizedStringBundle = Services.strings.createBundle("chrome://zotero-report-customizer/locale/zotero-report-customizer.properties", appLocale)
+    Zotero.ReportCustomizer.localizedStringBundle = Services.strings.createBundle("chrome://zotero-report-customizer/locale/zotero-report-customizer.properties", Services.locale.getApplicationLocale())
     Zotero.ItemFields.getLocalizedString = ((original) ->
       (itemType, field) ->
         try
-          return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName("itemFields.bibtexKey")  if field is "bibtexKey"
+          return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName("itemFields.bibtexKey") if field == 'bibtexKey'
         # pass to original for consistent error messages
-        original.apply this, arguments
+        return original.apply this, arguments
     )(Zotero.ItemFields.getLocalizedString)
-    
+
     # monkey-patch Zotero.getString to supply new translations
     Zotero.getString = ((original) ->
       (name, params) ->
         try
-          return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName(name)  if name is "itemFields.bibtexKey"
+          return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName(name)  if name == 'itemFields.bibtexKey'
         # pass to original for consistent error messages
-        original.apply this, arguments
+        original.apply(this, arguments)
     )(Zotero.getString)
-    
+
     # monkey-patch Zotero.Report.generateHTMLDetails to modify the generated report
     Zotero.Report.generateHTMLDetails = ((original) ->
       (items, combineChildItems) ->
         Zotero.ReportCustomizer.bibtexKeys = {}
         try
-          Zotero.ReportCustomizer.bibtexKeys = Zotero.BetterBibTex.getCiteKeys( Zotero.Items.get(item.itemID) for item in items )
+          Zotero.ReportCustomizer.bibtexKeys = Zotero.BetterBibTex.getCiteKeys((Zotero.Items.get(item.itemID) for item in items))
         catch err
-          Zotero.ReportCustomizer.log "Scrub failed", err
+          Zotero.ReportCustomizer.log("Scrub failed", err)
         report = original.apply(this, arguments)
         Zotero.ReportCustomizer.bibtexKeys = {}
         try
           doc = Zotero.ReportCustomizer.parser.parseFromString(report, "text/html")
           remove = []
-          
-          for field in Zotero.ReportCustomizer.fields().fields
-            remove.push "." + field  unless Zotero.ReportCustomizer.show(field)
-          Zotero.ReportCustomizer.log "remove: " + remove
+
+          for field in Zotero.ReportCustomizer.fields.fields
+            remove.push("." + field)  unless Zotero.ReportCustomizer.show(field)
+          Zotero.ReportCustomizer.log("remove: " + remove)
           unless remove.length is 0
             head = doc.getElementsByTagName("head")[0]
             style = doc.createElement("style")
-            head.appendChild style
-            style.appendChild doc.createTextNode(remove.join(", ") + "{display:none;}")
-          [].forEach.call doc.getElementsByTagName("h2"), (title) ->
+            head.appendChild(style)
+            style.appendChild(doc.createTextNode(remove.join(", ") + "{display:none;}"))
+          [].forEach.call(doc.getElementsByTagName("h2"), (title) ->
             return  unless title.parentNode
             id = title.parentNode.getAttribute("id")
             Zotero.ReportCustomizer.linkTo title, Zotero.Items.get(parseInt(id.substring("item-".length, id.length)))  if id and id.indexOf("item-") is 0
             return
-
+          )
           try
             order = JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref("sort")).filter((s) ->
               s.order
@@ -174,10 +161,11 @@ Zotero.ReportCustomizer =
                 order = ((if order is "d" then 1 else -1))
                 a = getField(a, field)
                 b = getField(b, field)
-                Zotero.ReportCustomizer.log
+                Zotero.ReportCustomizer.log({
                   name: field
                   typea: typeof a
                   typeb: typeof b
+                })
 
                 if (typeof a) isnt "number" or (typeof b) isnt "number"
                   a = "" + a
@@ -201,9 +189,8 @@ Zotero.ReportCustomizer =
 
               itemList = doc.getElementsByClassName("report")[0]
               items.reverse()
-              items.forEach (item) ->
-                itemList.appendChild item
-                return
+              for item in items
+                itemList.appendChild(item)
 
           catch err
             Zotero.ReportCustomizer.log "reorder failed", err
@@ -224,6 +211,7 @@ Zotero.ReportCustomizer =
           arr
         ]
     )(Zotero.Report._generateMetadataTable)
+
     Zotero.Report._generateAttachmentsList = ((original) ->
       (root, arr) ->
         original.apply this, arguments
@@ -244,7 +232,7 @@ Zotero.ReportCustomizer =
                   status = "general.yes"
               item = Zotero.Items.get(id)
               Zotero.ReportCustomizer.linkTo title, Zotero.Items.get(id)
-              title.appendChild Zotero.Report.doc.createTextNode(", " + Zotero.getString("fulltext.indexState.indexed").toLowerCase() + ": " + Zotero.getString(status))
+              title.appendChild(Zotero.Report.doc.createTextNode(", " + Zotero.getString("fulltext.indexState.indexed").toLowerCase() + ": " + Zotero.getString(status)))
             return
 
           return
@@ -255,7 +243,7 @@ Zotero.ReportCustomizer =
 
 
 # Initialize the utility
-window.addEventListener "load", ((e) ->
+window.addEventListener("load", ((e) ->
   Zotero.ReportCustomizer.init()
   return
-), false
+), false)

@@ -1,269 +1,241 @@
 #
 #    ***** BEGIN LICENSE BLOCK *****
-#    
+#
 #    Copyright © 2009 Center for History and New Media
 #                     George Mason University, Fairfax, Virginia, USA
 #                     http://zotero.org
-#    
+#
 #    This file is part of Zotero.
-#    
+#
 #    Zotero is free software: you can redistribute it and/or modify
 #    it under the terms of the GNU Affero General Public License as published by
 #    the Free Software Foundation, either version 3 of the License, or
 #    (at your option) any later version.
-#    
+#
 #    Zotero is distributed in the hope that it will be useful,
 #    but WITHOUT ANY WARRANTY; without even the implied warranty of
 #    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 #    GNU Affero General Public License for more details.
-#    
+#
 #    You should have received a copy of the GNU Affero General Public License
 #    along with Zotero.  If not, see <http://www.gnu.org/licenses/>.
-#    
+#
 #    ***** END LICENSE BLOCK *****
 #
-Zotero.Report = new ->
-  @fillElement = (elt, text) ->
-    elt.appendChild @doc.createTextNode(text)
+
+# coffeelint: disable=no_implicit_braces
+
+Zotero.Report = {
+  generateHTMLDetails: (items, combineChildItems) ->
+    return (new Zotero.ReportCustomizer.report(items, combineChildItems)).serialize()
+}
+
+class Zotero.ReportCustomizer.XmlNode
+  constructor: (@doc, @root) ->
+
+  namespace: 'http://www.w3.org/1999/xhtml'
+
+  add: (what) ->
+    switch
+      when typeof what == 'string'
+        @root.appendChild(@doc.createTextNode(what))
+        return
+
+      when what.appendChild
+        @root.appendChild(what)
+        return
+
+    for own name, content of what
+      node = @doc.createElementNS(@namespace, name)
+      @root.appendChild(node)
+
+      switch typeof content
+        when 'function'
+          content.call(new Zotero.ReportCustomizer.XmlNode(@doc, node))
+
+        when 'string', 'number'
+          node.appendChild(@doc.createTextNode('' + content))
+
+        else # assume node with attributes
+          for own k, v of content
+            if k == ''
+              if typeof v == 'function'
+                v.call(new Zotero.ReportCustomizer.XmlNode(@doc, node))
+              else
+                node.appendChild(@doc.createTextNode('' + v))
+            else
+              node.setAttribute(k, '' + v)
+
     return
 
-  @addElement = (parent, child) ->
-    child = @doc.createElement(child)  if typeof child is "string"
-    
-    # for no indentation, just do
-    # parent.appendChild(child);
-    # return child;
-    indent = ""
-    elem = parent
-    while elem.parentNode
-      indent += "  "
-      elem = elem.parentNode
-    if parent.hasChildNodes() # && parent.lastChild.nodeType === 3 && /^\s*[\r\n]\s*$/.test(parent.lastChild.textContent)) {
-      parent.insertBefore @doc.createTextNode("\n" + indent), parent.lastChild
-      parent.insertBefore child, parent.lastChild
-    else
-      parent.appendChild @doc.createTextNode("\n" + indent)
-      parent.appendChild child
-      parent.appendChild @doc.createTextNode("\n" + indent.slice(0, -2))
-    child
-
-  @addNote = (elt, note) ->
-    
-    # If not valid XML, display notes with entities encoded
-    
-    # &nbsp; isn't valid in HTML
-    
-    # Strip control characters (for notes that were
-    # added before item.setNote() started doing this)
-    note = "<div>" + note.replace(/&nbsp;/g, "&#160;").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "") + "</div>"
-    note = @parser.parseFromString(note, "text/html")
-    if note.documentElement.tagName is "parsererror"
-      Zotero.debug note.documentElement.textContent, 2
-      p = @addElement(elt, "p")
-      p.setAttribute "class", "plaintext"
-      @fillElement p, arr.note
-    else # Otherwise render markup normally
-      @addElement elt, note.documentElement
-    return
-
-  @generateHTMLDetails = (items, combineChildItems) ->
-    @parser = Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser)
-    @doc = @parser.parseFromString("<!DOCTYPE html><html><head></head><body></body></html>", "text/html")
-    @serializer = Components.classes["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Components.interfaces.nsIDOMSerializer)
-    head = @doc.getElementsByTagName("head")[0]
-    body = @doc.getElementsByTagName("body")[0]
-    meta = @addElement(head, "meta")
-    meta.setAttribute "http-equiv", "Content-Type"
-    meta.setAttribute "content", "text/html; charset=utf-8"
-    title = @addElement(head, "title")
-    @fillElement title, Zotero.getString("report.title.default")
-    
-    for props in [
-      { href: "zotero://report/detail.css" }
-      { href: "zotero://report/detail_screen.css", media: "screen,projection" }
-      { href: "zotero://report/detail_print.css", media: "print" }
-    ]
-      link = @addElement(head, "link")
-      link.setAttribute "rel", "stylesheet"
-      link.setAttribute "style", "text/css"
-      link.setAttribute "href", props.href
-      link.setAttribute "media", props.media  if props.media
-    reportUL = @addElement(body, "ul")
-    reportUL.setAttribute "class", "report" + ((if combineChildItems then " combineChildItems" else ""))
-    for arr of items
-      reportItem = @addElement(reportUL, "li")
-      reportItem.setAttribute "id", "item-" + arr.itemID
-      reportItem.setAttribute "class", "item " + arr.itemType
-      if arr.title
-        h2 = @addElement(reportItem, "h2")
-        if arr.reportSearchMatch # Top-level item matched search, so display title
-          @fillElement h2, arr.title
-        else # Non-matching parent, so display "Parent Item: [Title]"
-          h2.setAttribute "class", "parentItem"
-          @fillElement h2, Zotero.getString("report.parentItem")
-          span = @addElement(h2, "span")
-          span.setAttribute "class", "title"
-          @fillElement span, arr.title
-      
-      # If parent matches search, display parent item metadata table and tags
-      if arr.reportSearchMatch
-        @_generateMetadataTable reportItem, arr
-        @_generateTagsList reportItem, arr
-        
-        # Independent note
-        @addNote reportItem, arr.note  if arr["note"]
-      
-      # Children
-      if arr.reportChildren
-        
-        # Child notes
-        if arr.reportChildren.notes.length
-          
-          # Only display "Notes:" header if parent matches search
-          if arr.reportSearchMatch
-            h3 = @addElement(reportItem, "h3")
-            h3.setAttribute "class", "notes"
-            @fillElement h3, Zotero.getString("report.notes")
-          notesUL = @addElement(reportItem, "ul")
-          notesUL.setAttribute "class", "notes"
-          for note of arr.reportChildren.notes
-            notesLI = @addElement(notesUL, "li")
-            notesLI.setAttribute "id", "note-" + note.itemID
-            @addNote notesLI, note.note
-            
-            # Child note tags
-            @_generateTagsList notesLI, note
-        
-        # Chid attachments
-        @_generateAttachmentsList reportItem, arr.reportChildren
-      
-      # Related
-      if arr.reportSearchMatch and arr.related and arr.related.length
-        h3 = @addElement(reportItem, "h3")
-        h3.setAttribute "class", "related"
-        @fillElement h3, Zotero.getString("itemFields.related")
-        relatedUL = @addElement(reportItem, "ul")
-        relateds = Zotero.Items.get(arr.related)
-        for related of relateds
-          relatedLI = @addElement(relatedUL, "li")
-          relatedLI.setAttribute "id", "related-" + related.getID()
-          @fillElement relatedLI, related.getDisplayTitle()
-    @serializer.serializeToString @doc
-
-  @_generateMetadataTable = (root, arr) ->
-    table = @addElement(root, "table")
-    unlink = true
-    
-    # add and optionally unlink or the indentation is off
-    
-    # Item type
-    tr = @addElement(table, "tr")
-    tr.setAttribute "class", "itemType"
-    th = @addElement(tr, "th")
-    @fillElement th, Zotero.getString("itemFields.itemType")
-    td = @addElement(tr, "td")
-    @fillElement td, Zotero.ItemTypes.getLocalizedString(arr.itemType)
-    
-    # Creators
-    if arr["creators"]
-      unlink = false
-      displayText = undefined
-      for creator of arr["creators"]
-        # Two fields
-        switch creator["fieldMode"]
-          when 0 then displayText = creator["firstName"] + " " + creator["lastName"]
-          when 1 then displayText = creator["lastName"]
-          else Zotero.debug "TODO"
-
-        tr = @addElement(table, "tr")
-        tr.setAttribute "class", "creator " + creator.creatorType
-        th = @addElement(tr, "th")
-        th.setAttribute "class", creator.creatorType
-        @fillElement th, Zotero.getString("creatorTypes." + creator.creatorType)
-        td = @addElement(tr, "td")
-        @fillElement td, displayText
-    
+  metadata: (item) ->
     # Move dateAdded and dateModified to the end of the array
-    da = arr.dateAdded
-    dm = arr.dateModified
-    delete arr.dateAdded
-    delete arr.dateModified
+    da = item.dateAdded
+    dm = item.dateModified
+    delete item.dateAdded
+    delete item.dateModified
+    item.dateAdded = da
+    item.dateModified = dm
 
-    arr.dateAdded = da
-    arr.dateModified = dm
-
-    for i of arr
+    attributes = Object.create(null)
+    for k, v of arr
       # Skip certain fields
-      switch i
-        when "reportSearchMatch", "reportChildren", "libraryID", "key", "itemType", "itemID", "sourceItemID", "title", "firstCreator", "creators", "tags", "related", "notes", "note", "attachments"
+      switch k
+        when 'reportSearchMatch', 'reportChildren', 'libraryID', 'key', 'itemType', 'itemID', 'sourceItemID', 'title', 'firstCreator', 'creators', 'tags', 'related', 'notes', 'note', 'attachments'
           continue
       try
-        localizedFieldName = Zotero.ItemFields.getLocalizedString(arr.itemType, i)
+        localizedFieldName = Zotero.ItemFields.getLocalizedString(item.itemType, k)
       catch e # Skip fields we don't have a localized string for
-        Zotero.debug "Localized string not available for " + "itemFields." + i, 2
+        Zotero.debug("Localized string not available for itemFields.#{k}", 2)
         continue
 
-      arr[i] = Zotero.Utilities.trim(arr[i] + "")
-      
-      # Skip empty fields
-      continue  unless arr[i]
-      unlink = false
-      tr = @addElement(table, "tr")
-      tr.setAttribute "class", i
-      th = @addElement(tr, "th")
-      th.setAttribute "class", i
-      @fillElement th, localizedFieldName
-      td = @addElement(tr, "td")
+      v = Zotero.Utilities.trim(v + '')
+      continue unless v
+      attributes[k] = {label: localizedFieldName, value: v}
 
-      switch
-        when i is "url" and arr[i].match(/^https?:\/\//)
-          a = @addElement(td, "a")
-          a.setAttribute "href", arr[i]
-          @fillElement a, arr[i]
-      
-        # Remove SQL date from multipart dates
-        # (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
-        when i is "date"
-          @fillElement td, Zotero.Date.multipartToStr(arr[i])
-      
-        # Convert dates to local format
-        when i is "accessDate" or i is "dateAdded" or i is "dateModified"
-          date = Zotero.Date.sqlToDate(arr[i], true)
-          @fillElement td, date.toLocaleString()
+    return if !item.creators && Object.keys(attributes).length == 0
 
+    @add(table: ->
+      @add(tr: {'class': 'itemType', '': ->
+        @add(th: Zotero.getString('itemFields.itemType'))
+        @add(td: Zotero.ItemTypes.getLocalizedString(arr.itemType))
+        return
+      })
+      for creator in item.creators || []
+        displayText = switch creator.fieldMode
+          when 0 then "#{creator.firstName} #{creator.lastName}"
+          when 1 then creator.lastName
+          else ''
+        @add(tr: {'class': "creator #{creator.creatorType}", '': ->
+          @add(th: {'class': creator.creatorType, '': Zotero.getString("creatorTypes.#{creator.creatorType}")})
+          @add(td: displayText)
+          return
+        })
+
+      for k, v of attributes
+        @add(tr: {'class': k, '': ->
+          @add(th: {'class': k, '': v.label})
+          @add(td: ->
+            switch
+              when k == 'url' and v.value.match(/^https?:\/\//)
+                @add(a: {href: v, '': v})
+
+              # Remove SQL date from multipart dates
+              # (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
+              when k == 'date'
+                @add(Zotero.Date.multipartToStr(v.value))
+
+              # Convert dates to local format
+              when k == 'accessDate' or k == 'dateAdded' or k == 'dateModified'
+                date = Zotero.Date.sqlToDate(v.value, true)
+                @add(date.toLocaleString())
+
+              else
+                @add(v.value)
+          )
+          return
+        })
+
+      return
+    )
+    return
+
+  tags: (item) ->
+    return unless item.tags?.length
+
+    @add(h3: {'class': 'tags', '': Zotero.getString('report.tags')})
+    @add(ul: {'class', 'tags', '': ->
+      for tag of item.tags
+        @add(li: tag.fields.name)
+      return
+    })
+    return
+
+  note: (note) ->
+    return unless note
+    # If not valid XML, display notes with entities encoded
+    # &nbsp; isn't valid in HTML
+    # Strip control characters (for notes that were added before item.setNote() started doing this)
+    _note = '<div>' + note.replace(/&nbsp;/g, '&#160;').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '') + '</div>'
+    _note = Zotero.ReportCustomizer.parser.parseFromString(note, 'text/html')
+    if _note.documentElement.tagName == 'parsererror'
+      Zotero.debug(note.documentElement.textContent, 2)
+      @add('p', {'class': 'plaintext', '': note})
+    else # Otherwise render markup normally
+      @add(_note.documentElement)
+    return
+
+  attachments: (item) ->
+    return unless item.attachments?.length
+
+    @add(h3: {'class': 'attachments', '': Zotero.getString('itemFields.attachments')})
+    @add(ul: {'class': 'attachments', '': ->
+      for attachment of item.attachments
+        @add(li: ->
+          @add(attachment.title)
+          @tags(attachment)
+          @note(attachment.note)
+          return
+        )
+    })
+    return
+
+  item: (item) ->
+    @add(li: {id: "item-#{item.itemID}", 'class': "item #{item.itemType}", '': ->
+      if item.title
+        if item.reportSearchMatch # Top-level item matched search, so display title
+          @add(h2: item.title)
         else
-          @fillElement td, arr[i]
-    root.removeChild table  if unlink
+          @add(h2: {'class', 'parentItem', '': ->
+            @add(Zotero.getString('report.parentItem'))
+            @add(span: {'class': 'title', '': -> item.title })
+            return
+          })
+
+      if item.reportSearchMatch
+        @metadata(item)
+        @tags(item)
+        @note(item.note)
+        @attachments(item)
+
+      if item.reportChildren?.notes?.length
+        # Only display 'Notes:' header if parent matches search
+        @add(h3: {'class': 'notes', '': Zotero.getString('report.notes')}) if item.reportSearchMatch
+        @add(ul: {'class': 'notes', '': ->
+          @add(li: {id: "note-#{note.itemID}", '': -> @note(note.note) }) for note in item.reportChildren.notes
+          return
+        })
+
+      if item.reportSearchMatch and item.related?.length
+        @add(h3: {'class': 'related', '': Zotero.getString('itemFields.related')})
+        @add(ul: ->
+          @add(li: {id: "related-#{related.getID()}", '': related.getDisplayTitle()}) for related in Zotero.Items.get(item.related)
+          return
+        )
+      return
+    })
     return
 
-  @_generateTagsList = (root, arr) ->
-    if arr["tags"] and arr["tags"].length
-      h3 = @addElement(root, "h3")
-      h3.setAttribute "class", "tags"
-      @fillElement h3, Zotero.getString("report.tags")
-      ul = @addElement(root, "ul")
-      ul.setAttribute "class", "tags"
-      for tag of arr.tags
-        @fillElement @addElement(ul, "li"), tag.fields.name
-    return
+class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.XmlDocument
+  constructor: (items, combineChildItems) ->
+    @doc = Zotero.ReportCustomizer.document.implementation.createDocument(@namespace, 'html', null)
+    @root = @doc.documentElement
 
-  @_generateAttachmentsList = (root, arr) ->
-    if arr.attachments and arr.attachments.length
-      h3 = @addElement(root, "h3")
-      h3.setAttribute "class", "attachments"
-      @fillElement h3, Zotero.getString("itemFields.attachments")
-      ul = @addElement(root, "ul")
-      ul.setAttribute "class", "attachments"
-      for attachment of arr.attachments
-        li = @addElement(ul, "li")
-        li.setAttribute "id", "attachment-" + attachment.itemID
-        @fillElement li, attachment.title
-        
-        # Attachment tags
-        @_generateTagsList li, attachment
-        
-        # Attachment note
-        @addNote li, attachment.note  if attachment.note
-    return
+    @add(head: ->
+      @add(meta: {'http-equiv': 'Content-Type', content: 'text/html; charset=utf-8'})
+      @add(title: Zotero.getString('report.title.default'))
+      @add(link: {rel: 'stylesheet', type: 'text/css', href: 'zotero://report/detail.css'})
+      @add(link: {rel: 'stylesheet', type: 'text/css', media: 'screen,projection', href: 'zotero://report/detail_screen.css'})
+      @add(link: {rel: 'stylesheet', type: 'text/css', media: 'print', href: 'zotero://report/detail_print.css'})
+      return
+    )
+    @add(body: ->
+      @add(ul: {'class': "report#{if combineChildItems then ' combineChildItems' else ''}", '': ->
+        for item in items
+          @item(item)
+        return
+      })
+      return
+    )
 
-  return
+  serialize: -> Zotero.ReportCustomizer.serializer.serializeToString(@doc)
