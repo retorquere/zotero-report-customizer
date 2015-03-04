@@ -37,6 +37,9 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
 
   Node: ReportNode
 
+  for name in ['head', 'meta', 'title', 'link', 'body', 'table', 'tr', 'th', 'td', 'a', 'h2', 'h3', 'ul', 'li', 'p', 'span']
+    ReportNode::[name] = ReportNode::alias(name)
+
   show: Zotero.ReportCustomizer.show
 
   metadata: (item) ->
@@ -185,7 +188,6 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
           @li({id: "related-#{related.getID()}", '': related.getDisplayTitle()}) for related in Zotero.Items.get(item.related)
         )
     })
-Zotero.ReportCustomizer.ReportNode::alias('head meta title link body table tr th td a h2 h3 ul li p span')
 
 class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.ReportNode
   constructor: (items, combineChildItems) ->
@@ -194,7 +196,7 @@ class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.ReportNode
     @doc.metadata = {}
 
     try
-      order = (s for s in JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref("sort")) when s.order)
+      order = (s for s in JSON.parse(Zotero.ReportCustomizer.get('sort')) when s.order)
     catch
       order = []
 

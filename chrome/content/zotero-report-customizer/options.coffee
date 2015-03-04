@@ -13,7 +13,7 @@ saveSortOrder = ->
       when 'report-sort-order-d'
         rec.order = 'd'
     save.push(rec)
-  Zotero.ReportCustomizer.prefs.setCharPref('sort', JSON.stringify(save))
+  Zotero.ReportCustomizer.set('sort', JSON.stringify(save))
   return
 
 setup = ->
@@ -66,13 +66,17 @@ setup = ->
     # load stored order
     try
       # parse and remove cruft
-      order = (field for field in JSON.parse(Zotero.ReportCustomizer.prefs.getCharPref('sort')) when field.order && field.name in fields)
+      order = Zotero.ReportCustomizer.get('sort')
+      Zotero.ReportCustomizer.log('order:', order)
+      order = (field for field in JSON.parse(order) when field.order && field.name in fields)
     catch err
       order = []
-    Zotero.debug("report-customizer: order = #{JSON.stringify(order)} out of #{JSON.stringify(fields)}")
+      Zotero.ReportCustomizer.log('error fetching order', err)
+    Zotero.ReportCustomizer.log("order = #{JSON.stringify(order)} out of #{JSON.stringify(fields)}")
 
     # add all of the fields that didn't have an explicit sort order set
-    order = order.concat(({name: field} for field in fields when not field in (sort.name for sort in order)))
+    names = (sort.name for sort in order)
+    order = order.concat(({name: field} for field in fields when not(field in names)))
 
     Zotero.debug("report-customizer: full order = #{JSON.stringify(order)} out of #{JSON.stringify(fields)}")
     droppable = {
@@ -183,4 +187,5 @@ class Zotero.ReportCustomizer.OptionsPane extends Zotero.ReportCustomizer.XmlNod
 
   Node: OptionsPane
 
-Zotero.ReportCustomizer.OptionsPane::alias('treerow treeitem treecell treechildren listitem')
+  for name in ['treerow', 'treeitem', 'treecell', 'treechildren', 'listitem']
+    OptionsPane::[name] = OptionsPane::alias(name)

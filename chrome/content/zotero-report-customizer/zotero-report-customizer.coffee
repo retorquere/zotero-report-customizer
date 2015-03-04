@@ -1,18 +1,23 @@
-Components.utils.import("resource://gre/modules/Services.jsm")
+Components.utils.import('resource://gre/modules/Services.jsm')
 
 Zotero.ReportCustomizer =
-  prefs: Components.classes["@mozilla.org/preferences-service;1"].getService(Components.interfaces.nsIPrefService).getBranch("extensions.zotero-report-customizer.")
-  parser: Components.classes["@mozilla.org/xmlextras/domparser;1"].createInstance(Components.interfaces.nsIDOMParser)
-  serializer: Components.classes["@mozilla.org/xmlextras/xmlserializer;1"].createInstance(Components.interfaces.nsIDOMSerializer)
+  parser: Components.classes['@mozilla.org/xmlextras/domparser;1'].createInstance(Components.interfaces.nsIDOMParser)
+  serializer: Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer)
+
+  set: (key, value) ->
+    return Zotero.Prefs.set(".report-customizer.#{key}", value)
+
+  get: (key) ->
+    return Zotero.Prefs.get(".report-customizer.#{key}")
 
   show: (key, visible) ->
     if typeof visible == 'undefined' # get state
       try
-        return not Zotero.ReportCustomizer.prefs.getBoolPref("remove." + key)
+        return not @get("remove.#{key}")
       return true
 
     # set state
-    Zotero.ReportCustomizer.prefs.setBoolPref("remove.#{key}", not visible)
+    @set("remove.#{key}", not visible)
     return visible
 
   openPreferenceWindow: (paneID, action) ->
@@ -21,9 +26,9 @@ Zotero.ReportCustomizer =
       action: action
     }
     window.openDialog(
-      "chrome://zotero-report-customizer/content/options.xul",
-      "zotero-report-customizer-options",
-      "chrome,titlebar,toolbar,centerscreen" + (if Zotero.Prefs.get("browser.preferences.instantApply", true) then "dialog=no" else "modal"),
+      'chrome://zotero-report-customizer/content/options.xul',
+      'zotero-report-customizer-options',
+      'chrome,titlebar,toolbar,centerscreen' + (if Zotero.Prefs.get('browser.preferences.instantApply', true) then 'dialog=no' else 'modal'),
       io
     )
     return
@@ -48,7 +53,6 @@ Zotero.ReportCustomizer =
         when Array.isArray(m) then JSON.stringify(m)
         when m instanceof Error and m.name then "#{m.name}: #{m.message} \n(#{m.fileName}, #{m.lineNumber})\n#{m.stack}"
         when m instanceof Error then "#{e}\n#{e.stack}"
-        when (typeof m) == 'object' then JSON.stringify(Zotero.BetterBibTeX.inspect(m)) # unpacks db query objects
         else JSON.stringify(m)
 
     Zotero.debug("[report-customizer] #{msg.join(' ')}")
@@ -69,21 +73,23 @@ Zotero.ReportCustomizer =
 
     for type in @tree
       type.fields = []
-      @addField(type, @label("itemType"))
+      @addField(type, @label('itemType'))
 
       # getItemTypeFields yields an iterator, not an arry, so we can't just add them
       @addField(type, @label(Zotero.ItemFields.getName(field))) for field in Zotero.ItemFields.getItemTypeFields(type.id)
-      @addField(type, @label("bibtexKey")) if Zotero.BetterBibTex
-      @addField(type, @label("tags"))
-      @addField(type, @label("attachments"))
-      @addField(type, @label("dateAdded"))
-      @addField(type, @label("dateModified"))
-      @addField(type, @label("accessDate"))
-      @addField(type, @label("extra"))
+      @addField(type, @label('citekey')) if Zotero.BetterBibTex
+      @addField(type, @label('tags'))
+      @addField(type, @label('attachments'))
+      @addField(type, @label('related'))
+      @addField(type, @label('notes'))
+      @addField(type, @label('dateAdded'))
+      @addField(type, @label('dateModified'))
+      @addField(type, @label('accessDate'))
+      @addField(type, @label('extra'))
     @fields = Object.keys(@fields)
 
     # Load in the localization stringbundle for use by getString(name)
-    Zotero.ReportCustomizer.localizedStringBundle = Services.strings.createBundle("chrome://zotero-report-customizer/locale/zotero-report-customizer.properties", Services.locale.getApplicationLocale())
+    @localizedStringBundle = Services.strings.createBundle('chrome://zotero-report-customizer/locale/zotero-report-customizer.properties', Services.locale.getApplicationLocale())
     Zotero.ItemFields.getLocalizedString = ((original) ->
       return (itemType, field) ->
         try
@@ -111,11 +117,7 @@ class Zotero.ReportCustomizer.XmlNode
 
   serialize: -> Zotero.OPDS.serializer.serializeToString(@doc)
 
-  alias: (names) ->
-    for name in names.trim().split(/\s+/)
-      @Node::[name] = (content) ->
-        return @add({name: content})
-    return
+  alias: (name) -> (v...) -> Zotero.ReportCustomizer.XmlNode::add.apply(@, [{"#{name}": v[0]}].concat(v.slice(1)))
 
   set: (node, attrs...) ->
     for attr in attrs
@@ -125,7 +127,7 @@ class Zotero.ReportCustomizer.XmlNode
             value.call(new @Node(@namespace, node, @doc))
           else node.appendChild(@doc.createTextNode('' + v))
         else
-          node.setAttribute(k, '' + v)
+          node.setAttribute(name, '' + value)
     return
 
   add: (content...) ->
@@ -144,6 +146,7 @@ class Zotero.ReportCustomizer.XmlNode
           continue
 
       for own name, value of what
+        Zotero.ReportCustomizer.log("creating node #{name}")
         node = @doc.createElementNS(@namespace, name)
         @root.appendChild(node)
 
@@ -160,7 +163,7 @@ class Zotero.ReportCustomizer.XmlNode
     return
 
 # Initialize the utility
-window.addEventListener("load", ((e) ->
+window.addEventListener('load', ((e) ->
   Zotero.ReportCustomizer.init()
   return
 ), false)
