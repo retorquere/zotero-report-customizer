@@ -118,7 +118,11 @@ class Zotero.ReportCustomizer.XmlNode
 
   serialize: -> Zotero.ReportCustomizer.serializer.serializeToString(@doc)
 
-  alias: (name) -> (v...) -> Zotero.ReportCustomizer.XmlNode::add.apply(@, [{"#{name}": v[0]}].concat(v.slice(1)))
+  #alias: (name) -> (v...) -> Zotero.ReportCustomizer.XmlNode::add.apply(@, [{"#{name}": v[0]}].concat(v.slice(1)))
+  alias: (names) ->
+    for name in names
+      @Node::[name] = do (name) -> (v...) -> XmlNode::add.apply(@, [{"#{name}": v[0]}].concat(v.slice(1)))
+    return
 
   set: (node, attrs...) ->
     for attr in attrs

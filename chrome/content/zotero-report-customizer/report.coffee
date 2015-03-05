@@ -37,8 +37,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
 
   Node: ReportNode
 
-  for name in ['head', 'meta', 'title', 'link', 'body', 'table', 'tr', 'th', 'td', 'a', 'h2', 'h3', 'ul', 'li', 'p', 'span']
-    ReportNode::[name] = ReportNode::alias(name)
+  ReportNode::alias(['head', 'meta', 'title', 'link', 'body', 'table', 'tr', 'th', 'td', 'a', 'h2', 'h3', 'ul', 'li', 'p', 'span'])
 
   show: (field) -> Zotero.ReportCustomizer.show(field)
 
@@ -80,13 +79,9 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
 
       if @show('creator')
         for creator in item.creators || []
-          displayText = switch creator.fieldMode
-            when 0 then "#{creator.firstName} #{creator.lastName}"
-            when 1 then creator.lastName
-            else ''
           @tr({'class': "creator #{creator.creatorType}", '': ->
             @th({'class': creator.creatorType, '': Zotero.getString("creatorTypes.#{creator.creatorType}")})
-            @td(displayText)
+            @td(if creator.fieldMode == 1 then creator.lastName else (name for name in [creator.firstName, creator.lastName] when name).join(' '))
           })
 
       for k, v of attributes

@@ -185,5 +185,4 @@ class Zotero.ReportCustomizer.OptionsPane extends Zotero.ReportCustomizer.XmlNod
 
   Node: OptionsPane
 
-  for name in ['treerow', 'treeitem', 'treecell', 'treechildren', 'listitem']
-    OptionsPane::[name] = OptionsPane::alias(name)
+  OptionsPane::alias(['treerow', 'treeitem', 'treecell', 'treechildren', 'listitem'])
