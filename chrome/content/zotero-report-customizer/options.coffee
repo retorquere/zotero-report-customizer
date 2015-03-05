@@ -26,15 +26,15 @@ setup = ->
         @treerow(->
           @treecell({properties: 'not-editable', editable: 'false'})
           @treecell({editable: 'false', label: type.label})
-          @treechildren(->
-            for field in type.fields
-              @treeitem(->
-                @treerow(->
-                  @treecell({class: "#{field.name} checkbox"})
-                  @treecell({editable: 'false', label: field.label})
-                )
+        )
+        @treechildren(->
+          for field in type.fields
+            @treeitem(->
+              @treerow(->
+                @treecell({class: "#{field.name} checkbox"})
+                @treecell({editable: 'false', label: field.label})
               )
-          )
+            )
         )
       })
 
@@ -67,12 +67,10 @@ setup = ->
     try
       # parse and remove cruft
       order = Zotero.ReportCustomizer.get('sort')
-      Zotero.ReportCustomizer.log('order:', order)
       order = (field for field in JSON.parse(order) when field.order && field.name in fields)
     catch err
       order = []
       Zotero.ReportCustomizer.log('error fetching order', err)
-    Zotero.ReportCustomizer.log("order = #{JSON.stringify(order)} out of #{JSON.stringify(fields)}")
 
     # add all of the fields that didn't have an explicit sort order set
     names = (sort.name for sort in order)

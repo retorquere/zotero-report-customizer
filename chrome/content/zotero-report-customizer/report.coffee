@@ -40,7 +40,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
   for name in ['head', 'meta', 'title', 'link', 'body', 'table', 'tr', 'th', 'td', 'a', 'h2', 'h3', 'ul', 'li', 'p', 'span']
     ReportNode::[name] = ReportNode::alias(name)
 
-  show: Zotero.ReportCustomizer.show
+  show: (field) -> Zotero.ReportCustomizer.show(field)
 
   metadata: (item) ->
     # Move dateAdded and dateModified to the end of the array
@@ -51,11 +51,11 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
     item.dateAdded = da
     item.dateModified = dm
 
-    key = @doc.metadata.citekeys[item.itemID]
-    item.citekey = "#{key.citekey} (#{if key.citeKeyFormat then 'generated' else 'pinned'})" if key # ", " + key.conflict + " conflict"  if key.conflict
+    citekey = Zotero.BetterBibTeX?.keymanager.get(item)
+    item.citekey = "#{citekey.citekey} #{if citekey.citeKeyFormat then 'generated' else 'pinned'}" if citekey
 
     attributes = Object.create(null)
-    for k, v of arr
+    for k, v of item
       # Skip certain fields
       switch k
         when 'reportSearchMatch', 'reportChildren', 'libraryID', 'key', 'itemType', 'itemID', 'sourceItemID', 'title', 'firstCreator', 'creators', 'tags', 'related', 'notes', 'note', 'attachments'
@@ -75,7 +75,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
     @table(->
       @tr({'class': 'itemType', '': ->
         @th(Zotero.getString('itemFields.itemType'))
-        @td(Zotero.ItemTypes.getLocalizedString(arr.itemType))
+        @td(Zotero.ItemTypes.getLocalizedString(item.itemType))
       }) if @show('itemType')
 
       if @show('creator')
@@ -95,12 +95,17 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
           @td(->
             switch
               when k == 'url' and v.value.match(/^https?:\/\//)
-                @a({href: v, '': v})
+                @a({href: v.value, '': v.value})
 
               # Remove SQL date from multipart dates
               # (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
               when k == 'date'
                 @add(Zotero.Date.multipartToStr(v.value))
+
+              when k == 'DOI'
+                url = v.value
+                url = 'http://doi.org/' + url unless url.match(/^https?:\/\//)
+                @a({href: url, '': v.value})
 
               # Convert dates to local format
               when k == 'accessDate' or k == 'dateAdded' or k == 'dateModified'
@@ -122,7 +127,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
     })
 
   note: (note) ->
-    return unless note && @show('note')
+    return unless note && @show('notes')
 
     # &nbsp; isn't valid in HTML
     # Strip control characters (for notes that were added before item.setNote() started doing this)
@@ -175,7 +180,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
         @note(item.note)
         @attachments(item)
 
-      if item.reportChildren?.notes?.length && @show('note')
+      if item.reportChildren?.notes?.length && @show('notes')
         # Only display 'Notes:' header if parent matches search
         @h3({'class': 'notes', '': Zotero.getString('report.notes')}) if item.reportSearchMatch
         @ul({'class': 'notes', '': ->
@@ -193,19 +198,12 @@ class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.ReportNode
   constructor: (items, combineChildItems) ->
     super('http://www.w3.org/1999/xhtml', 'html')
 
-    @doc.metadata = {}
-
     try
       order = (s for s in JSON.parse(Zotero.ReportCustomizer.get('sort')) when s.order)
     catch
       order = []
 
     items.sort((a, b) => return (rank for rank in (@compare(a, b, s) for s in order) when rank != 0)[0] || 0) if order.length > 0
-
-    try
-      @doc.metadata.citekeys = Zotero.BetterBibTex.getCiteKeys((Zotero.Items.get(item.itemID) for item in items)) if Zotero.BetterBibTex
-    catch err
-      Zotero.ReportCustomizer.log('could not load bibtex citation keys:', err)
 
     @head(->
       @meta({'http-equiv': 'Content-Type', content: 'text/html; charset=utf-8'})
@@ -220,24 +218,19 @@ class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.ReportNode
       })
     )
 
-    field: (item, field) ->
-      return switch field
-        when 'itemType'
-          Zotero.ItemTypes.getName(item.itemTypeID)
-        when 'date'
-          item.getField('date', true, true)
-        else
-          item[field] || item.getField(field)
+  field: (item, field) ->
+    return Zotero.ItemTypes.getName(item.itemTypeID) if field == 'itemType'
+    return item[field]
 
-    compare: (a, b, sort) ->
-      order = (if sort.order == 'd' then 1 else -1)
-      a = @field(a, sort.name)
-      b = @field(b, sort.name)
+  compare: (a, b, sort) ->
+    order = (if sort.order == 'd' then 1 else -1)
+    a = @field(a, sort.name)
+    b = @field(b, sort.name)
 
-      if typeof a != number || typeof b != 'number'
-        a = '' + a
-        b = '' + b
+    if typeof a != 'number' || typeof b != 'number'
+      a = '' + a
+      b = '' + b
 
-        return 0 if a == b
-        return -order if a < b
-        return order
+      return 0 if a == b
+      return -order if a < b
+      return order

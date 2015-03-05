@@ -3,6 +3,7 @@ Components.utils.import('resource://gre/modules/Services.jsm')
 Zotero.ReportCustomizer =
   parser: Components.classes['@mozilla.org/xmlextras/domparser;1'].createInstance(Components.interfaces.nsIDOMParser)
   serializer: Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer)
+  document: Components.classes["@mozilla.org/xul/xul-document;1"].getService(Components.interfaces.nsIDOMDocument)
 
   set: (key, value) ->
     return Zotero.Prefs.set(".report-customizer.#{key}", value)
@@ -112,10 +113,10 @@ Zotero.ReportCustomizer =
 class Zotero.ReportCustomizer.XmlNode
   constructor: (@namespace, @root, @doc) ->
     if !@doc
-      @doc = Zotero.OPDS.document.implementation.createDocument(@namespace, @root, null)
+      @doc = Zotero.ReportCustomizer.document.implementation.createDocument(@namespace, @root, null)
       @root = @doc.documentElement
 
-  serialize: -> Zotero.OPDS.serializer.serializeToString(@doc)
+  serialize: -> Zotero.ReportCustomizer.serializer.serializeToString(@doc)
 
   alias: (name) -> (v...) -> Zotero.ReportCustomizer.XmlNode::add.apply(@, [{"#{name}": v[0]}].concat(v.slice(1)))
 
@@ -127,7 +128,7 @@ class Zotero.ReportCustomizer.XmlNode
             value.call(new @Node(@namespace, node, @doc))
 
           when name == ''
-            node.appendChild(@doc.createTextNode('' + v))
+            node.appendChild(@doc.createTextNode('' + value))
 
           else
             node.setAttribute(name, '' + value)
@@ -136,20 +137,21 @@ class Zotero.ReportCustomizer.XmlNode
   add: (content...) ->
     if typeof content[0] == 'object'
       for own name, attrs of content[0]
-        Zotero.ReportCustomizer.log("creating node #{name}")
+        continue if name == ''
         node = @doc.createElementNS(@namespace, name)
         @root.appendChild(node)
         content = [attrs].concat(content.slice(1))
         break # there really should only be one pair here!
-    else
-      node = @root
+    node ?= @root
+
+    content = (c for c in content when typeof c == 'number' || c)
 
     for attrs in content
       switch
         when typeof attrs == 'string'
           node.appendChild(@doc.createTextNode(attrs))
 
-        when typeof what == 'function'
+        when typeof attrs == 'function'
           attrs.call(new @Node(@namespace, node, @doc))
 
         when attrs.appendChild
