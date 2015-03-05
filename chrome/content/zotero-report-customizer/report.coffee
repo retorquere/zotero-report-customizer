@@ -223,7 +223,9 @@ class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.ReportNode
     return item[field]
 
   compare: (a, b, sort) ->
-    order = (if sort.order == 'd' then 1 else -1)
+    order = {d: 1, a: -1}[sort.order]
+    return 0 unless order
+
     a = @field(a, sort.name)
     b = @field(b, sort.name)
 
