@@ -6,10 +6,10 @@ Zotero.ReportCustomizer =
   document: Components.classes["@mozilla.org/xul/xul-document;1"].getService(Components.interfaces.nsIDOMDocument)
 
   set: (key, value) ->
-    return Zotero.Prefs.set(".report-customizer.#{key}", value)
+    return Zotero.Prefs.set("report-customizer.#{key}", value)
 
   get: (key) ->
-    return Zotero.Prefs.get(".report-customizer.#{key}")
+    return Zotero.Prefs.get("report-customizer.#{key}")
 
   show: (key, visible) ->
     if typeof visible == 'undefined' # get state
