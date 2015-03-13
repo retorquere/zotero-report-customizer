@@ -28,7 +28,11 @@
 
 Zotero.Report = {
   generateHTMLDetails: (items, combineChildItems) ->
-    return (new Zotero.ReportCustomizer.Report(items, combineChildItems)).serialize()
+    try
+      return (new Zotero.ReportCustomizer.Report(items, combineChildItems)).serialize()
+    catch e
+      return '' + e
+    return
 }
 
 class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
@@ -62,7 +66,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
       try
         localizedFieldName = Zotero.ItemFields.getLocalizedString(item.itemType, k)
       catch e # Skip fields we don't have a localized string for
-        Zotero.debug("Localized string not available for itemFields.#{k}", 2)
+        Zotero.ReportCustomizer.log("Localized string not available for itemFields.#{k}")
         continue
 
       v = Zotero.Utilities.trim(v + '')
@@ -118,7 +122,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
 
     @h3({'class': 'tags', '': Zotero.getString('report.tags')})
     @ul({'class', 'tags', '': ->
-      @li(tag.fields.name) for tag of item.tags
+      @li(tag.fields.name) for tag in item.tags
     })
 
   note: (note) ->
@@ -140,11 +144,11 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
 
     @h3({'class': 'attachments', '': Zotero.getString('itemFields.attachments')})
     @ul({'class': 'attachments', '': ->
-      for attachment of item.attachments
+      for attachment in item.attachments
         @li(->
-          @a({href: "zotero://select/items/#{item.libraryID || 0}_#{item.key}", '': item.title})
-          @add(Zotero.getString("fulltext.indexState.indexed").toLowerCase() + ': ' + Zotero.getString(
-            switch Zotero.Fulltext.getIndexedState(item.itemID)
+          @a({href: "zotero://select/items/#{item.libraryID || 0}_#{item.key}", '': attachment.title})
+          @add(', ' + Zotero.getString("fulltext.indexState.indexed").toLowerCase() + ': ' + Zotero.getString(
+            switch Zotero.Fulltext.getIndexedState(attachment.itemID)
               when Zotero.Fulltext.INDEX_STATE_UNAVAILABLE  then 'fulltext.indexState.unavailable'
               when Zotero.Fulltext.INDEX_STATE_UNINDEXED    then 'general.no'
               when Zotero.Fulltext.INDEX_STATE_PARTIAL      then 'fulltext.indexState.partial'

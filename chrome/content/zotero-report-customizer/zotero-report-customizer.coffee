@@ -60,6 +60,25 @@ Zotero.ReportCustomizer =
     return
 
   init: ->
+    # Load in the localization stringbundle for use by getString(name)
+    @localizedStringBundle = Services.strings.createBundle('chrome://zotero-report-customizer/locale/zotero-report-customizer.properties', Services.locale.getApplicationLocale())
+    Zotero.ItemFields.getLocalizedString = ((original) ->
+      return (itemType, field) ->
+        try
+          return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName('itemFields.citekey') if field == 'citekey'
+        # pass to original for consistent error messages
+        return original.apply(this, arguments)
+    )(Zotero.ItemFields.getLocalizedString)
+
+    # monkey-patch Zotero.getString to supply new translations
+    Zotero.getString = ((original) ->
+      return (name, params) ->
+        try
+          return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName(name)  if name == 'itemFields.citekey'
+        # pass to original for consistent error messages
+        return original.apply(this, arguments)
+    )(Zotero.getString)
+
     @tree = []
     @fields = {}
     collation = Zotero.getLocaleCollation()
@@ -89,24 +108,6 @@ Zotero.ReportCustomizer =
       @addField(type, @label('extra'))
     @fields = Object.keys(@fields)
 
-    # Load in the localization stringbundle for use by getString(name)
-    @localizedStringBundle = Services.strings.createBundle('chrome://zotero-report-customizer/locale/zotero-report-customizer.properties', Services.locale.getApplicationLocale())
-    Zotero.ItemFields.getLocalizedString = ((original) ->
-      return (itemType, field) ->
-        try
-          return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName('itemFields.citekey') if field == 'citekey'
-        # pass to original for consistent error messages
-        return original.apply(this, arguments)
-    )(Zotero.ItemFields.getLocalizedString)
-
-    # monkey-patch Zotero.getString to supply new translations
-    Zotero.getString = ((original) ->
-      return (name, params) ->
-        try
-          return Zotero.ReportCustomizer.localizedStringBundle.GetStringFromName(name)  if name == 'itemFields.citekey'
-        # pass to original for consistent error messages
-        return original.apply(this, arguments)
-    )(Zotero.getString)
 
     return
 
