@@ -146,7 +146,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
     @ul({'class': 'attachments', '': ->
       for attachment in item.attachments
         @li(->
-          @a({href: "zotero://select/items/#{item.libraryID || 0}_#{item.key}", '': attachment.title})
+          @a({href: "zotero://select/items/#{attachment.libraryID || 0}_#{attachment.key}", '': attachment.title})
           @add(', ' + Zotero.getString("fulltext.indexState.indexed").toLowerCase() + ': ' + Zotero.getString(
             switch Zotero.Fulltext.getIndexedState(attachment.itemID)
               when Zotero.Fulltext.INDEX_STATE_UNAVAILABLE  then 'fulltext.indexState.unavailable'
