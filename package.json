@@ -18,7 +18,6 @@
   },
   "dependencies": {
     "coffee-script": "^1.8.0",
-    "coffeelint": "^1.6.1",
-    "coffeelint-no-implicit-returns": "0.0.4"
+    "coffeelint": "^1.6.1"
   }
 }

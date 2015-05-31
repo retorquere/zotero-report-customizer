@@ -5,7 +5,7 @@
 Gemfile.lock
 .bundle
 *.js
-.depends.mf
+.depend.mf
 resource/translators/latex_unicode_mapping.coffee
 resource/translators/mathchar.pegcoffee
 tmp

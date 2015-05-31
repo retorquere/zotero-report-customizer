@@ -15,6 +15,7 @@ require 'zlib'
 require 'open3'
 require 'yaml'
 require 'rake/loaders/makefile'
+require 'rake/clean'
 
 NODEBIN="node_modules/.bin"
 
@@ -64,24 +65,6 @@ ZIPFILES = [
   'install.rdf'
 ] + Dir['chrome/skin/**/*.*']
 
-SOURCES = [
-  'chrome/content/zotero-report-customizer/include.coffee',
-  'chrome/content/zotero-report-customizer/options.coffee',
-  'chrome/content/zotero-report-customizer/overlay.xul',
-  'chrome/content/zotero-report-customizer/options.xul',
-  'chrome/content/zotero-report-customizer/report.coffee',
-  'chrome/content/zotero-report-customizer/zotero-report-customizer.coffee',
-  'chrome/locale/en-US/zotero-report-customizer/zotero-report-customizer.dtd',
-  'chrome/locale/en-US/zotero-report-customizer/zotero-report-customizer.properties',
-  'chrome.manifest',
-  'defaults/preferences/defaults.coffee',
-  'install.rdf',
-  "#{NODEBIN}/coffee",
-  "#{NODEBIN}/coffeelint",
-  'Rakefile',
-  'update.rdf',
-] + Dir['chrome/skin/**/*.*']
-
 FileUtils.mkdir_p 'tmp'
 
 class String
@@ -116,45 +99,16 @@ rule '.js' => '.coffee' do |t|
   }
 end
 
-task :clean do
-  clean = Dir['**/*.js'].select{|f| f=~ /^(defaults|chrome|resource)\//} + Dir['tmp/*'].select{|f| File.file?(f) }
-  clean.each{|f|
-    File.unlink(f)
-  }
-end
+Dir['**/*.js'].reject{|f| f =~ /^(node_modules|www)\//}.each{|f| CLEAN.include(f)}
+CLEAN.include('tmp/**/*')
+CLEAN.include('.depend.mf')
+CLEAN.include('*.xpi')
+CLEAN.include('*.log')
+CLEAN.include('*.cache')
+CLEAN.include('*.debug')
 
 task :dropbox => XPI do
   dropbox = File.expand_path('~/Dropbox')
   Dir["#{dropbox}/*.xpi"].each{|xpi| File.unlink(xpi)}
   FileUtils.cp(XPI, File.join(dropbox, XPI))
 end
-
-file '.depends.mf' => SOURCES do |t|
-  open(t.name, 'w'){|dmf|
-    dependencies = {}
-
-    t.prerequisites.each{|src|
-      next unless File.extname(src) == '.coffee' || File.extname(src) == '.pegcoffee'
-      js = File.join(File.dirname(src), File.basename(src, File.extname(src)) + '.js')
-
-      dependencies[src] ||= []
-      dependencies[src] << js
-
-      yml = File.join(File.dirname(src), File.basename(src, File.extname(src)) + '.yml')
-      if File.file?(yml)
-        dependencies[yml] ||= []
-        dependencies[yml] << js
-      end
-
-      expand(open(src), collect: true)[1].each{|dep|
-        dependencies[dep] ||= []
-        dependencies[dep] << js
-      }
-    }
-
-    dependencies.each_pair{|dependency, dependants|
-      dmf.write("#{dependants.uniq.sort.collect{|d| d.shellescape }.join(' ')} : #{dependency.shellescape}\n")
-    }
-  }
-end
-import '.depends.mf'
