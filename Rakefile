@@ -17,8 +17,6 @@ require 'yaml'
 require 'rake/loaders/makefile'
 require 'rake/clean'
 
-NODEBIN="node_modules/.bin"
-
 LINTED=[]
 def expand(file, options={})
   dependencies = []

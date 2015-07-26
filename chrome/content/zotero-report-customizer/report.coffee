@@ -55,7 +55,10 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
     item.dateModified = dm
 
     citekey = Zotero.BetterBibTeX?.keymanager.get(item)
-    item.citekey = "#{citekey.citekey} #{if citekey.citeKeyFormat then 'generated' else 'pinned'}" if citekey
+    if citekey
+      properties = [if citekey.citeKeyformat then 'generated' else 'pinned']
+      properties.push('duplicate') if @doc.citekeys?[citekey.citekey] > 1
+      item.citekey = "#{citekey.citekey} (#{properties.join(', ')})"
 
     attributes = Object.create(null)
     for k, v of item
@@ -203,6 +206,13 @@ class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.ReportNode
       order = []
 
     items.sort((a, b) => return (rank for rank in (@compare(a, b, s) for s in order) when rank != 0)[0] || 0) if order.length > 0
+
+    @doc.citekeys = {}
+    if Zotero.BetterBibTeX
+      for item in items
+        citekey = Zotero.BetterBibTeX.keymanager.get(item).citekey
+        @doc.citekeys[citekey] ||= 0
+        @doc.citekeys[citekey] += 1
 
     @head(->
       @meta({'http-equiv': 'Content-Type', content: 'text/html; charset=utf-8'})
