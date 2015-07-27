@@ -210,9 +210,10 @@ class Zotero.ReportCustomizer.Report extends Zotero.ReportCustomizer.ReportNode
     @doc.citekeys = {}
     if Zotero.BetterBibTeX
       for item in items
-        citekey = Zotero.BetterBibTeX.keymanager.get(item).citekey
-        @doc.citekeys[citekey] ||= 0
-        @doc.citekeys[citekey] += 1
+        citekey = Zotero.BetterBibTeX.keymanager.get(item)
+        continue unless citekey
+        @doc.citekeys[citekey.citekey] ||= 0
+        @doc.citekeys[citekey.citekey] += 1
 
     @head(->
       @meta({'http-equiv': 'Content-Type', content: 'text/html; charset=utf-8'})

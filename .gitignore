@@ -5,6 +5,7 @@
 Gemfile.lock
 .bundle
 *.js
+*.js.map
 .depend.mf
 tmp
 features/import/*.out.json

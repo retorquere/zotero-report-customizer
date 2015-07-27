@@ -16,6 +16,7 @@ require 'open3'
 require 'yaml'
 require 'rake/loaders/makefile'
 require 'rake/clean'
+require 'net/http/post/multipart'
 
 LINTED=[]
 def expand(file, options={})
@@ -105,8 +106,17 @@ CLEAN.include('*.log')
 CLEAN.include('*.cache')
 CLEAN.include('*.debug')
 
-task :dropbox => XPI do
-  dropbox = File.expand_path('~/Dropbox')
-  Dir["#{dropbox}/*.xpi"].each{|xpi| File.unlink(xpi)}
-  FileUtils.cp(XPI, File.join(dropbox, XPI))
+task :share => XPI do
+  xpi = Dir['*.xpi'][0]
+  url = URI.parse('http://tempsend.com/send')
+  File.open(xpi) do |data|
+    req = Net::HTTP::Post::Multipart.new(url.path,
+      'file' => UploadIO.new(data, 'application/x-xpinstall', File.basename(xpi)),
+      'expire' => '604800'
+    )
+    res = Net::HTTP.start(url.host, url.port) do |http|
+      http.request(req)
+    end
+    puts "http://tempsend.com#{res['location']}"
+  end
 end
