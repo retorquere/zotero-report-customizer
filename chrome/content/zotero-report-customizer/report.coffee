@@ -56,7 +56,7 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
 
     citekey = Zotero.BetterBibTeX?.keymanager.get(item)
     if citekey
-      properties = [if citekey.citeKeyformat then 'generated' else 'pinned']
+      properties = [if citekey.citekeyFormat then 'generated' else 'pinned']
       properties.push('duplicate') if @doc.citekeys?[citekey.citekey] > 1
       item.citekey = "#{citekey.citekey} (#{properties.join(', ')})"
 
