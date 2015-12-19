@@ -1,6 +1,6 @@
 # Zotero Report Customizer
 
-Install by downloading the [latest version](https://zotplus.github.io/report-customizer/zotero-report-customizer-0.2.18.xpi) (**0.2.18**). If you are not
+Install by downloading the [latest version](https://zotplus.github.io/report-customizer/zotero-report-customizer-0.2.19.xpi) (**0.2.19**). If you are not
 prompted with a Firefox installation dialog then double-click the downloaded xpi; Firefox ought to start and present you
 with the installation dialog.
 
