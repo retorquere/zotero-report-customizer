@@ -4,30 +4,19 @@
 	<Description about="urn:mozilla:install-manifest">
 		<em:id>report-customizer@iris-advies.com</em:id>
 		<em:name>Zotero Report Customizer</em:name>
-		<em:version>0.2.17</em:version>
+		<em:version>0.2.18</em:version>
 		<em:description>Customize Zotero reports by scrubbing fields</em:description>
 		<em:creator>Emiliano Heyns</em:creator>
 		<em:updateURL>https://zotplus.github.io/report-customizer/update.rdf</em:updateURL>
     <em:iconURL>chrome://zotero-report-customizer/skin/report-customizer.svg</em:iconURL>
 		<em:type>2</em:type> <!-- type=extension -->
 		
-		<!-- Requires Zotero -->
-		<em:requires>
-			<Description>
-				<em:id>zotero@chnm.gmu.edu</em:id>
-				<em:name>Zotero</em:name>
-				<em:homepageURL>http://www.zotero.org</em:homepageURL>
-				<em:minVersion>3.0</em:minVersion>
-				<em:maxVersion>4.0.*</em:maxVersion>
-			</Description>
-		</em:requires>
-    
 		<!-- Requires Firefox or Zotero Standalone -->
 		<em:targetApplication>
 			<Description>
 				<em:id>{ec8030f7-c20a-464f-9b0e-13a3a9e97384}</em:id>
-				<em:minVersion>17.0</em:minVersion>
-				<em:maxVersion>23.*</em:maxVersion>
+				<em:minVersion>31.0</em:minVersion>
+				<em:maxVersion>44.*</em:maxVersion>
 			</Description>
 		</em:targetApplication>
 		<em:targetApplication>
