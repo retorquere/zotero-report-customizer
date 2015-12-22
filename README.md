@@ -2,7 +2,7 @@
 
 To use Zotero Report Customizer, simply select the "Report Customizer…" option from the Zotero Actions Menu (the small gear icon: ![Zotero Actions Menu](https://www.zotero.org/support/_media/gear.png?w=16).)
 
-Install by downloading the [latest version](https://zotplus.github.io/report-customizer/index.html)). If you are not
+Install by downloading the [latest version](https://zotplus.github.io/report-customizer/index.html). If you are not
 prompted with a Firefox installation dialog then double-click the downloaded xpi; Firefox ought to start and present you
 with the installation dialog.
 
