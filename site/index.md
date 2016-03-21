@@ -1,5 +1,6 @@
-# Report Customizer [![Build Status](https://travis-ci.org/ZotPlus/zotero-report-customizer.svg?branch=master)](https://travis-ci.org/ZotPlus/zotero-report-customizer)
-
+---
+title: Report Customizer
+---
 # Zotero Report Customizer
 
 Install by downloading the [latest version](https://zotplus.github.io/report-customizer/zotero-report-customizer-{% include report-customizer-version.html %}.xpi) (**{% include report-customizer-version.html %}**). If you are not
@@ -19,9 +20,9 @@ without the copy-paste-into-website bit. Configuration panel allows you to pick 
 from the report, and they will simple not show up. Settings are synced through Firefox Sync if you
 have set it up.
 
-## Integration with [Zotero: Better BibTeX](https://zotplus.github.io/zotero-report-customizer/better-bibtex/)
+## Integration with [Zotero: Better BibTeX](/better-bibtex/)
 
-This plugin now integrates with [Zotero: Better BibTeX](https://zotplus.github.io/zotero-report-customizer/better-bibtex/), to display the
+This plugin now integrates with [Zotero: Better BibTeX](/better-bibtex/), to display the
 bibtex key plus any conflicts between them.
 
 ## Customizing the fields to display
@@ -45,4 +46,4 @@ works, and if you're using this plugin, you probably don't want to fiddle with t
 
 Shows indexing status of attachments, plus links to select attachment
 
-If you experience any problems, or are unclear on how to use it, I'll be glad to [help](https://zotplus.github.io/zotero-report-customizer/support.html).
+If you experience any problems, or are unclear on how to use it, I'll be glad to [help](/support.html).

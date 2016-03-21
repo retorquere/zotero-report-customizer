@@ -9,7 +9,10 @@ Zotero.ReportCustomizer =
     return Zotero.Prefs.set("report-customizer.#{key}", value)
 
   get: (key) ->
-    return Zotero.Prefs.get("report-customizer.#{key}")
+    try
+      return Zotero.Prefs.get("report-customizer.#{key}")
+    catch
+      return null
 
   show: (key, visible) ->
     if typeof visible == 'undefined' # get state
@@ -135,6 +138,8 @@ class Zotero.ReportCustomizer.XmlNode
             node.appendChild(@doc.createTextNode('' + value))
 
           else
+            if Zotero.ReportCustomizer.get('debugging')
+              Zotero.debug("Adding attribute: #{JSON.stringify(name)}")
             node.setAttribute(name, '' + value)
     return
 
