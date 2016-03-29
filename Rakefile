@@ -17,8 +17,8 @@ require 'yaml'
 require 'rake/loaders/makefile'
 require 'rake/clean'
 require 'net/http/post/multipart'
-require_relative 'lib/rake/xpi'
-require_relative 'lib/rake/xpi/github'
+require 'rake/xpi'
+require 'rake/xpi/github'
 
 
 task :gather do
