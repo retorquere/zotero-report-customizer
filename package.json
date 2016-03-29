@@ -9,12 +9,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/ZotPlus/zotero-report-customizer.git"
+    "url": "https://github.com/retorquere/zotero-report-customizer.git"
   },
   "author": "",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/ZotPlus/zotero-report-customizer/issues"
+    "url": "https://github.com/retorquere/zotero-report-customizer/issues"
   },
   "dependencies": {
     "coffee-script": "^1.10.0",

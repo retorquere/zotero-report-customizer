@@ -1,6 +1,6 @@
 # Zotero Report Customizer
 
-Install by downloading the [latest version](https://github.com/ZotPlus/zotero-report-customizer/releases). If you are not
+Install by downloading the [latest version](https://github.com/retorquere/zotero-report-customizer/releases). If you are not
 prompted with a Firefox installation dialog then double-click the downloaded xpi; Firefox ought to start and present you
 with the installation dialog.
 
@@ -17,9 +17,9 @@ without the copy-paste-into-website bit. Configuration panel allows you to pick 
 from the report, and they will simple not show up. Settings are synced through Firefox Sync if you
 have set it up.
 
-## Integration with [Zotero: Better BibTeX](https://zotplus.github.io/zotero-report-customizer/better-bibtex/)
+## Integration with [Zotero: Better BibTeX](https://retorquere.github.io/zotero-report-customizer/better-bibtex/)
 
-This plugin now integrates with [Zotero: Better BibTeX](https://zotplus.github.io/zotero-report-customizer/better-bibtex/), to display the
+This plugin now integrates with [Zotero: Better BibTeX](https://retorquere.github.io/zotero-report-customizer/better-bibtex/), to display the
 bibtex key plus any conflicts between them.
 
 ## Customizing the fields to display
@@ -43,4 +43,4 @@ works, and if you're using this plugin, you probably don't want to fiddle with t
 
 Shows indexing status of attachments, plus links to select attachment
 
-If you experience any problems, or are unclear on how to use it, I'll be glad to [help](https://zotplus.github.io/zotero-report-customizer/support.html).
+If you experience any problems, or are unclear on how to use it, I'll be glad to [help](https://retorquere.github.io/zotero-report-customizer/support.html).

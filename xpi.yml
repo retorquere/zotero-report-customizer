@@ -1,13 +1,13 @@
 ---
 github:
-  user: Zotplus
+  user: retorquere
   token: GITHUB_TOKEN
   repo: zotero-report-customizer
 amo:
   issuer: MOZJWTissuer
   secret: MOZJWTsecret
 xpi: zotero-report-customizer.xpi
-changelog: https://zotplus.github.io/zotero-report-customizer/CHANGELOG.html
+changelog: https://retorquere.github.io/zotero-report-customizer/CHANGELOG.html
 files:
 - chrome.manifest
 - chrome/content/zotero-report-customizer/include.js
