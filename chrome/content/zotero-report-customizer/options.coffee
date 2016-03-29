@@ -146,7 +146,7 @@ toggleShowField = (tree, event) ->
     for cb in document.getElementsByClassName(cls)
       cb.setAttribute('value', (if show then 'true' else ''))
 
-    # item.setAttribute('class', show ? '' : 'hidden');
+    # item.setAttribute('class', show ? '' : 'hidden')
     Zotero.ReportCustomizer.show(cls.replace(/(?:^|\s)checkbox(?!\S)/g, ''), show)
   return
 

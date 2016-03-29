@@ -10,9 +10,6 @@ rvm:
 script:
 - true
 after_success:
-- bundle exec ./.travis.sh
+- bundle exec rake clean && bundle exec rake publish
 before_install:
 - npm update
-branches:
-  except:
-    - /^[0-9]+\.[0-9]+\.[0-9]+$/

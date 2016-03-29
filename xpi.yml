@@ -1,0 +1,29 @@
+---
+github:
+  user: Zotplus
+  token: GITHUB_TOKEN
+  repo: zotero-report-customizer
+amo:
+  issuer: MOZJWTissuer
+  secret: MOZJWTsecret
+xpi: zotero-report-customizer.xpi
+changelog: https://zotplus.github.io/zotero-report-customizer/CHANGELOG.html
+files:
+- chrome.manifest
+- chrome/content/zotero-report-customizer/include.js
+- chrome/content/zotero-report-customizer/options.js
+- chrome/content/zotero-report-customizer/options.xul
+- chrome/content/zotero-report-customizer/overlay.xul
+- chrome/content/zotero-report-customizer/report.js
+- chrome/content/zotero-report-customizer/zotero-report-customizer.js
+- chrome/locale/en-US/zotero-report-customizer/zotero-report-customizer.dtd
+- chrome/locale/en-US/zotero-report-customizer/zotero-report-customizer.properties
+- chrome/skin/default/zotero-report-customizer/arrow-down.png
+- chrome/skin/default/zotero-report-customizer/arrow-up.png
+- chrome/skin/default/zotero-report-customizer/checkbox_no.png
+- chrome/skin/default/zotero-report-customizer/checkbox_yes.png
+- chrome/skin/default/zotero-report-customizer/options.css
+- chrome/skin/default/zotero-report-customizer/overlay.css
+- chrome/skin/default/zotero-report-customizer/report-customizer.svg
+- defaults/preferences/defaults.js
+- install.rdf
