@@ -150,6 +150,7 @@ module Rake
           STDERR.puts "#{self.release}"
           STDERR.puts "  committed = #{commitmsg}"
           STDERR.puts "  release   = #{releasemsg}"
+          STDERR.puts "  branch    = #{branch.inspect}"
 
           @release_build = (commitmsg == releasemsg && branch == 'master')
         end
@@ -363,7 +364,7 @@ end
 
 task :publish => XPI.xpi do
   if !XPI.pull_request
-    STDERR.puts "Publishing #{XPI.versioned_xpi}"
+    STDERR.puts "Publishing #{XPI.release_build? ? 'release' : 'debug'} build #{XPI.versioned_xpi}"
     STDERR.puts "Published to " + XPI.publish
   end
 end
