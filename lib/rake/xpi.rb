@@ -50,8 +50,7 @@ module Rake
       end
       def release=(rel)
         doc = Nokogiri::XML(File.open('install.rdf'))
-        puts doc.to_xml
-        doc.at('//em:version').inner_text = rel
+        doc.at('//em:version').content = rel
         open('install.rdf', 'w'){|f| f.write(doc.to_xml)}
       end
 
