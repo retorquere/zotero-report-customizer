@@ -86,7 +86,7 @@ Zotero.ReportCustomizer =
     @fields = {}
     collation = Zotero.getLocaleCollation()
 
-    for type in Zotero.ItemTypes.getprimaryTypes().concat(Zotero.ItemTypes.getSecondaryTypes())
+    for type in Zotero.ItemTypes.getPrimaryTypes().concat(Zotero.ItemTypes.getSecondaryTypes(), Zotero.ItemTypes.getHiddenTypes())
       @tree.push({
         id: type.id
         name: type.name
