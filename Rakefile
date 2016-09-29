@@ -18,7 +18,7 @@ require 'rake/loaders/makefile'
 require 'rake/clean'
 require 'net/http/post/multipart'
 require 'rake/xpi'
-require 'rake/xpi/github'
+require 'rake/xpi/publish/github'
 
 
 task :gather do

@@ -85,10 +85,17 @@ class Zotero.ReportCustomizer.ReportNode extends Zotero.ReportCustomizer.XmlNode
       }) if @show('itemType')
 
       if @show('creator')
+        order = []
+        creators = {}
         for creator in item.creators || []
-          @tr({'class': "creator #{creator.creatorType}", '': ->
-            @th({'class': creator.creatorType, '': Zotero.getString("creatorTypes.#{creator.creatorType}")})
-            @td(if creator.fieldMode == 1 then creator.lastName else (name for name in [creator.firstName, creator.lastName] when name).join(' '))
+          if !creators[creator.creatorType]
+            order.push(creator.creatorType)
+            creators[creator.creatorType] = []
+          creators[creator.creatorType].push(creator)
+        for creatorType in order
+          @tr({'class': "creator #{creatorType}", '': ->
+            @th({'class': creatorType, '': Zotero.getString("creatorTypes.#{creatorType}")})
+            @td((if creator.fieldMode == 1 then (creator.name || creator.lastName) else (name for name in [creator.firstName, creator.lastName] when name).join(' ') for creator in creators[creatorType]).join(', '))
           })
 
       for k, v of attributes
