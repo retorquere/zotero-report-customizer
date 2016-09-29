@@ -1,0 +1,16 @@
+---
+machine:
+  ruby:
+    version: '2.2'
+test:
+  override:
+    - bundle exec rake
+general:
+  branches:
+    ignore:
+      - gh-pages
+deployment:
+  all:
+    branch: "/.*/"
+    commands:
+    - bundle exec rake publish
