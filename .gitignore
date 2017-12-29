@@ -14,3 +14,4 @@ update.rdf
 *.xpi
 *.log
 node_modules
+build
