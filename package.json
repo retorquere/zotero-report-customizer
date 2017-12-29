@@ -19,6 +19,7 @@
   "dependencies": {
     "coffee-script": "^1.10.0",
     "coffeelint": "^1.15.0",
-    "pegjs": "^0.8.0"
+    "pegjs": "^0.8.0",
+    "zotero-plugin": "0.0.13"
   }
 }
