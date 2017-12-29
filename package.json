@@ -5,13 +5,25 @@
   "description": "Report Customizer for Zotero",
   "preferglobal": true,
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "cucumber --fail-fast --no-color | tee cucumber.log",
+    "ae": "HEADLESS=false KILL=false cucumber --fail-fast --tags @ae",
+    "lint": "tsc --lib es6 webpack/tslint/noModuleExportsRule.ts && tslint -t stylish --project . --rules-dir ./webpack/tslint",
+    "prebuild": "mkdir -p build && rm -rf build/* && mkdir -p xpi && rm -f xpi/*.xpi && mkdir -p gen && rm -rf gen/*",
+    "webpack": "webpack",
+    "build": "npm run lint && npm run webpack",
+    "postbuild": "node webpack/scripts/zipup.js build zotero-report-customizer && node webpack/scripts/zipup.js test/fixtures/debug-bridge debug-bridge",
+    "start": "HEADLESS=false KILL=false cucumber --fail-fast --tags @none",
+    "release": "ts-node webpack/scripts/release.ts",
+    "postversion": "TAG=$(echo $(git describe --tags $(git rev-list --tags --max-count=1))) && git tag -a $TAG $TAG -f -m \"$(git log `git describe --tags --abbrev=0 HEAD^`..HEAD --oneline)\" && git push && git push --tags"
   },
   "repository": {
     "type": "git",
     "url": "https://github.com/retorquere/zotero-report-customizer.git"
   },
-  "author": "",
+  "author": {
+    "name": "Emiliano Heyns",
+    "email": "Emiliano.Heyns@iris-advies.com"
+  },
   "license": "ISC",
   "bugs": {
     "url": "https://github.com/retorquere/zotero-report-customizer/issues"
@@ -20,5 +32,20 @@
     "coffee-script": "^1.10.0",
     "coffeelint": "^1.15.0",
     "pegjs": "^0.8.0"
+  },
+  "devDependencies": {
+    "circular-dependency-plugin": "^4.2.1",
+    "fs-extra": "^4.0.2",
+    "pug": "^2.0.0-rc.4",
+    "replace": "^0.3.0",
+    "uri-templates": "^0.2.0",
+    "webpack": "^3.8.1"
+  },
+  "xpi": {
+    "name": "Zotero Report Customizer",
+    "iconURL": "chrome://zotero-report-customizer/skin/report-customizer.svg",
+    "updateLink": "https://github.com/retorquere/zotero-report-customizer/releases/download/v{version}/zotero-report-customizer-{version}.xpi",
+    "updateInfoURL": "https://retorquere.github.io/zotero-report-customizer/CHANGELOG.html",
+    "releaseURL": "https://github.com/retorquere/zotero-report-customizer/releases/download/release/"
   }
 }
