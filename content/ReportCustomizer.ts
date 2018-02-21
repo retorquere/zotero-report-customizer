@@ -1,4 +1,5 @@
 declare const Zotero: any
+declare const window: any
 
 import mime = require('mime-types')
 
@@ -7,6 +8,15 @@ const ReportCustomizer = new class { // tslint:disable-line:variable-name
 
   constructor() {
     window.addEventListener('load', e => { this.load() }, false)
+  }
+
+  public openPreferenceWindow(pane, action) {
+    window.openDialog(
+      'chrome://zotero-report-customizer/content/Configure.xul',
+      'zotero-report-customizer-options',
+      `chrome,titlebar,toolbar,centerscreen${Zotero.Prefs.get('browser.preferences.instantApply', true) ? 'dialog=no' : 'modal'}`,
+      { pane, action }
+    )
   }
 
   public get() {

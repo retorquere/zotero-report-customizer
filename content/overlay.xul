@@ -3,20 +3,14 @@
 <!DOCTYPE window SYSTEM "chrome://zotero-report-customizer/locale/zotero-report-customizer.dtd">
 
 <overlay id="zotero-report-customizer-overlay"
-	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-	
-	<stringbundleset id="stringbundleset">
-		<stringbundle id="zotero-report-customizer-strings"
-			src="chrome://zotero-report-customizer/locale/zotero-report-customizer.properties"/>
-	</stringbundleset>
-	
-	<menupopup id="zotero-tb-actions-popup">
-		<!-- Make sure the menu separator for utilities is visible -->
-		<menuseparator id="zotero-tb-actions-plugins-separator" hidden="false"/>
-		<menuitem insertbefore="zotero-tb-actions-separator" label="&zotero-report-customizer.name;" oncommand="Zotero.ReportCustomizer.openPreferenceWindow()"/>
-	</menupopup>
-	
-	<!-- Include the main extension logic -->
-	<script src="chrome://zotero/content/include.js"/>
-	<script src="chrome://zotero-report-customizer/content/ReportCustomizer.js"/>
+  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+
+  <menupopup id="menu_ToolsPopup">
+    <menuseparator hidden="false"/>
+    <menuitem label="&zotero-report-customizer.name;" oncommand="Zotero.ReportCustomizer.openPreferenceWindow()"/>
+  </menupopup>
+
+  <!-- Include the main extension logic -->
+  <script src="chrome://zotero/content/include.js"/>
+  <script src="chrome://zotero-report-customizer/content/ReportCustomizer.js"/>
 </overlay>

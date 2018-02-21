@@ -37,6 +37,7 @@ const config = {
 
   entry: {
     ReportCustomizer: './ReportCustomizer.ts',
+    'ReportCustomizer.Configure': './Configure.ts',
   },
 
   output: {
