@@ -18,5 +18,5 @@
 	
 	<!-- Include the main extension logic -->
 	<script src="chrome://zotero/content/include.js"/>
-	<script src="chrome://zotero-report-customizer/content/include.js" type="application/javascript;version=1.8"/>
+	<script src="chrome://zotero-report-customizer/content/ReportCustomizer.js"/>
 </overlay>
