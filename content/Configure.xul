@@ -11,7 +11,7 @@
 		onload="Zotero.ReportCustomizer.load()">
   <prefpane label="&zotero-report-customizer.name;" id="zotero-report-customizer-prefpane">
     <preferences id="preferences"/>
-		<browser id="template" type="content" src="http://127.0.0.1:23119/report-customizer/index.html" flex="1"/>
+    <iframe type="content" src="http://127.0.0.1:23119/report-customizer/index.html" flex="1"/>
   </prefpane>
   <script src="chrome://zotero/content/include.js" />
   <script src="chrome://zotero-report-customizer/content/include.js" />
