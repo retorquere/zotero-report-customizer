@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title>CKEditor</title>
+    <script src="https://cdn.ckeditor.com/4.8.0/standard/ckeditor.js"></script>
+    <style>
+      span.cke_button_icon.cke_button__token_icon {
+        background : url("zotero-z-32px-australis-unix.svg");
+      }
+    </style>
+  </head>
+  <body>
+    <textarea name="reference"></textarea>
+    <script>
+      CKEDITOR.plugins.addExternal( 'token', '/token/', 'plugin.js' );
+      CKEDITOR.replace('reference', {
+        extraPlugins: 'token',
+        availableTokens: [
+          ["", ""],
+          ["token1", "token1"],
+          ["token2", "token2"],
+          ["token3", "token3"],
+        ]
+      });
+    </script>
+  </body>
+</html>
