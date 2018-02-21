@@ -1,5 +1,7 @@
 declare const Zotero: any
 
+import mime = require('mime-types')
+
 const ReportCustomizer = new class { // tslint:disable-line:variable-name
   private template: string
 
@@ -55,7 +57,7 @@ function install_url_handler(resource) {
 
     public async init(request) {
       try {
-        return [200, 'text/plain', Zotero.File.getContentsFromURL(`resource://zotero-report-customizer/${resource}`)] // tslint:disable-line:no-magic-numbers
+        return [200, mime.lookup(resource) || 'application/octet-stream', Zotero.File.getContentsFromURL(`resource://zotero-report-customizer/${resource}`)] // tslint:disable-line:no-magic-numbers
       } catch (err) {
         ReportCustomizer.log(`could not serve URL ${resource}`, err)
         return [500, 'application/text', `RC failed: ${err}\n${err.stack}`] // tslint:disable-line:no-magic-numbers

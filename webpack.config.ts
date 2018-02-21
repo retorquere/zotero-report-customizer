@@ -16,7 +16,7 @@ const config = {
   node: { fs: 'empty' },
   resolveLoader: {
     alias: {
-      'json-loader': path.join(__dirname, './zotero-webpack/loader/json.ts'),
+      'json-loader': 'zotero-plugin/loader/json',
       'wrap-loader': 'zotero-plugin/loader/wrap',
     },
   },

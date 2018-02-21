@@ -27,6 +27,7 @@
     "circular-dependency-plugin": "^4.4.0",
     "find-up": "^2.1.0",
     "fs-extra": "^5.0.0",
+    "mime-types": "^2.1.18",
     "properties-reader": "0.0.16",
     "pug": "^2.0.0-rc.4",
     "replace": "^0.3.0",
