@@ -4,6 +4,8 @@ declare const window: any
 import mime = require('mime-types')
 
 const ReportCustomizer = new class { // tslint:disable-line:variable-name
+  public fields: string[]
+
   private template: string
 
   constructor() {
@@ -56,14 +58,24 @@ const ReportCustomizer = new class { // tslint:disable-line:variable-name
 
   private async load() {
     this.log('starting')
+
+    await Zotero.Schema.schemaUpdatePromise
+
+    this.fields = (await Zotero.DB.queryAsync(`
+        SELECT DISTINCT COALESCE(bf.fieldName, f.fieldName) as fieldName
+        FROM itemTypes it
+        JOIN itemTypeFields itf ON it.itemTypeID = itf.itemTypeID
+        JOIN fields f ON f.fieldID = itf.fieldID
+        LEFT JOIN baseFieldMappingsCombined bfmc ON it.itemTypeID = bfmc.itemTypeID AND f.fieldID = bfmc.fieldID
+        LEFT JOIN fields bf ON bf.fieldID = bfmc.baseFieldID
+      `.replace(/\n/g, ' ').trim())).map(field => field.fieldName)
+    // TODO: sort fields case-insensitive
   }
 }
 
 function install_url_handler(resource) {
   Zotero.Server.Endpoints[`/report-customizer/${resource}`] = class {
     public supportedMethods = ['GET']
-    public OK = 200
-    public SERVER_ERROR = 500
 
     public async init(request) {
       try {
@@ -84,6 +96,19 @@ for (const resource of [
   'token/dialogs/token.js',
 ]) {
   install_url_handler(resource)
+}
+
+Zotero.Server.Endpoints['/report-customizer/fields.json'] = class {
+  public supportedMethods = ['GET']
+
+  public async init(request) {
+    try {
+      return [200, 'application/json', JSON.stringify(ReportCustomizer.fields) ] // tslint:disable-line:no-magic-numbers
+    } catch (err) {
+      ReportCustomizer.log('could not serve fields.json', err)
+      return [500, 'application/text', `RC failed: ${err}\n${err.stack}`] // tslint:disable-line:no-magic-numbers
+    }
+  }
 }
 
 export = ReportCustomizer
