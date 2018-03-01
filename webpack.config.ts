@@ -3,7 +3,7 @@
 import * as webpack from 'webpack'
 import * as path from 'path'
 
-import BailPlugin from 'zotero-plugin/plugin/bail'
+// import BailPlugin from 'zotero-plugin/plugin/bail'
 
 import CircularDependencyPlugin = require('circular-dependency-plugin')
 
@@ -13,16 +13,25 @@ import 'zotero-plugin/rdf'
 import 'zotero-plugin/version'
 
 const config = {
+  mode: 'production',
+  optimization: {
+    minimize: false,
+    concatenateModules: false,
+    noEmitOnErrors: true,
+    namedModules: true,
+    namedChunks: true,
+  },
+
   node: { fs: 'empty' },
   resolveLoader: {
     alias: {
-      'json-loader': 'zotero-plugin/loader/json',
+      'custom-json-loader': 'zotero-plugin/loader/json',
       'wrap-loader': 'zotero-plugin/loader/wrap',
     },
   },
   module: {
     rules: [
-      { test: /\.json$/, use: [ 'json-loader' ] },
+      // { test: /\.json$/, use: [ 'custom-json-loader' ] },
       { test: /\.ts$/, exclude: [ /node_modules/ ], use: [ 'wrap-loader', 'ts-loader' ] },
     ],
   },
@@ -30,7 +39,7 @@ const config = {
   plugins: [
     new webpack.NamedModulesPlugin(),
     new CircularDependencyPlugin({ failOnError: true }),
-    BailPlugin,
+    // BailPlugin, noEmitOnErrors
   ],
 
   context: path.resolve(__dirname, './content'),
@@ -41,11 +50,12 @@ const config = {
   },
 
   output: {
+    pathinfo: true,
+
     path: path.resolve(__dirname, './build/content'),
     filename: '[name].js',
     jsonpFunction: 'Zotero.WebPackedReportCustomizer',
     devtoolLineToLine: true,
-    pathinfo: true,
     library: 'Zotero.[name]',
     libraryTarget: 'assign',
   },
