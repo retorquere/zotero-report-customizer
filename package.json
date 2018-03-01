@@ -8,7 +8,8 @@
     "prebuild": "npm run lint",
     "build": "webpack",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
-    "release": "zotero-plugin-release"
+    "release": "zotero-plugin-release",
+    "link": "zotero-plugin-link"
   },
   "repository": {
     "type": "git",

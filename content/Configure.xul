@@ -1,19 +1,19 @@
 <?xml version="1.0"?>
-<!-- vim: set expandtab : -->
-<!-- vim: set ts=2 : -->
 <?xml-stylesheet href="chrome://global/skin/" type="text/css"?>
-<?xml-stylesheet href="chrome://zotero-report-customizer/skin/options.css"?>
+<?xml-stylesheet href="chrome://zotero/skin/zotero.css" type="text/css"?>
 <!DOCTYPE window SYSTEM "chrome://zotero-report-customizer/locale/zotero-report-customizer.dtd">
-<prefwindow
-		id="zotero-report-customizer-pref"
-		title="&zotero-report-customizer.name;"
-		xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
-		onload="Zotero.ReportCustomizer.load()">
-  <prefpane label="&zotero-report-customizer.name;" id="zotero-report-customizer-prefpane">
-    <preferences id="preferences"/>
+
+<dialog xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul"
+	title="&zotero-report-customizer.name;" buttons="accept"
+	id="tag-color-chooser"
+	buttonlabelaccept="Close"
+  onload="Zotero.ReportCustomizer.load()"
+	width="350"
+	height="140">
+	
+	<vbox id="tag-color-chooser-container" flex="1">
     <iframe type="content" src="http://127.0.0.1:23119/report-customizer/index.html" flex="1"/>
-  </prefpane>
+	</vbox>
   <script src="chrome://zotero/content/include.js" />
-  <script src="chrome://zotero-report-customizer/content/include.js" />
-  <script src="options.js" />
-</prefwindow>
+  <script src="chrome://zotero-report-customizer/content/ReportCustomizer.Configure.js" />
+</dialog>
