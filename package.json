@@ -34,13 +34,13 @@
     "request": "^2.83.0",
     "request-promise": "^4.2.2",
     "rimraf": "^2.6.2",
-    "ts-loader": "^3.5.0",
+    "ts-loader": "^4.0.0",
     "ts-node": "^5.0.0",
     "tslint": "^5.9.1",
     "typescript": "^2.7.2",
     "uri-templates": "^0.2.0",
-    "webpack": "^3.11.0",
-    "zotero-plugin": "0.0.24"
+    "webpack": "^4.0.1",
+    "zotero-plugin": "0.0.26"
   },
   "xpi": {
     "name": "Zotero Report Customizer",
