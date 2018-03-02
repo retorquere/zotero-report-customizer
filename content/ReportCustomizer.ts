@@ -68,8 +68,7 @@ const ReportCustomizer = new class { // tslint:disable-line:variable-name
         JOIN fields f ON f.fieldID = itf.fieldID
         LEFT JOIN baseFieldMappingsCombined bfmc ON it.itemTypeID = bfmc.itemTypeID AND f.fieldID = bfmc.fieldID
         LEFT JOIN fields bf ON bf.fieldID = bfmc.baseFieldID
-      `.replace(/\n/g, ' ').trim())).map(field => field.fieldName)
-    // TODO: sort fields case-insensitive
+      `.replace(/\n/g, ' ').trim())).map(field => field.fieldName).sort((a, b) => a.toLowerCase().localeCompare(b.toLowerCase()))
   }
 }
 

@@ -36,12 +36,12 @@
     "request-promise": "^4.2.2",
     "rimraf": "^2.6.2",
     "ts-loader": "^4.0.0",
-    "ts-node": "^5.0.0",
+    "ts-node": "^5.0.1",
     "tslint": "^5.9.1",
     "typescript": "^2.7.2",
     "uri-templates": "^0.2.0",
     "webpack": "^4.0.1",
-    "webpack-cli": "^2.0.9",
+    "webpack-cli": "^2.0.10",
     "zotero-plugin": "0.0.26"
   },
   "xpi": {
