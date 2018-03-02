@@ -25,13 +25,14 @@ const config = {
   node: { fs: 'empty' },
   resolveLoader: {
     alias: {
-      'custom-json-loader': 'zotero-plugin/loader/json',
+      'json-jsesc-loader': 'zotero-plugin/loader/json',
       'wrap-loader': 'zotero-plugin/loader/wrap',
     },
   },
   module: {
     rules: [
-      // { test: /\.json$/, use: [ 'custom-json-loader' ] },
+      // https://github.com/webpack/webpack/issues/6572
+      { test: /\.json$/, type: 'javascript/auto', use: [ 'json-jsesc-loader' ] },
       { test: /\.ts$/, exclude: [ /node_modules/ ], use: [ 'wrap-loader', 'ts-loader' ] },
     ],
   },
