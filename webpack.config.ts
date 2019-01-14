@@ -3,8 +3,6 @@
 import * as webpack from 'webpack'
 import * as path from 'path'
 
-// import BailPlugin from 'zotero-plugin/plugin/bail'
-
 import CircularDependencyPlugin = require('circular-dependency-plugin')
 
 import 'zotero-plugin/make-dirs'
@@ -13,50 +11,56 @@ import 'zotero-plugin/rdf'
 import 'zotero-plugin/version'
 
 const config = {
-  mode: 'production',
+  mode: 'development',
+  devtool: false,
   optimization: {
+    flagIncludedChunks: true,
+    occurrenceOrder: false,
+    usedExports: true,
     minimize: false,
     concatenateModules: false,
     noEmitOnErrors: true,
     namedModules: true,
     namedChunks: true,
+    // runtimeChunk: false,
+  },
+
+  resolve: {
+    extensions: ['.ts', '.js'],
   },
 
   node: { fs: 'empty' },
+
   resolveLoader: {
     alias: {
-      'json-jsesc-loader': 'zotero-plugin/loader/json',
+      'json-loader': 'zotero-plugin/loader/json',
       'wrap-loader': 'zotero-plugin/loader/wrap',
     },
   },
   module: {
     rules: [
-      // https://github.com/webpack/webpack/issues/6572
-      { test: /\.json$/, type: 'javascript/auto', use: [ 'json-jsesc-loader' ] },
+      { test: /\.json$/, use: [ 'json-loader' ] },
       { test: /\.ts$/, exclude: [ /node_modules/ ], use: [ 'wrap-loader', 'ts-loader' ] },
     ],
   },
 
   plugins: [
-    new webpack.NamedModulesPlugin(),
     new CircularDependencyPlugin({ failOnError: true }),
-    // BailPlugin, noEmitOnErrors
   ],
 
   context: path.resolve(__dirname, './content'),
 
   entry: {
-    ReportCustomizer: './ReportCustomizer.ts',
-    'ReportCustomizer.Configure': './Configure.ts',
+    ReportCustomizer: './zotero-report-customizer.ts',
   },
 
   output: {
-    pathinfo: true,
-
+    globalObject: 'Zotero',
     path: path.resolve(__dirname, './build/content'),
     filename: '[name].js',
-    jsonpFunction: 'Zotero.WebPackedReportCustomizer',
+    jsonpFunction: 'WebPackedReportCustomizer',
     devtoolLineToLine: true,
+    pathinfo: true,
     library: 'Zotero.[name]',
     libraryTarget: 'assign',
   },

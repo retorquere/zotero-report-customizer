@@ -3,14 +3,9 @@
 <!DOCTYPE window SYSTEM "chrome://zotero-report-customizer/locale/zotero-report-customizer.dtd">
 
 <overlay id="zotero-report-customizer-overlay"
-  xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
-
-  <menupopup id="menu_ToolsPopup">
-    <menuseparator hidden="false"/>
-    <menuitem label="&zotero-report-customizer.name;" oncommand="Zotero.ReportCustomizer.openPreferenceWindow()"/>
-  </menupopup>
-
-  <!-- Include the main extension logic -->
+	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
+	
+	<!-- Include the main extension logic -->
   <script src="chrome://zotero/content/include.js"/>
   <script src="chrome://zotero-report-customizer/content/ReportCustomizer.js"/>
 </overlay>

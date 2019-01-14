@@ -46,3 +46,4 @@ works, and if you're using this plugin, you probably don't want to fiddle with t
 Shows indexing status of attachments, plus links to select attachment
 
 If you experience any problems, or are unclear on how to use it, I'll be glad to [help](https://retorquere.github.io/zotero-report-customizer/support.html).
+

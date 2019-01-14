@@ -1,5 +1,1 @@
-<!ENTITY zotero-report-customizer.name "Report Customizer…">
-<!ENTITY zotero-report-customizer.show "Fields to show in report">
-<!ENTITY zotero-report-customizer.sort "Report sort order">
-<!ENTITY zotero-report-customizer.field "Field">
-<!ENTITY zotero-report-customizer.order "Order">
+<!ENTITY zotero.report-customizer "Zotero Report Customizer">

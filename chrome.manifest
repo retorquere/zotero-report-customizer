@@ -3,4 +3,3 @@ locale	zotero-report-customizer	en-US		locale/en-US/
 skin	zotero-report-customizer	default		skin/
 
 overlay	chrome://zotero/content/zoteroPane.xul	chrome://zotero-report-customizer/content/overlay.xul
-resource  zotero-report-customizer          resource/

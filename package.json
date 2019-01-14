@@ -1,52 +1,43 @@
 {
   "name": "zotero-report-customizer",
-  "version": "5.0.0",
+  "version": "0.0.1",
   "description": "Zotero Report Customizer",
-  "main": "index.js",
   "scripts": {
     "lint": "tslint -t stylish --project .",
     "prebuild": "npm run lint",
     "build": "webpack",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
-    "link": "zotero-plugin-link"
+    "postversion": "git push --follow-tags"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/retorquere/zotero-report-customizer.git"
+    "url": "git@github.com:Emiliano Heyns/zotero-report-customizer.git"
   },
   "author": {
     "name": "Emiliano Heyns",
-    "email": "Emiliano.Heyns@iris-advies.com"
+    "email": "emiliano.heyns@iris-advies.com"
   },
-  "license": "ISC",
   "bugs": {
-    "url": "https://github.com/retorquere/zotero-report-customizer/issues"
+    "url": "https://github.com/Emiliano Heyns/zotero-report-customizer/issues"
   },
-  "homepage": "https://github.com/retorquere/zotero-report-customizer#readme",
+  "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
   "dependencies": {
-    "circular-dependency-plugin": "^4.4.0",
-    "find-up": "^2.1.0",
-    "fs-extra": "^5.0.0",
-    "mime-types": "^2.1.18",
-    "properties-reader": "0.0.16",
-    "pug": "^2.0.0-rc.4",
-    "replace": "^0.3.0",
-    "request": "^2.83.0",
-    "request-promise": "^4.2.2",
-    "rimraf": "^2.6.2",
-    "ts-loader": "^4.0.0",
-    "ts-node": "^5.0.1",
-    "tslint": "^5.9.1",
-    "typescript": "^2.7.2",
-    "uri-templates": "^0.2.0",
-    "webpack": "^4.0.1",
-    "webpack-cli": "^2.0.10",
-    "zotero-plugin": "0.0.26"
+    "circular-dependency-plugin": "^5.0.2",
+    "handlebars": "^4.0.12",
+    "nunjucks": "^3.1.7",
+    "rimraf": "^2.6.3",
+    "ts-loader": "^5.3.3",
+    "ts-node": "^7.0.1",
+    "tslint": "^5.12.1",
+    "typescript": "^3.2.2",
+    "webpack": "^4.28.4",
+    "webpack-cli": "^3.2.1",
+    "zotero-plugin": "0.0.68"
   },
   "xpi": {
     "name": "Zotero Report Customizer",
-    "updateLink": "https://github.com/retorquere/zotero-report-customizer/releases/download/v{version}/zotero-report-customizer-{version}.xpi",
-    "releaseURL": "https://github.com/retorquere/zotero-report-customizer/releases/download/release/"
+    "updateLink": "https://github.com/Emiliano Heyns/zotero-report-customizer/releases/download/v{version}/zotero-auto-index-{version}.xpi",
+    "releaseURL": "https://github.com/Emiliano Heyns/zotero-report-customizer/releases/download/release/"
   }
 }
