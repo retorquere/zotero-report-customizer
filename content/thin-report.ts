@@ -3,6 +3,8 @@ declare const Zotero: any
 import * as nunjucks from 'nunjucks'
 nunjucks.configure({ autoescape: true })
 
+import indent = require('indent-string')
+
 const papersizes = {
   letter:       { w: 612, h: 792 },
   lettersmall:  { w: 612, h: 792 },
@@ -29,7 +31,8 @@ const sublists = ['header', 'detail', 'footer', 'page-footer']
 const ignoreBlocks = new Set([ 'page-number', 'image-block' ])
 
 export class ThinReport {
-  private template: string
+  public template: string
+
   private list: boolean
   private page: { w: number, h: number }
   private margin: { top: number, left: number, bottom: number, right: number }
@@ -42,7 +45,13 @@ export class ThinReport {
   public load(layout) {
     layout = {...JSON.parse(JSON.stringify(layout)), type: 'layout', display: true }
 
-    this.page = papersizes[layout.report['paper-type'].toLowerCase()]
+    const paperType = layout.report['paper-type'].toLowerCase()
+    if (paperType === 'user') {
+      this.page = { w: layout.report.width, h: layout.report.height }
+    } else {
+      this.page = papersizes[paperType]
+    }
+
     this.margin = {
       top: layout.report.margin[0],
       bottom: layout.report.margin[1],
@@ -53,8 +62,8 @@ export class ThinReport {
 
     this.normalize(layout, { left: layout.left, top: layout.top })
 
-    this.template = ''
-    this.add(layout, '')
+    this.template = this.add(layout)
+    Zotero.debug('ThinReport: ' + this.template)
   }
 
   public render(items) {
@@ -117,9 +126,14 @@ export class ThinReport {
   }
 
   private normalize(item, context) {
-    if (item.id) {
-      item.field = (context.varscope || '') + item.id.replace(/_+$/, '')
+    if (item.type !== 'list' && item.id) { // lists must have an ID in thinreports
+      item.field = (context.varscope || '') + item.id
       if (!this.fields.has(item.field)) throw new Error(`Unsupported field "${item.field}"`)
+    }
+
+    if (item.type !== 'list' && item.description) { // lists always shown
+      item.condition = (context.varscope || '') + item.description
+      if (!this.fields.has(item.condition)) throw new Error(`Unsupported field "${item.condition}"`)
     }
 
     switch (item.type) {
@@ -232,75 +246,81 @@ export class ThinReport {
     return rows
   }
 
-  private add(item, indent) {
-    if (!item.display) return
+  private add(item): string {
+    if (!item.display) return ''
 
-    let extra_indent = ''
-    if (item.field) {
-      this.template += `${indent}{% if ${item.field} %}\n`
-      extra_indent = '  '
-    }
+    let template = ''
 
     switch (item.type) {
       case 'list':
-        this.add_list(item, indent + extra_indent)
+        template = this.add_list(item)
         break
+
       case 'line':
-        this.add_line(item, indent + extra_indent)
+        template = this.add_line(item)
         break
+
       case 'text':
       case 'text-block':
-        this.add_text(item, indent + extra_indent)
+        template = this.add_text(item)
         break
+
       case 'rect':
       case 'ellipse':
-        this.add_rect(item, indent + extra_indent)
+        template = this.add_rect(item)
         break
+
       case 'image':
-        this.add_image(item, indent + extra_indent)
+        template = this.add_image(item)
         break
+
       case 'layout':
-        this.add_layout(item, indent + extra_indent)
+        template = this.add_layout(item)
         break
+
       case 'row':
-        this.add_row(item, indent + extra_indent)
+        template = this.add_row(item)
         break
+
       default: throw new Error(`Unsupported item type ${item.type}`)
     }
 
-    if (item.field) {
-      this.template += `${indent}{% endif %}\n`
-    }
+    if (template && (item.field || item.condition)) template = this.wrap(`{% if ${item.field || item.condition} %}`, template, '{% endif %}')
+
+    return template
   }
 
-  private add_layout(item, indent) {
-    this.template += `
-      <html>
-        <head>
-          <style>
-            @page { size: ${item.report['paper-type']}; margin: ${item.report.margin.map(px => px + 'px').join(' ')}; }
-            @media print {
-              footer { position: fixed; bottom: 0;}
-              table { page-break-after:auto }
-              tr    { page-break-inside:avoid; page-break-after:auto }
-              td    { page-break-inside:avoid; page-break-after:auto }
-              thead { display:table-header-group }
-              tfoot { display:table-footer-group }
-              html  { width: ${this.page.w}px; height: ${this.page.h}px; }
-              body  { width: ${this.page.w}px; height: ${this.page.h}px; padding: ${item.report.margin.map(m => `${m}px`).join(' ')}; }
-              .line { border: 0; position: absolute }
-              table, .text, .text-block, img, .rect, .ellipse { position: absolute }
-            }
-          </style>
-        <body>
-          <div style="position: relative;">
-    `
+  private add_layout(item): string {
+    const padding = item.report.margin.map(m => `${m}px`).join(' ')
+    let template = [
+      '<html>',
+      '  <head>',
+      '    <style>',
+      `      @page { size: ${item.report['paper-type']}; margin: ${item.report.margin.map(px => px + 'px').join(' ')}; }`,
+      '      @media print {',
+      '        footer { position: fixed; bottom: 0;}',
+      '        table { page-break-after:auto }',
+      '        tr    { page-break-inside:avoid; page-break-after:auto }',
+      '        td    { page-break-inside:avoid; page-break-after:auto }',
+      '        thead { display:table-header-group }',
+      '        tfoot { display:table-footer-group }',
+      `        html  { width: ${this.page.w}px; height: ${this.page.h}px; }`,
+      `        body  { width: ${this.page.w}px; height: ${this.page.h}px; padding: ${padding}; }`,
+      '        .line { border: 0; position: absolute }',
+      '        table, .text, .text-block, img, .rect, .ellipse { position: absolute }',
+      '      }',
+      '    </style>',
+      '  <body>',
+      '',
+    ].join('\n')
 
     for (const child of item.items) {
-      this.add(child, '      ')
+      template += indent(this.add(child), 4) // tslint:disable-line:no-magic-numbers
     }
 
-    this.template += '</div>\n</body>\n'
+    template += '  </body>\n</html>\n'
+
+    return template
   }
 
   private dimensions(item) {
@@ -314,15 +334,16 @@ export class ThinReport {
     return dimensions.trim()
   }
 
-  private add_row(item, indent) {
-    this.template += `${indent}<div style="position: relative">\n`
+  private add_row(item): string {
+    let template = ''
     for (const child of item.items) {
-      this.add(child, indent + '  ')
+      template += this.add(child)
     }
-    this.template += `${indent}</div>\n`
+
+    return this.wrap('<div style="position: relative">', template, '</div>')
   }
 
-  private add_line(item, indent) {
+  private add_line(item): string {
     let style = `border: 0px; ${this.dimensions(item)}`
 
     for (const [k, v] of Object.entries(item.style)) {
@@ -342,10 +363,11 @@ export class ThinReport {
           throw new Error(`Unknown style attribute ${k}`)
       }
     }
-    this.template += `${indent}<div class="line" style="${style}"/>\n`
+
+    return `<div class="line" style="${style}"/>\n`
   }
 
-  private add_text(item, indent) {
+  private add_text(item): string {
     let style = this.dimensions(item)
 
     for (const [k, v] of Object.entries(item.style)) {
@@ -390,11 +412,11 @@ export class ThinReport {
       }
     }
 
-    let div = `${indent}<div class="${item.type}" style="${style}">`
+    let div = `<div class="${item.type}" style="${style}">`
 
     const format = item.type === 'text-block' && item.format ? item.format.base : null
     if (format === '{url}') {
-      div += `\n${indent}  <a href="{{ ${item.field} }})">{{ ${item.field} }}</a>`
+      div += `<a href="{{ ${item.field} }})">{{ ${item.field} }}</a>`
     } else if (format) {
       div += format.split('{value}').map(s => `{{ ${JSON.stringify(s)} }}`).join(`{{ ${item.field} }}`)
     } else if (item.type === 'text-block') {
@@ -402,10 +424,12 @@ export class ThinReport {
     } else {
       div += `{{ ${JSON.stringify(item.texts.join(' '))} }}`
     }
-    this.template += div + '</div>\n'
+    div += '</div>\n'
+
+    return div
   }
 
-  private add_rect(item, indent) {
+  private add_rect(item): string {
     let style = this.dimensions(item)
 
     for (const [k, v] of Object.entries(item.style)) {
@@ -430,71 +454,64 @@ export class ThinReport {
       }
     }
 
-    this.template += `${indent}<div class="rect" style="${style}"/>\n`
+    return `<div class="rect" style="${style}"/>\n`
   }
 
-  private add_list(item, indent) {
+  private add_list(item): string {
     if (this.list && item.type === 'list') throw new Error('Only one list allowed')
     this.list = item
 
-    const style = this.dimensions(item)
-    this.template += `${indent}<table style="${style}">\n`
+    let table = ''
 
-    this._add_list_table_part('header', indent, 'thead')
+    table += this._add_list_table_part('header', 'thead')
 
-    this._add_list_table_part('detail', indent + '  ', 'tbody')
+    table += this._add_list_table_part('detail', 'tbody')
 
-    this._add_list_table_part('footer', indent, 'tfoot')
+    table += this._add_list_table_part('footer', 'tfoot')
 
     if (item['page-footer'] && item['page-footer'].enabled) {
-      this.template += `${indent}footer\n`
+      let footer = ''
       for (const child of item['page-footer'].items) {
-        this.add(child, indent + '  ')
+        footer += this.add(child)
       }
+      table += this.wrap('footer', footer)
     }
-    this.template += `${indent}</table>\n`
+
+    return this.wrap(`<table style="${this.dimensions(item)}">`, table, '</table>')
   }
 
-  private _add_list_table_part(part, indent, elt) {
+  private _add_list_table_part(part, elt): string {
     const item = this.list[part]
-    if (typeof item.enabled === 'boolean' && !item.enabled) return
+    if (typeof item.enabled === 'boolean' && !item.enabled) return ''
 
-    const td = elt === 'thead' ? 'th' : 'td'
-
-    this.template += `${indent}  <${elt}>\n`
-
-    let extra_indent = ''
-    if (elt === 'tbody') {
-      this.template += `${indent + extra_indent}    {% for item in items %}\n`
-      extra_indent = '  '
-    }
-
-    this.template += `${indent + extra_indent}    <tr>\n`
-    this.template += `${indent + extra_indent}      <${td}>\n`
-
+    let template = ''
     for (const child of item.items) {
-      this.add(child, `        ${indent + extra_indent}`)
+      template += this.add(child)
     }
+    template = this.wrap(elt === 'thead' ? 'th' : 'td', template)
+    template = this.wrap('tr', template)
 
-    this.template += `${indent + extra_indent}      </${td}>\n`
-    this.template += `${indent + extra_indent}    </tr>\n`
+    if (elt === 'tbody') template = this.wrap('{% for item in items %}', template, '{% endfor %}')
+    template = this.wrap(elt, template)
 
-    if (elt === 'tbody') {
-      this.template += `${indent + extra_indent}    {% endfor %}\n`
-    }
-    this.template += `${indent}  </${elt}>\n`
+    return template
   }
 
-  private add_image(item, indent) {
+  private add_image(item): string {
     const src = `data:${item.data['mime-type']};base64,${item.data.base64}`
     const style = this.dimensions(item)
-    this.template += `${indent}<img src="${src}" style="${style}"></img>\n`
+    return `<img src="${src}" style="${style}"></img>\n`
+  }
+
+  private wrap(prefix, body, postfix = null) {
+    if (!postfix) {
+      postfix = `</${prefix}>`
+      prefix = `<${prefix}>`
+    }
+    return `${prefix}\n${indent(body, 2)}${postfix}\n`
   }
 }
 
 // htmlEncode(str) {
   // return str.replace(/&/g, '&amp;').replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 // }
-
-// const template = new ThinReport(tlf)
-// fs.writeFileSync('estimate.pug', template.template)

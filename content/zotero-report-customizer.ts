@@ -15,6 +15,12 @@ function patch(object, method, patcher) {
   object[method][marker] = true
 }
 
+function save(path, contents) {
+  const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
+  file.initWithPath(path)
+  Zotero.File.putContents(file, contents)
+}
+
 const seconds = 1000
 
 function flash(title, body = null, timeout = 8) {
@@ -61,12 +67,20 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
     }
   }
 
+  public render(items) {
+    return this.report.render(items.map(item => this.simplify(item)))
+  }
+
   private simplify(item) {
     for (const [alias, field] of Object.entries(this.fields.aliasOf)) {
       if (!item[alias]) continue
       item[field] = item[alias]
       delete item[alias]
     }
+
+    item.itemType = Zotero.ItemTypes.getLocalizedString(item.itemType)
+
+    save('/tmp/item.json', JSON.stringify(item, null, 2))
   }
 
   private async init() {
@@ -76,7 +90,7 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
     await Zotero.Schema.initializationPromise
 
     this.fields = {
-      valid: new Set([]),
+      valid: new Set([ 'itemType', 'dateAdded', 'dateModified', 'tags', 'attachments', 'notes', 'collections' ]),
       aliasOf: {},
     }
 
@@ -94,5 +108,15 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
     }
 
     this.report = new ThinReport(this.fields.valid)
+
+    this.report.load(this.report.defaultReport())
+    save('/tmp/template.html', this.report.template)
   }
+}
+
+Zotero.Report.HTML.listGenerator = function* listGenerator(items, combineChildItems) {
+  const html = ReportCustomizer.render(items)
+  save('/tmp/report.html', html)
+
+  yield html
 }
