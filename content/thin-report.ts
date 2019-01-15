@@ -1,3 +1,5 @@
+declare const Zotero: any
+
 import * as nunjucks from 'nunjucks'
 nunjucks.configure({ autoescape: true })
 
@@ -23,11 +25,6 @@ const papersizes = {
   '10x14':      { w: 720, h: 1008 },
 }
 
-const supportedVars = new Set([
-  'customer_name',
-  'item.url',
-])
-
 const sublists = ['header', 'detail', 'footer', 'page-footer']
 const ignoreBlocks = new Set([ 'page-number', 'image-block' ])
 
@@ -36,8 +33,13 @@ export class ThinReport {
   private list: boolean
   private page: { w: number, h: number }
   private margin: { top: number, left: number, bottom: number, right: number }
+  private fields: Set<string>
 
-  constructor(layout) {
+  constructor(validFields) {
+    this.fields = validFields
+  }
+
+  public load(layout) {
     layout = {...JSON.parse(JSON.stringify(layout)), type: 'layout', display: true }
 
     this.page = papersizes[layout.report['paper-type'].toLowerCase()]
@@ -59,8 +61,66 @@ export class ThinReport {
     return nunjucks.renderString(this.template, { items })
   }
 
+  public defaultReport() {
+    const fields = [...this.fields].filter(field => field.startsWith('item.')).map(field => field.replace('item.', ''))
+
+    const template = JSON.parse(Zotero.File.getContentsFromURL('resource://zotero-report-customizer/report.tlf'))
+
+    const list = template.items.find(item => item.type === 'list')
+    const detail = list.detail.items
+    const height = list.detail.height
+
+    list.detail.items = []
+
+    let firstrow = true
+    for (const field of fields) {
+      if (!firstrow) {
+        list.detail.height += height
+        list.height += height
+      }
+
+      for (const item of detail) {
+        list.detail.items.push(this.defaultReportField(item, firstrow ? 0 : height, field))
+      }
+      firstrow = false
+    }
+
+    return template
+  }
+
+  private defaultReportField(item, offset, field) {
+    // shift orig item
+    if (typeof item.y !== 'undefined') item.y += offset
+    if (typeof item.y1 !== 'undefined') item.y1 += offset
+    if (typeof item.y2 !== 'undefined') item.y2 += offset
+    if (typeof item.cy !== 'undefined') item.cy += offset
+
+    item = JSON.parse(JSON.stringify(item))
+
+    item.description = field
+
+    let label
+    if (item.type === 'text' && (item.texts || [''])[0].indexOf('{field}') >= 0) {
+      if (field === field.toUpperCase()) {
+        label = field
+      } else {
+        label = field[0].toUpperCase() + field.slice(1)
+        label = label.split(/([A-Z][a-z]*)/)
+        label = label.join(' ').toLowerCase()
+      }
+      item.texts = [ (item.texts || [''])[0].replace('{field}', label) ]
+    }
+
+    if (item.type === 'text-block' && item.id === 'field') item.id = field
+
+    return item
+  }
+
   private normalize(item, context) {
-    if (item.id) item.field = (context.varscope || '') + item.id.replace(/_+$/, '')
+    if (item.id) {
+      item.field = (context.varscope || '') + item.id.replace(/_+$/, '')
+      if (!this.fields.has(item.field)) throw new Error(`Unsupported field "${item.field}"`)
+    }
 
     switch (item.type) {
       case 'layout':
@@ -336,7 +396,7 @@ export class ThinReport {
     if (format === '{url}') {
       div += `\n${indent}  <a href="{{ ${item.field} }})">{{ ${item.field} }}</a>`
     } else if (format) {
-      div += ' ' + format.replace('{value}', `{{ ${item.field} }}`)
+      div += format.split('{value}').map(s => `{{ ${JSON.stringify(s)} }}`).join(`{{ ${item.field} }}`)
     } else if (item.type === 'text-block') {
       div += `{{ ${item.field} }}`
     } else {

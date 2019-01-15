@@ -1,6 +1,9 @@
 declare const Zotero: any
 declare const Components: any
 
+Components.utils.import('resource://gre/modules/osfile.jsm')
+declare const OS: any
+
 const marker = 'ReportCustomizerMonkeyPatched'
 
 // import TR here
@@ -12,10 +15,33 @@ function patch(object, method, patcher) {
   object[method][marker] = true
 }
 
-export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disable-line:variable-name
-  public idle: boolean = false
+const seconds = 1000
 
-  private template: ThinReport
+function flash(title, body = null, timeout = 8) {
+  try {
+    const pw = new Zotero.ProgressWindow()
+    pw.changeHeadline(`Report Customizer: ${title}`)
+    if (!body) body = title
+    if (Array.isArray(body)) body = body.join('\n')
+    pw.addDescription(body)
+    pw.show()
+    pw.startCloseTimer(timeout * seconds)
+
+  } catch (err) {
+    Zotero.logError(err)
+
+  }
+}
+
+export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disable-line:variable-name
+  private initialized: boolean = false
+
+  private report: ThinReport
+
+  private fields: {
+    valid: Set<string>
+    aliasOf: { [key: string]: string }
+  }
 
   constructor() {
     window.addEventListener('load', event => {
@@ -23,8 +49,50 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
     }, false)
   }
 
+  public async load(template) {
+    try {
+      const path = OS.Path.join(Zotero.DataDirectory.dir, 'report-customizer', template)
+      if (!await OS.File.exists(path)) throw new Error(`"${path}" does not exist`)
+      this.report.load(JSON.parse(await OS.File.read(path, { encoding: 'utf-8' })))
+    } catch (err) {
+      Zotero.logError(err)
+      flash(err.message)
+
+    }
+  }
+
+  private simplify(item) {
+    for (const [alias, field] of Object.entries(this.fields.aliasOf)) {
+      if (!item[alias]) continue
+      item[field] = item[alias]
+      delete item[alias]
+    }
+  }
+
   private async init() {
-    if (this.template) return
-    this.template = new ThinReport({})
+    if (this.initialized) return
+    this.initialized = true
+
+    await Zotero.Schema.initializationPromise
+
+    this.fields = {
+      valid: new Set([]),
+      aliasOf: {},
+    }
+
+    const sql = `
+      SELECT it.typeName, COALESCE(bf.fieldName, f.fieldName) as fieldName, CASE WHEN bf.fieldName IS NULL THEN NULL ELSE f.fieldName END as fieldAlias
+      FROM itemTypes it
+      JOIN itemTypeFields itf ON it.itemTypeID = itf.itemTypeID
+      JOIN fields f ON f.fieldID = itf.fieldID
+      LEFT JOIN baseFieldMappingsCombined bfmc ON it.itemTypeID = bfmc.itemTypeID AND f.fieldID = bfmc.fieldID
+      LEFT JOIN fields bf ON bf.fieldID = bfmc.baseFieldID
+    `.replace(/\r/g, '').replace(/\n/g, ' ').trim()
+    for (const row of await Zotero.DB.queryAsync(sql)) {
+      this.fields.valid.add(`item.${row.fieldName}`)
+      if (row.fieldAlias) this.fields.aliasOf[row.fieldAlias] = row.fieldName
+    }
+
+    this.report = new ThinReport(this.fields.valid)
   }
 }
