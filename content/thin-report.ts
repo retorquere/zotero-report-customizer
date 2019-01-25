@@ -1,9 +1,11 @@
 declare const Zotero: any
+declare const Components: any
 
 import * as nunjucks from 'nunjucks'
 nunjucks.configure({ autoescape: true })
 
 import indent = require('indent-string')
+import dedent = require('dedent')
 
 const papersizes = {
   letter:       { w: 612, h: 792 },
@@ -36,10 +38,14 @@ export class ThinReport {
   private list: boolean
   private page: { w: number, h: number }
   private margin: { top: number, left: number, bottom: number, right: number }
-  private fields: Set<string>
 
-  constructor(validFields) {
-    this.fields = validFields
+  private fields: {
+    valid: Set<string>
+    aliasOf: { [key: string]: string }
+  }
+
+  constructor(fields) {
+    this.fields = fields
   }
 
   public load(layout) {
@@ -67,11 +73,11 @@ export class ThinReport {
   }
 
   public render(items) {
-    return nunjucks.renderString(this.template, { items })
+    return this.cleanup(nunjucks.renderString(this.template, { items: items.map(item => this.simplify(item)) }))
   }
 
   public defaultReport() {
-    const fields = [...this.fields].filter(field => field.startsWith('item.')).map(field => field.replace('item.', ''))
+    const fields = [...this.fields.valid].filter(field => field.startsWith('item.')).map(field => field.replace('item.', ''))
 
     const template = JSON.parse(Zotero.File.getContentsFromURL('resource://zotero-report-customizer/report.tlf'))
 
@@ -97,6 +103,18 @@ export class ThinReport {
     return template
   }
 
+  private cleanup(html) {
+    const parser = Components.classes['@mozilla.org/xmlextras/domparser;1'].createInstance(Components.interfaces.nsIDOMParser)
+    const doc = parser.parseFromString(html, 'text/html')
+    for (const wrapper of Zotero.Utilities.xpath(doc, '//div[@class="wrapper"]')) {
+      if (wrapper.innerText.trim() === '') wrapper.remove()
+    }
+    const serializer = Components.classes['@mozilla.org/xmlextras/xmlserializer;1'].createInstance(Components.interfaces.nsIDOMSerializer)
+    html = serializer.serializeToString(doc)
+
+    return html.split('\n').filter(line => line.trim()).join('\n')
+  }
+
   private defaultReportField(item, offset, field) {
     // shift orig item
     if (typeof item.y !== 'undefined') item.y += offset
@@ -113,9 +131,8 @@ export class ThinReport {
       if (field === field.toUpperCase()) {
         label = field
       } else {
-        label = field[0].toUpperCase() + field.slice(1)
-        label = label.split(/([A-Z][a-z]*)/)
-        label = label.join(' ').toLowerCase()
+        label = field.charAt(0).toUpperCase() + field.slice(1)
+        label = label.replace(/([A-Z]+)/g, ' $1').trim()
       }
       item.texts = [ (item.texts || [''])[0].replace('{field}', label) ]
     }
@@ -126,14 +143,22 @@ export class ThinReport {
   }
 
   private normalize(item, context) {
-    if (item.type !== 'list' && item.id) { // lists must have an ID in thinreports
-      item.field = (context.varscope || '') + item.id
-      if (!this.fields.has(item.field)) throw new Error(`Unsupported field "${item.field}"`)
+    if (item.type === 'list') {
+      delete item.id // thinreports editor always adds an ID to lists
+      delete item.description // lists always shown
     }
 
-    if (item.type !== 'list' && item.description) { // lists always shown
-      item.condition = (context.varscope || '') + item.description
-      if (!this.fields.has(item.condition)) throw new Error(`Unsupported field "${item.condition}"`)
+    if (item.id && item.type !== 'text-block') throw new Error(`Unexpected ID on item if type ${item.type}`)
+    if (item.id && item.description && item.id !== item.description) throw new Error(`ID/description mismatch on ${item.type}`)
+
+    if (item.type === 'text-block' && item.id) {
+      item.field = (context.varscope || '') + item.id
+      if (!this.fields.valid.has(item.field)) throw new Error(`Unsupported field "${item.field}"`)
+    }
+
+    if (item.id || item.description) {
+      item.condition = (context.varscope || '') + (item.id || item.description)
+      if (!this.fields.valid.has(item.condition)) throw new Error(`Unsupported field "${item.condition}"`)
     }
 
     switch (item.type) {
@@ -145,6 +170,7 @@ export class ThinReport {
         for (const child of item.items) {
           this.normalize(child, { top: item.top, left: item.left })
         }
+        // TODO: inside rows?
         const list = item.items.find(child => child.type === 'list')
         item.items = this.splitToRows(item.items.filter(child => child.type !== 'list'))
         if (list) item.items.push(list)
@@ -221,7 +247,6 @@ export class ThinReport {
         rows.push({
           type: 'row',
           display: true,
-          top: item.top,
           items: [],
         })
 
@@ -240,7 +265,16 @@ export class ThinReport {
     }
 
     for (const row of rows) {
-      row.left = Math.min(...row.items.map(item => item.left))
+      row.height = Math.max(...row.items.map(item => item.top + item.height))
+      row.width = Math.max(...row.items.map(item => item.left + item.width))
+
+      // if all child members have the same condition, lift it to the row
+      if (row.items[0].condition && !row.items.find(item => item.condition !== row.items[0].condition)) {
+        row.condition = row.items[0].condition
+        for (const item of row.items) {
+          delete item.condition
+        }
+      }
     }
 
     return rows
@@ -285,42 +319,41 @@ export class ThinReport {
       default: throw new Error(`Unsupported item type ${item.type}`)
     }
 
-    if (template && (item.field || item.condition)) template = this.wrap(`{% if ${item.field || item.condition} %}`, template, '{% endif %}')
+    if (template && item.condition) template = `{% if ${item.condition} %}\n` + template + '{% endif %}\n' // tslint:disable-line:prefer-template
 
     return template
   }
 
   private add_layout(item): string {
-    const padding = item.report.margin.map(m => `${m}px`).join(' ')
-    let template = [
-      '<html>',
-      '  <head>',
-      '    <style>',
-      `      @page { size: ${item.report['paper-type']}; margin: ${item.report.margin.map(px => px + 'px').join(' ')}; }`,
-      '      @media print {',
-      '        footer { position: fixed; bottom: 0;}',
-      '        table { page-break-after:auto }',
-      '        tr    { page-break-inside:avoid; page-break-after:auto }',
-      '        td    { page-break-inside:avoid; page-break-after:auto }',
-      '        thead { display:table-header-group }',
-      '        tfoot { display:table-footer-group }',
-      `        html  { width: ${this.page.w}px; height: ${this.page.h}px; }`,
-      `        body  { width: ${this.page.w}px; height: ${this.page.h}px; padding: ${padding}; }`,
-      '        .line { border: 0; position: absolute }',
-      '        table, .text, .text-block, img, .rect, .ellipse { position: absolute }',
-      '      }',
-      '    </style>',
-      '  <body>',
-      '',
-    ].join('\n')
-
+    let body = ''
     for (const child of item.items) {
-      template += indent(this.add(child), 4) // tslint:disable-line:no-magic-numbers
+      body += this.add(child)
     }
+    body = this.wrap('body', body)
 
-    template += '  </body>\n</html>\n'
+    const margins = item.report.margin.map(m => `${m}px`).join(' ')
+    let head = dedent(`
+      @page { size: ${item.report['paper-type']}; margin: ${margins}; }
+      @media print {
+        footer { position: fixed; bottom: 0;}
+        table { page-break-after:auto }
+        tr    { page-break-inside:avoid; page-break-after:auto }
+        td    { page-break-inside:avoid; page-break-after:auto }
+        thead { display:table-header-group }
+        tfoot { display:table-footer-group }
+        html  { width: ${this.page.w}px; height: ${this.page.h}px; }
+        body  { width: ${this.page.w}px; height: ${this.page.h}px; padding: ${margins}; }
+      }
+      .line { border: 0; position: absolute }
+      table, .text, .text-block, img, .rect, .ellipse { position: absolute }
+      .wrapper { position: relative; border: 0; padding: 0; margin: 0 }
+    `) + '\n'
 
-    return template
+    head = this.wrap('style', head)
+    head = '<title>Zotero report</title>\n' + head
+    head = this.wrap('head', head)
+
+    return this.wrap('html', head + body)
   }
 
   private dimensions(item) {
@@ -340,11 +373,11 @@ export class ThinReport {
       template += this.add(child)
     }
 
-    return this.wrap('<div style="position: relative">', template, '</div>')
+    return this.wrap(`<div class="wrapper" style="${this.dimensions(item)}">`, template, '</div>')
   }
 
   private add_line(item): string {
-    let style = `border: 0px; ${this.dimensions(item)}`
+    let style = this.dimensions(item)
 
     for (const [k, v] of Object.entries(item.style)) {
       if (!v || (Array.isArray(v) && !v.length)) continue
@@ -477,6 +510,8 @@ export class ThinReport {
       table += this.wrap('footer', footer)
     }
 
+    delete item.height
+    delete item.width
     return this.wrap(`<table style="${this.dimensions(item)}">`, table, '</table>')
   }
 
@@ -491,7 +526,7 @@ export class ThinReport {
     template = this.wrap(elt === 'thead' ? 'th' : 'td', template)
     template = this.wrap('tr', template)
 
-    if (elt === 'tbody') template = this.wrap('{% for item in items %}', template, '{% endfor %}')
+    if (elt === 'tbody') template = '{% for item in items %}\n' + template + '{% endfor %}\n' // tslint:disable-line:prefer-template
     template = this.wrap(elt, template)
 
     return template
@@ -509,6 +544,18 @@ export class ThinReport {
       prefix = `<${prefix}>`
     }
     return `${prefix}\n${indent(body, 2)}${postfix}\n`
+  }
+
+  private simplify(item) {
+    for (const [alias, field] of Object.entries(this.fields.aliasOf)) {
+      if (!item[alias]) continue
+      item[field] = item[alias]
+      delete item[alias]
+    }
+
+    item.itemType = Zotero.ItemTypes.getLocalizedString(item.itemType)
+
+    return item
   }
 }
 
