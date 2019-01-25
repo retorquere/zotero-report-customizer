@@ -37,6 +37,7 @@ mixin metadata(item)
     table
       tr.itemType
         th #{Zotero.getString('itemFields.itemType')}
+          a.delete-field(href='#' onclick='deleteField("itemType")')
         td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
 
       //- Creators
@@ -44,6 +45,7 @@ mixin metadata(item)
         each creator in item.creators
           tr.creator(class=creator.creatorType)
             th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
+              a.delete-field(href='#' onclick='deleteField("creator")')
             td
               if typeof creator.name !== 'undefined'
                 //- One field
@@ -68,6 +70,7 @@ mixin metadata(item)
 
         tr(class=fieldAlias[`${item.itemType}.${field}`] || field)
           th #{fieldName(item.itemType, field)}
+            a.delete-field(href='#' onclick=`deleteField("${fieldAlias[`${item.itemType}.${field}`] || field}")`)
           td
             if field == 'url' && value.match(/^https?:\/\//)
               //- URL
@@ -88,6 +91,7 @@ mixin metadata(item)
 mixin tags(item)
   if item.tags && item.tags.length
     h3.tags #{Zotero.getString('report.tags')}
+      a.delete-field(href='#' onclick='deleteField("tags")')
     ul.tags
       each tag in item.tags
         li #{tag.tag}
@@ -95,6 +99,7 @@ mixin tags(item)
 mixin attachments(item)
   if item.attachments && item.attachments.length
     h3.attachments #{Zotero.getString('itemFields.attachments')}
+      a.delete-field(href='#' onclick='deleteField("attachments")')
     ul.attachments
       each attachment in item.attachments
         li(id=`item_${attachment.key}`)
@@ -106,18 +111,19 @@ mixin attachments(item)
 
           //- Attachment note
           if attachment.note
-            div.note
-              +note(attachment.note)
+            +note(attachment.note)
 //-
 mixin note(text)
-  //- If HTML tag or entity, parse as HTML
-  if text.match(/(<(p|ul|ol|div|a|br|b|i|u|strong|em( >))|&[a-z]+;|&#[0-9]+;)/)
-    //- Strip control characters (for notes that were
-    //- added before item.setNote() started doing this)
-    | !{domParser.parseFromString(`<div>${text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')}</div>`, 'text/html').body.innerHTML}
-  else
-    //- Otherwise, treat as plain text
-    p.plaintext #{text}
+  div.notes
+    a.delete-field(href='#' onclick='deleteField("notes")')
+    //- If HTML tag or entity, parse as HTML
+    if text.match(/(<(p|ul|ol|div|a|br|b|i|u|strong|em( >))|&[a-z]+;|&#[0-9]+;)/)
+      //- Strip control characters (for notes that were
+      //- added before item.setNote() started doing this)
+      | !{domParser.parseFromString(`<div>${text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')}</div>`, 'text/html').body.innerHTML}
+    else
+      //- Otherwise, treat as plain text
+      p.plaintext #{text}
 //-
 html
   head
@@ -126,7 +132,41 @@ html
     link(rel='stylesheet' type='text/css' href='zotero://report/detail.css')
     link(rel='stylesheet' type='text/css' media='screen,projection' href='zotero://report/detail_screen.css')
     link(rel='stylesheet' type='text/css' media='print' href='zotero://report/detail_print.css')
+    style.
+      h3, th, .notes {
+        position: relative;
+      }
+
+      .delete-field {
+        position: absolute;
+        top: 5px;
+        left: 5px;
+        display: none;
+        width: 10px;
+        height: 10px;
+        border: 1px solid #f56b00;
+        background:
+          linear-gradient(to bottom right, transparent 43%, #fff 45%, #fff 55%, transparent 57%),
+          linear-gradient(to bottom left , transparent 43%, #fff 45%, #fff 55%, transparent 57%),
+          #f56b00;
+        }
+
+        .edit-header {
+          position: sticky;
+          top: 10px;
+          right: 10px;
+        }
+
+        @media print {
+          .edit-header {
+            display: none !important;
+          }
+        }
   body
+    div.edit-header
+      //- edit symbol
+      a(href='#' onclick="toggleEdit()") !{'&#9998;'}
+
     ul.report(class={combineChildItems: 'combineChildItems'})
       each item in items
         li.item(id=`item_${item.key}` class=item.itemType)
