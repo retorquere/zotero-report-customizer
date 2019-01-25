@@ -3,7 +3,8 @@
   "version": "0.0.1",
   "description": "Zotero Report Customizer",
   "scripts": {
-    "lint": "tslint -t stylish --project . && pug -c content/report.pug",
+    "lint": "tslint -t stylish --project .",
+    "pug": "pug -c content/report.pug",
     "prebuild": "npm run lint",
     "build": "tsc  -t es2017 content/report.ts && webpack",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
