@@ -5,14 +5,14 @@
   "scripts": {
     "lint": "tslint -t stylish --project .",
     "prebuild": "npm run lint",
-    "build": "webpack",
+    "build": "tsc  -t es2017 content/report.ts && webpack",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags"
   },
   "repository": {
     "type": "git",
-    "url": "git@github.com:Emiliano Heyns/zotero-report-customizer.git"
+    "url": "https://github.com/retorquere/zotero-report-customizer.git"
   },
   "author": {
     "name": "Emiliano Heyns",
@@ -23,18 +23,22 @@
   },
   "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
   "dependencies": {
+    "ajv": "^6.7.0",
     "circular-dependency-plugin": "^5.0.2",
+    "dedent": "^0.7.0",
     "handlebars": "^4.0.12",
     "indent-string": "^3.2.0",
     "nunjucks": "^3.1.7",
+    "pug": "^2.0.3",
+    "pug-loader": "^2.4.0",
     "rimraf": "^2.6.3",
     "ts-loader": "^5.3.3",
-    "ts-node": "^7.0.1",
+    "ts-node": "^8.0.1",
     "tslint": "^5.12.1",
-    "typescript": "^3.2.2",
-    "webpack": "^4.28.4",
+    "typescript": "^3.2.4",
+    "webpack": "^4.29.0",
     "webpack-cli": "^3.2.1",
-    "zotero-plugin": "0.0.68"
+    "zotero-plugin": "0.0.69"
   },
   "xpi": {
     "name": "Zotero Report Customizer",
