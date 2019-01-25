@@ -1,6 +1,5 @@
 doctype strict
 - const domParser = Components.classes['@mozilla.org/xmlextras/domparser;1'].createInstance(Components.interfaces.nsIDOMParser)
-- Zotero.logError(`fieldAlias = ${JSON.stringify(fieldAlias)}`)
 - const nonMeta = new Set([])
 - nonMeta.add('reportSearchMatch')
 - nonMeta.add('reportChildren')
@@ -67,7 +66,6 @@ mixin metadata(item)
           - continue
         - value = item[field]
 
-        - Zotero.logError(`field: ${field}/${item.itemType}.${field}, alias: ${fieldAlias[`${item.itemType}.${field}`]}`)
         tr(class=fieldAlias[`${item.itemType}.${field}`] || field)
           th #{fieldName(item.itemType, field)}
           td
