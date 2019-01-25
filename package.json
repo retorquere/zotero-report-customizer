@@ -3,7 +3,7 @@
   "version": "0.0.1",
   "description": "Zotero Report Customizer",
   "scripts": {
-    "lint": "tslint -t stylish --project .",
+    "lint": "tslint -t stylish --project . && pug -c content/report.pug",
     "prebuild": "npm run lint",
     "build": "tsc  -t es2017 content/report.ts && webpack",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
@@ -23,6 +23,7 @@
   },
   "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
   "dependencies": {
+    "@types/source-map": "^0.5.2",
     "ajv": "^6.7.0",
     "circular-dependency-plugin": "^5.0.2",
     "dedent": "^0.7.0",
@@ -30,6 +31,7 @@
     "indent-string": "^3.2.0",
     "nunjucks": "^3.1.7",
     "pug": "^2.0.3",
+    "pug-cli": "^1.0.0-alpha6",
     "pug-loader": "^2.4.0",
     "rimraf": "^2.6.3",
     "ts-loader": "^5.3.3",

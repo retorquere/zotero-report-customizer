@@ -39,6 +39,7 @@ const config = {
   },
   module: {
     rules: [
+      { test: /\.pug$/, use: [ 'pug-loader' ] },
       { test: /\.json$/, use: [ 'json-loader' ] },
       { test: /\.ts$/, exclude: [ /node_modules/ ], use: [ 'wrap-loader', 'ts-loader' ] },
     ],
