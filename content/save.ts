@@ -1,6 +1,6 @@
 // tslint:disable: no-console
 
-declare const backend: string
+declare let backend: string
 
 window.onmessage = e => {
   const xhr = new XMLHttpRequest()
