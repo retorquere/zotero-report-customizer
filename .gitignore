@@ -11,4 +11,4 @@ build
 *.xpi
 node_modules
 .env
-content/report.js
+content/*.js

@@ -6,7 +6,7 @@
     "lint": "tslint -t stylish --project .",
     "pug": "pug -c content/report.pug",
     "prebuild": "npm run lint",
-    "build": "tsc  -t es2017 content/report.ts && webpack",
+    "build": "tsc  -t es2017 content/report.ts && tsc  -t es2017 content/save.ts && webpack",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags"

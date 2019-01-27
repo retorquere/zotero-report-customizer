@@ -1,9 +1,20 @@
 // tslint:disable:no-console
 
-const state = {
+declare const config: { remove: string[] }
+
+let backend = null
+window.onload = () => {
+  document.getElementById('backend').addEventListener('load', () => {
+    backend = this.contentWindow
+  })
+}
+
+let state: { editing: boolean, dirty: boolean, remove: string[] } = {
   editing: false,
+  dirty: false,
   remove: [],
 }
+window.onbeforeunload = () => state.dirty
 
 function toggleEdit() {
   state.editing = !state.editing
@@ -15,16 +26,44 @@ function toggleEdit() {
   return false
 }
 
-function deleteField(type) {
-  if (state.remove.indexOf(type) < 0) state.remove.push(type)
-  update()
+function deleteField(field) {
+  state.dirty = true
+
+  if (state.remove.indexOf(field.dataset.type) < 0) state.remove.push(field.dataset.type)
+  update(state.remove, 'none')
+
   return false
 }
 
-function update() {
-  for (const cls of state.remove) {
+function reset() {
+  state = {...state, ...config, dirty: false }
+
+  const restore = []
+  for (const field of document.querySelectorAll('[data-type]')) {
+    const type = (field as HTMLElement).dataset.type
+    if (restore.indexOf(type) < 0) restore.push(type)
+  }
+  update(restore, '')
+
+  return false
+}
+
+function save() {
+  if (state.dirty && backend) backend.postMessage(JSON.stringify({ remove: state.remove }), '*')
+  return false
+}
+window.onmessage = e => {
+  // e.data can be 'saved' or 'error'
+  // this will reload the report and thereby get the latest saved state
+  location.reload(true)
+}
+
+function update(classes, display) {
+  document.getElementById('dirty').style.display = state.dirty ? 'inline-block' : 'none'
+
+  for (const cls of classes) {
     for (const field of document.getElementsByClassName(cls)) {
-      (field as HTMLElement).style.display = 'none'
+      (field as HTMLElement).style.display = display
     }
   }
 }

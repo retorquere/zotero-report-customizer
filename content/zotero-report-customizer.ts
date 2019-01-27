@@ -4,9 +4,11 @@ declare const Components: any
 Components.utils.import('resource://gre/modules/osfile.jsm')
 declare const OS: any
 
+const backend = 'http://127.0.0.1:23119/report-customizer'
 const report = require('./report.pug')
+const save = require('./save.pug')({ backend })
 
-function save(path, contents) {
+function saveFile(path, contents) {
   const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
   file.initWithPath(path)
   Zotero.File.putContents(file, contents)
@@ -55,8 +57,25 @@ function* listGenerator(items, combineChildItems) {
     }
   }
 
-  const html = report({ fieldName, items, fieldAlias })
-  save('/tmp/rc-report.html', html)
+  Zotero.logError('getting report-customizer.config...')
+  let serialized = null
+  try {
+    serialized = Zotero.Prefs.get('report-customizer.config')
+  } catch (err) {
+    Zotero.logError(`Cannot retrieve report-customizer.config: ${err}`)
+  }
+  let config = { remove: [], order: [] }
+  if (serialized) {
+    try {
+      config = JSON.parse(serialized)
+    } catch (err) {
+      Zotero.logError(`Cannot parse report-customizer.config ${JSON.stringify(serialized)}: ${err}`)
+    }
+  }
+
+  const html = report({ backend, config, fieldName, items, fieldAlias })
+  saveFile('/tmp/rc-report.html', html)
+  saveFile('/tmp/rc-save.html', save)
   yield html
 }
 
@@ -80,5 +99,35 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
     }
 
     Zotero.Report.HTML.listGenerator = listGenerator
+
+    Zotero.Server.Endpoints['/report-customizer'] = class ReportCustomizerBackend {
+      public supportedMethods = ['GET', 'POST']
+      public supportedDataTypes = '*'
+      public permitBookmarklet = false
+
+      public init(req) {
+        switch (req.method) {
+          case 'GET':
+            return [200, 'text/html', save] // tslint:disable-line:no-magic-numbers
+
+          case 'POST':
+            Zotero.logError(`saving report-customizer.config ${JSON.stringify(req.data)}`)
+
+            try {
+              Zotero.Prefs.set('report-customizer.config', JSON.stringify(JSON.parse(req.data)))
+              return [200, 'text/plain', 'config saved'] // tslint:disable-line:no-magic-numbers
+
+            } catch (err) {
+              Zotero.logError(`error saving report-customizer data: ${err}`)
+
+            }
+            return [500, 'error saving report-customizer data', 'text/plain'] // tslint:disable-line:no-magic-numbers
+
+          default:
+            return [500, `unexpected method ${req.method}`, 'text/plain'] // tslint:disable-line:no-magic-numbers
+
+        }
+      }
+    }
   }
 }
