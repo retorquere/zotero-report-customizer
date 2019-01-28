@@ -38,6 +38,7 @@ mixin metadata(item)
       tr.itemType
         th #{Zotero.getString('itemFields.itemType')}
           a.delete-field(href='#' data-type='itemType' onclick='deleteField(this)')
+            i.material-icons clear
         td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
 
       //- Creators
@@ -46,6 +47,7 @@ mixin metadata(item)
           tr.creator(class=creator.creatorType)
             th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
               a.delete-field(href='#' data-type='creator' onclick='deleteField(this)')
+                i.material-icons clear
             td
               if typeof creator.name !== 'undefined'
                 //- One field
@@ -71,6 +73,7 @@ mixin metadata(item)
         tr(class=fieldAlias[`${item.itemType}.${field}`] || field)
           th #{fieldName(item.itemType, field)}
             a.delete-field(href='#' data-type=(fieldAlias[`${item.itemType}.${field}`] || field) onclick='deleteField(this)')
+              i.material-icons clear
           td
             if field == 'url' && value.match(/^https?:\/\//)
               //- URL
@@ -92,6 +95,7 @@ mixin tags(item)
   if item.tags && item.tags.length
     h3.tags #{Zotero.getString('report.tags')}
       a.delete-field(href='#' data-type='tags' onclick='deleteField(this)')
+        i.material-icons clear
     ul.tags
       each tag in item.tags
         li #{tag.tag}
@@ -100,6 +104,7 @@ mixin attachments(item)
   if item.attachments && item.attachments.length
     h3.attachments #{Zotero.getString('itemFields.attachments')}
       a.delete-field(href='#' data-type='attachments' onclick='deleteField(this)')
+        i.material-icons clear
     ul.attachments
       each attachment in item.attachments
         li(id=`item_${attachment.key}`)
@@ -116,6 +121,7 @@ mixin attachments(item)
 mixin note(text)
   div.notes
     a.delete-field(href='#' data-type='notes' onclick='deleteField(this)')
+      i.material-icons clear
     //- If HTML tag or entity, parse as HTML
     if text.match(/(<(p|ul|ol|div|a|br|b|i|u|strong|em( >))|&[a-z]+;|&#[0-9]+;)/)
       //- Strip control characters (for notes that were
@@ -146,94 +152,91 @@ html
         top: 5px;
         left: 5px;
         display: none;
-        width: 10px;
-        height: 10px;
-        border: 1px solid #f56b00;
-        background:
-          linear-gradient(to bottom right, transparent 43%, #fff 45%, #fff 55%, transparent 57%),
-          linear-gradient(to bottom left , transparent 43%, #fff 45%, #fff 55%, transparent 57%),
-          #f56b00;
-        }
+        font-size: 10px !important;
+      }
 
+      .edit-header {
+        position: sticky;
+        top: 10px;
+        right: 10px;
+      }
+
+      xiframe {
+        display: none;
+        width: 0;
+        height: 0;
+        border: none;
+        position: absolute;
+      }
+
+      @media print {
         .edit-header {
-          position: sticky;
-          top: 10px;
-          right: 10px;
+          display: none !important;
         }
+      }
 
-        #backend {
-          display: none;
-          width: 0;
-          height: 0;
-          border: none;
-          position: absolute;
-        }
+      @font-face {
+        font-family: 'Material Icons';
+        font-style: normal;
+        font-weight: 400;
+        src: local('Material Icons'),
+          local('MaterialIcons-Regular'),
+          url(#{require('./MaterialIcons-Regular.woff2')}) format('woff2'),
+          url(#{require('./MaterialIcons-Regular.woff')}) format('woff')
+      }
 
-        @media print {
-          .edit-header {
-            display: none !important;
-          }
-        }
+      .material-icons {
+        font-family: 'Material Icons';
+        font-weight: normal;
+        font-style: normal;
+        font-size: 24px;  /* Preferred icon size */
+        display: inline-block;
+        line-height: 1;
+        text-transform: none;
+        letter-spacing: normal;
+        word-wrap: normal;
+        white-space: nowrap;
+        direction: ltr;
 
-        @font-face {
-          font-family: 'Material Icons';
-          font-style: normal;
-          font-weight: 400;
-          src: local('Material Icons'),
-            local('MaterialIcons-Regular'),
-            url(#{require('./MaterialIcons-Regular.woff2')}) format('woff2'),
-            url(#{require('./MaterialIcons-Regular.woff')}) format('woff')
-        }
+        /* Support for all WebKit browsers. */
+        -webkit-font-smoothing: antialiased;
+        /* Support for Safari and Chrome. */
+        text-rendering: optimizeLegibility;
 
-        .material-icons {
-          font-family: 'Material Icons';
-          font-weight: normal;
-          font-style: normal;
-          font-size: 24px;  /* Preferred icon size */
-          display: inline-block;
-          line-height: 1;
-          text-transform: none;
-          letter-spacing: normal;
-          word-wrap: normal;
-          white-space: nowrap;
-          direction: ltr;
+        /* Support for Firefox. */
+        -moz-osx-font-smoothing: grayscale;
 
-          /* Support for all WebKit browsers. */
-          -webkit-font-smoothing: antialiased;
-          /* Support for Safari and Chrome. */
-          text-rendering: optimizeLegibility;
-
-          /* Support for Firefox. */
-          -moz-osx-font-smoothing: grayscale;
-
-          /* Support for IE. */
-          font-feature-settings: 'liga';
-        }
+        /* Support for IE. */
+        font-feature-settings: 'liga';
+      }
   body
     div.edit-header
       a(href='#' onclick='toggleEdit()')
         i.material-icons edit
       | 
-      a(href='#' onclick='reset()')
+      a(href='#' onclick='restore()')
         i.material-icons undo
       | 
-      a(href='#' onclick='save()')
-        i.material-icons save
+      a(href='#' onclick='reset()')
+        i.material-icons clear_all
       | 
-      i.material-icons#dirty warning
+      a#dirty(href='#' onclick='save()')
+        i.material-icons save
+      div
+        pre#log
 
     ul.report(class={combineChildItems: 'combineChildItems'})
       each item in items
         li.item(id=`item_${item.key}` class=item.itemType)
           if item.title
             if item.reportSearchMatch
-              //- Top-level item matched search, so display title
-              h2 #{item.title}
+              //- Top-level item matched search, so display title. titles may have html-ish code, so don't escape
+              h2 !{item.title}
             else
-              //- Non-matching parent, so display "Parent Item: [Title]"
+              //- Non-matching parent, so display "Parent Item: [Title]". titles may have html-ish code, so don't escape
               h2.parentItem
                 | #{Zotero.getString('report.parentItem')}
-                span #{item.title}
+                span !{item.title}
 
           //- If parent matches search, display parent item metadata table and tags
           if item.reportSearchMatch
@@ -267,7 +270,7 @@ html
             ul.related
               each relation in item.relations
                 li(id=`item_${relation.key}`) #{relation.title}
-script
-  | const config = !{JSON.stringify(config)};
-  include report.js
+script.
+  const config = !{JSON.stringify(config)};
+  !{require('!raw-loader!ts-loader!./report.ts')}
 iframe#backend(src=backend)

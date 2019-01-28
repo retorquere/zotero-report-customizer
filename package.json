@@ -6,7 +6,7 @@
     "lint": "tslint -t stylish 'content/**/*.ts' 'pages/**/*.ts'",
     "pug": "pug -c content/report.pug",
     "prebuild": "npm run lint",
-    "build": "tsc -t es2017 pages/report.ts && tsc -t es2017 pages/save.ts && webpack",
+    "build": "webpack",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags"
@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
   "dependencies": {
-    "@types/source-map": "^0.5.7",
+    "@types/source-map": "^0.5.2",
     "ajv": "^6.7.0",
     "circular-dependency-plugin": "^5.0.2",
     "dedent": "^0.7.0",
@@ -49,6 +49,7 @@
     "releaseURL": "https://github.com/Emiliano Heyns/zotero-report-customizer/releases/download/release/"
   },
   "devDependencies": {
+    "raw-loader": "^1.0.0",
     "url-loader": "^1.1.2"
   }
 }

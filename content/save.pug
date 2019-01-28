@@ -1,0 +1,8 @@
+doctype strict
+html
+  body
+    div
+      pre#log
+script.
+  const backend = !{JSON.stringify(backend)};
+  !{require('!raw-loader!ts-loader!./save.ts')}

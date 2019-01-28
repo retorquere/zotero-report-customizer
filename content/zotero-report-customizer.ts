@@ -5,8 +5,8 @@ Components.utils.import('resource://gre/modules/osfile.jsm')
 declare const OS: any
 
 const backend = 'http://127.0.0.1:23119/report-customizer'
-const report = require('../pages/report.pug')
-const save = require('../pages/save.pug')({ backend })
+const report = require('./report.pug')
+const save = require('./save.pug')({ backend })
 
 function saveFile(path, contents) {
   const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
@@ -57,7 +57,7 @@ function* listGenerator(items, combineChildItems) {
     }
   }
 
-  Zotero.logError('getting report-customizer.config...')
+  Zotero.debug('getting report-customizer.config...')
   let serialized = null
   try {
     serialized = Zotero.Prefs.get('report-customizer.config')
@@ -72,6 +72,7 @@ function* listGenerator(items, combineChildItems) {
       Zotero.logError(`Cannot parse report-customizer.config ${JSON.stringify(serialized)}: ${err}`)
     }
   }
+  Zotero.debug(`report-customizer.config: ${JSON.stringify(config)}`)
 
   const html = report({ backend, config, fieldName, items, fieldAlias })
   saveFile('/tmp/rc-report.html', html)
@@ -111,17 +112,17 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
             return [200, 'text/html', save] // tslint:disable-line:no-magic-numbers
 
           case 'POST':
-            Zotero.logError(`saving report-customizer.config ${JSON.stringify(req.data)}`)
+            Zotero.debug(`saving report-customizer.config ${JSON.stringify(req.data)}`)
 
             try {
-              Zotero.Prefs.set('report-customizer.config', JSON.stringify(JSON.parse(req.data)))
+              Zotero.Prefs.set('report-customizer.config', JSON.stringify(req.data))
               return [200, 'text/plain', 'config saved'] // tslint:disable-line:no-magic-numbers
 
             } catch (err) {
               Zotero.logError(`error saving report-customizer data: ${err}`)
 
             }
-            return [500, 'error saving report-customizer data', 'text/plain'] // tslint:disable-line:no-magic-numbers
+            return [500, `error saving report-customizer data ${JSON.stringify(req.data)}`, 'text/plain'] // tslint:disable-line:no-magic-numbers
 
           default:
             return [500, `unexpected method ${req.method}`, 'text/plain'] // tslint:disable-line:no-magic-numbers
