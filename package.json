@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
   "dependencies": {
-    "@types/source-map": "^0.5.2",
+    "@types/source-map": "^0.5.7",
     "ajv": "^6.7.0",
     "circular-dependency-plugin": "^5.0.2",
     "dedent": "^0.7.0",
@@ -41,7 +41,7 @@
     "typescript": "^3.2.4",
     "webpack": "^4.29.0",
     "webpack-cli": "^3.2.1",
-    "zotero-plugin": "0.0.70"
+    "zotero-plugin": "0.0.71"
   },
   "xpi": {
     "name": "Zotero Report Customizer",
