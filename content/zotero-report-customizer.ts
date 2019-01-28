@@ -75,8 +75,8 @@ function* listGenerator(items, combineChildItems) {
   Zotero.debug(`report-customizer.config: ${JSON.stringify(config)}`)
 
   const html = report({ backend, config, fieldName, items, fieldAlias })
-  saveFile('/tmp/rc-report.html', html)
-  saveFile('/tmp/rc-save.html', save)
+  // saveFile('/tmp/rc-report.html', html)
+  // saveFile('/tmp/rc-save.html', save)
   yield html
 }
 
