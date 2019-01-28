@@ -161,21 +161,66 @@ html
           right: 10px;
         }
 
+        #backend {
+          display: none;
+          width: 0;
+          height: 0;
+          border: none;
+          position: absolute;
+        }
+
         @media print {
           .edit-header {
             display: none !important;
           }
         }
+
+        @font-face {
+          font-family: 'Material Icons';
+          font-style: normal;
+          font-weight: 400;
+          src: local('Material Icons'),
+            local('MaterialIcons-Regular'),
+            url(#{require('./MaterialIcons-Regular.woff2')}) format('woff2'),
+            url(#{require('./MaterialIcons-Regular.woff')}) format('woff')
+        }
+
+        .material-icons {
+          font-family: 'Material Icons';
+          font-weight: normal;
+          font-style: normal;
+          font-size: 24px;  /* Preferred icon size */
+          display: inline-block;
+          line-height: 1;
+          text-transform: none;
+          letter-spacing: normal;
+          word-wrap: normal;
+          white-space: nowrap;
+          direction: ltr;
+
+          /* Support for all WebKit browsers. */
+          -webkit-font-smoothing: antialiased;
+          /* Support for Safari and Chrome. */
+          text-rendering: optimizeLegibility;
+
+          /* Support for Firefox. */
+          -moz-osx-font-smoothing: grayscale;
+
+          /* Support for IE. */
+          font-feature-settings: 'liga';
+        }
   body
     div.edit-header
-      //- edit symbol
-      a(href='#' onclick="toggleEdit()") #{'\u270E'}
+      a(href='#' onclick='toggleEdit()')
+        i.material-icons edit
       | 
-      a(href='#' onclick="reset()") #{'\u21BB'}
+      a(href='#' onclick='reset()')
+        i.material-icons undo
       | 
-      a(href='#' onclick="save()") #{'\u1F4BE'}
+      a(href='#' onclick='save()')
+        i.material-icons save
       | 
-      span#dirty #{'\u26A0'}
+      i.material-icons#dirty warning
 
     ul.report(class={combineChildItems: 'combineChildItems'})
       each item in items
@@ -222,7 +267,7 @@ html
             ul.related
               each relation in item.relations
                 li(id=`item_${relation.key}`) #{relation.title}
-script const config = !{JSON.stringify(config)};
 script
+  | const config = !{JSON.stringify(config)};
   include report.js
 iframe#backend(src=backend)

@@ -2,18 +2,21 @@
 
 declare const config: { remove: string[] }
 
-let backend = null
+let backend: Window = null
+let state: { editing: boolean, dirty: boolean, remove: string[] } = {
+  editing: false,
+  dirty: false,
+  remove: config.remove,
+}
+
 window.onload = () => {
+  update()
+
   document.getElementById('backend').addEventListener('load', () => {
     backend = this.contentWindow
   })
 }
 
-let state: { editing: boolean, dirty: boolean, remove: string[] } = {
-  editing: false,
-  dirty: false,
-  remove: [],
-}
 window.onbeforeunload = () => state.dirty
 
 function toggleEdit() {
@@ -30,7 +33,7 @@ function deleteField(field) {
   state.dirty = true
 
   if (state.remove.indexOf(field.dataset.type) < 0) state.remove.push(field.dataset.type)
-  update(state.remove, 'none')
+  update()
 
   return false
 }
@@ -38,12 +41,7 @@ function deleteField(field) {
 function reset() {
   state = {...state, ...config, dirty: false }
 
-  const restore = []
-  for (const field of document.querySelectorAll('[data-type]')) {
-    const type = (field as HTMLElement).dataset.type
-    if (restore.indexOf(type) < 0) restore.push(type)
-  }
-  update(restore, '')
+  update(true)
 
   return false
 }
@@ -58,11 +56,24 @@ window.onmessage = e => {
   location.reload(true)
 }
 
-function update(classes, display) {
+function update(restore = false) {
   document.getElementById('dirty').style.display = state.dirty ? 'inline-block' : 'none'
 
-  for (const cls of classes) {
-    for (const field of document.getElementsByClassName(cls)) {
+  const show: {[key: string]: string} = {}
+
+  if (restore) {
+    for (const field of document.querySelectorAll('[data-type]')) {
+      const type = (field as HTMLElement).dataset.type
+      show[type] = ''
+    }
+  }
+
+  for (const type of state.remove) {
+    show[type] = 'none'
+  }
+
+  for (const [type, display] of Object.entries(show)) {
+    for (const field of document.getElementsByClassName(type)) {
       (field as HTMLElement).style.display = display
     }
   }

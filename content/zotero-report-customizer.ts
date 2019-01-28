@@ -5,8 +5,8 @@ Components.utils.import('resource://gre/modules/osfile.jsm')
 declare const OS: any
 
 const backend = 'http://127.0.0.1:23119/report-customizer'
-const report = require('./report.pug')
-const save = require('./save.pug')({ backend })
+const report = require('../pages/report.pug')
+const save = require('../pages/save.pug')({ backend })
 
 function saveFile(path, contents) {
   const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
@@ -100,7 +100,7 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
 
     Zotero.Report.HTML.listGenerator = listGenerator
 
-    Zotero.Server.Endpoints['/report-customizer'] = class ReportCustomizerBackend {
+    Zotero.Server.Endpoints['/report-customizer'] = class {
       public supportedMethods = ['GET', 'POST']
       public supportedDataTypes = '*'
       public permitBookmarklet = false
