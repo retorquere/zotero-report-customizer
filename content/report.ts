@@ -1,12 +1,11 @@
-// tslint:disable:no-console
+declare const config: ReportConfig
+declare const defaults: ReportConfig
 
-declare const config: { remove: string[] }
-
-const state: { editing: boolean, saved: boolean, remove: string[] } = {
+const state: { editing: boolean, saved: boolean, config: ReportConfig } = {
   editing: false,
   saved: false,
 
-  remove: config.remove.slice(),
+  config: JSON.parse(JSON.stringify(config)),
 }
 
 function _log(msg) {
@@ -15,11 +14,45 @@ function _log(msg) {
   pre.textContent += `${msg}\n`
 }
 
+function equal(a, b) {
+  const ta = typeof a
+  const tb = typeof b
+
+  if (ta !== tb) return false
+
+  switch (ta) {
+    case 'undefined':
+      return true
+    case 'number':
+    case 'string':
+    case 'boolean':
+      return a === b
+  }
+
+  // both are either array or object here
+
+  const aa = Array.isArray(a)
+  const ab = Array.isArray(b)
+  if (aa !== ab) return false // must be both arrays or objects
+
+  if (aa) {
+    if (a.length !== b.length) return false
+
+  } else {
+    if ((a === null) !== (b === null)) return false
+    if (Object.keys(a).length !== Object.keys(b).length) return false
+
+  }
+
+  for (const i in a) {
+    if (!equal(a[i], b[i])) return false
+  }
+
+  return true
+}
+
 function isDirty() {
-  const _config_remove = Array.from(new Set(config.remove)).sort().join(':')
-  const _state_remove = Array.from(new Set(state.remove)).sort().join(':')
-  _log(`loaded: ${JSON.stringify(_config_remove)}, current: ${JSON.stringify(_state_remove)}, dirty: ${_config_remove !== _state_remove}`)
-  return _config_remove !== _state_remove
+  return !equal(config, state.config)
 }
 
 window.onbeforeunload = function(e) { // tslint:disable-line:only-arrow-functions
@@ -39,21 +72,21 @@ function toggleEdit() {
 
 function deleteField(field) {
   _log('deleteField')
-  if (state.remove.indexOf(field.dataset.type) < 0) state.remove.push(field.dataset.type)
+  if (state.config.fields.remove.indexOf(field.dataset.type) < 0) state.config.fields.remove.push(field.dataset.type)
   update()
   return false
 }
 
 function restore() {
   _log('restore')
-  state.remove = config.remove.slice()
+  state.config = JSON.parse(JSON.stringify(config))
   update()
   return false
 }
 
 function reset() {
   _log('reset')
-  state.remove = []
+  state.config = JSON.parse(JSON.stringify(defaults))
   update()
   return false
 }
@@ -63,7 +96,7 @@ function save() {
   _log('save: dirty=' + isDirty() + ', backend=' + !!backend) // tslint:disable-line:prefer-template
   if (isDirty()) {
     if (backend) {
-      backend.postMessage(JSON.stringify({ remove: state.remove }), '*')
+      backend.postMessage(JSON.stringify(state.config), '*')
     } else {
       alert(`backend not available: ${!!document.getElementById('backend')}`)
     }
@@ -83,7 +116,10 @@ window.onmessage = function(e) { // tslint:disable-line:only-arrow-functions
 
 function update() {
   _log('update; dirty=' + isDirty())
-  document.getElementById('dirty').style.display = isDirty() ? 'inline-block' : 'none'
+
+  document.getElementById('save').style.display = isDirty() ? 'inline-block' : 'none'
+  document.getElementById('undo').style.display = !equal(state.config, config) ? 'inline-block' : 'none'
+  document.getElementById('reset').style.display = !equal(state.config, defaults) ? 'inline-block' : 'none'
 
   const show: {[key: string]: string} = {}
 
@@ -92,7 +128,7 @@ function update() {
     show[type] = ''
   }
 
-  for (const type of state.remove) {
+  for (const type of state.config.fields.remove) {
     show[type] = 'none'
   }
 

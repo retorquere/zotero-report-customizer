@@ -1,0 +1,31 @@
+{
+  "title": "Report Config",
+
+  "type": "object",
+  "properties": {
+
+    "items": {
+      "type": "object",
+      "properties": {
+        "sort": { "type": "string", "default": "" }
+      },
+
+      "required": [ "sort" ],
+      "additionalProperties": false
+    },
+
+    "fields": {
+      "type": "object",
+      "properties": {
+        "remove": { "type": "array", "items": { "type": "string" }, "default": [] },
+        "order":  { "type": "array", "items": { "type": "string" }, "default": [] }
+      },
+
+      "required": [ "remove", "order" ],
+      "additionalProperties": false
+    }
+  },
+
+  "required": [ "items", "fields" ],
+  "additionalProperties": false
+}

@@ -21,8 +21,7 @@ window.onmessage = function(e) { // tslint:disable-line:only-arrow-functions
   }
 
   try {
-    const payload = JSON.parse(e.data)
-    xhr.send(JSON.stringify({ remove: payload.remove || [] }))
+    xhr.send(e.data)
   } catch (err) {
     log(err)
     window.parent.postMessage('error', '*')

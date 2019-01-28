@@ -28,8 +28,11 @@
     "ajv": "^6.7.0",
     "circular-dependency-plugin": "^5.0.2",
     "dedent": "^0.7.0",
+    "fs-extra": "^7.0.1",
     "handlebars": "^4.0.12",
     "indent-string": "^3.2.0",
+    "json-schema-defaults": "^0.4.0",
+    "json-schema-to-typescript": "^6.1.1",
     "nunjucks": "^3.1.7",
     "pug": "^2.0.3",
     "pug-cli": "^1.0.0-alpha6",
@@ -49,7 +52,6 @@
     "releaseURL": "https://github.com/Emiliano Heyns/zotero-report-customizer/releases/download/release/"
   },
   "devDependencies": {
-    "raw-loader": "^1.0.0",
     "url-loader": "^1.1.2"
   }
 }

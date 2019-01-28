@@ -1,5 +1,7 @@
 {
   "compilerOptions": {
+    "noUnusedLocals": true,
+    "noUnusedParameters": false,
     "importHelpers": true,
     "target": "es2017",
     "disableSizeLimit": true,
@@ -11,22 +13,18 @@
     "downlevelIteration": true,
     "lib": [ "es2017", "dom", "dom.iterable" ],
     "typeRoots": [
-      "./typings",
+      "./content/typings",
+      "./translators/typings",
+      "./gen/typings",
       "./node_modules/@types"
-    ],
-    "moduleResolution": "node"
+    ]
   },
   "include": [
-    "bin",
-    "loader",
-    "plugin",
-    "script",
-    "webpack",
     "content/**/*",
-    "resource/**/*",
+    "translators/**/*",
     "zotero-webpack/**/*",
     "setup/**/*",
-    "*.ts"
+    "gen/**/*"
   ],
   "exclude": [
     "node_modules",

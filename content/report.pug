@@ -212,16 +212,16 @@ html
       }
   body
     div.edit-header
-      a(href='#' onclick='toggleEdit()')
+      a#edit(href='#' onclick='toggleEdit()')
         i.material-icons edit
       | 
-      a(href='#' onclick='restore()')
+      a#undo(href='#' onclick='restore()')
         i.material-icons undo
       | 
-      a(href='#' onclick='reset()')
+      a#reset(href='#' onclick='reset()')
         i.material-icons clear_all
       | 
-      a#dirty(href='#' onclick='save()')
+      a#save(href='#' onclick='save()')
         i.material-icons save
       div
         pre#log
@@ -273,5 +273,6 @@ html
                 li(id=`item_${relation.key}`) #{relation.title}
 script.
   const config = !{JSON.stringify(config)};
-  !{require('!raw-loader!ts-loader!./report.ts')}
+  const defaults = !{JSON.stringify(defaults)};
+  !{require('!inline-ts!./report.ts')}
 iframe#backend(src=backend)

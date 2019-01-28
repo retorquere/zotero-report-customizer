@@ -1,17 +1,17 @@
 declare const Zotero: any
-declare const Components: any
 
-Components.utils.import('resource://gre/modules/osfile.jsm')
-declare const OS: any
+import Ajv = require('ajv')
 
 const backend = 'http://127.0.0.1:23119/report-customizer'
 const report = require('./report.pug')
 const save = require('./save.pug')({ backend })
 
+// declare const Components: any
 function saveFile(path, contents) {
-  const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
-  file.initWithPath(path)
-  Zotero.File.putContents(file, contents)
+  // const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
+  // file.initWithPath(path)
+  // Zotero.File.putContents(file, contents)
+  Zotero.debug(`${path}: ${contents}`)
 }
 
 const fields = `
@@ -30,6 +30,11 @@ function getLibraryIDFromkey(key) {
   }
   return undefined
 }
+
+const schema = require('./report-config.json')
+const ajv = new Ajv({allErrors: true})
+const validate = ajv.compile(schema)
+const defaults = require('json-schema-defaults')(schema)
 
 function* listGenerator(items, combineChildItems) {
   const fieldNames = {}
@@ -94,7 +99,7 @@ function* listGenerator(items, combineChildItems) {
   } catch (err) {
     Zotero.logError(`Cannot retrieve report-customizer.config: ${err}`)
   }
-  let config = { remove: [], order: [] }
+  let config = defaults
   if (serialized) {
     try {
       config = JSON.parse(serialized)
@@ -102,11 +107,15 @@ function* listGenerator(items, combineChildItems) {
       Zotero.logError(`Cannot parse report-customizer.config ${JSON.stringify(serialized)}: ${err}`)
     }
   }
+  if (!validate(config)) {
+    Zotero.logError(`Config does not conform to schema, resetting: ${validate.errors}`)
+    config = defaults
+  }
   Zotero.debug(`report-customizer.config: ${JSON.stringify(config)}`)
 
-  const html = report({ backend, config, fieldName, items, fieldAlias })
-  // saveFile('/tmp/rc-report.html', html)
-  // saveFile('/tmp/rc-save.html', save)
+  const html = report({ defaults, backend, config, fieldName, items, fieldAlias })
+  saveFile('/tmp/rc-report.html', html)
+  saveFile('/tmp/rc-save.html', save)
   yield html
 }
 
@@ -145,6 +154,8 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
             Zotero.debug(`saving report-customizer.config ${JSON.stringify(req.data)}`)
 
             try {
+              if (!validate(req.data)) throw new Error(`Config does not conform to schema, ignoring: ${validate.errors}`)
+
               Zotero.Prefs.set('report-customizer.config', JSON.stringify(req.data))
               return [200, 'text/plain', 'config saved'] // tslint:disable-line:no-magic-numbers
 
