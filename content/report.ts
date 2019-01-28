@@ -2,8 +2,9 @@
 
 declare const config: { remove: string[] }
 
-const state: { editing: boolean, remove: string[] } = {
+const state: { editing: boolean, saved: boolean, remove: string[] } = {
   editing: false,
+  saved: false,
 
   remove: config.remove.slice(),
 }
@@ -22,7 +23,7 @@ function isDirty() {
 }
 
 window.onbeforeunload = function(e) { // tslint:disable-line:only-arrow-functions
-  return isDirty() ? true : undefined
+  return !state.saved && isDirty() ? true : undefined
 }
 
 function toggleEdit() {
@@ -74,7 +75,7 @@ window.onmessage = function(e) { // tslint:disable-line:only-arrow-functions
   _log('message: got ' + e.data)
 
   // this will prevent the onbeforeunload complaining
-  restore()
+  state.saved = true
 
   // this will reload the report and thereby get the latest saved state
   location.reload(true)

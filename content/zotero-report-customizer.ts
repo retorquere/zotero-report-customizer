@@ -24,10 +24,24 @@ const fields = `
 `.replace(/\n/g, ' ').trim()
 const fieldAlias: { [key: string]: string } = {}
 
+function getLibraryIDFromkey(key) {
+  for (const [libraryID, keys] of Object.entries(Zotero.Items._objectIDs)) {
+    if (keys[key]) return parseInt(libraryID)
+  }
+  return undefined
+}
+
 function* listGenerator(items, combineChildItems) {
   const fieldNames = {}
   function fieldName(itemType, field) {
-    if (field === 'citationKey' && itemType !== 'attachment' && itemType !== 'note') return 'Citation Key'
+    if (itemType !== 'attachment' && itemType !== 'note') {
+      switch (field) {
+        case 'citationKey':
+          return 'Citation key'
+        case 'citationKeyConflicts':
+          return 'Citation key conflicts'
+      }
+    }
 
     const id = `${itemType}.${field}`
     if (typeof fieldNames[id] === 'undefined') {
@@ -42,7 +56,19 @@ function* listGenerator(items, combineChildItems) {
   }
 
   for (const item of items) {
-    if (Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) item.citationKey = (Zotero.BetterBibTeX.KeyManager.keys.findOne({ itemKey: item.key}) || {}).citekey
+    Zotero.debug(`item fields: ${Object.keys(item)}`)
+    if (item.itemType !== 'attachment' && item.itemType !== 'note' && Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) {
+      const citekey = Zotero.BetterBibTeX.KeyManager.keys.findOne({ itemKey: item.key}) || {}
+      item.citationKey = citekey.citekey
+      if (item.citationKey) {
+        const conflicts = Zotero.BetterBibTeX.KeyManager.keys.find({
+          itemKey: { $ne: item.key },
+          citekey: item.citationKey,
+          libraryID: getLibraryIDFromkey(item.key),
+        })
+        item.citationKeyConflicts = conflicts.length || ''
+      }
+    }
 
     if (item.reportSearchMatch && item.relations[Zotero.Relations.relatedItemPredicate]) {
       let relations = item.relations[Zotero.Relations.relatedItemPredicate]
