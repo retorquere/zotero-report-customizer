@@ -70,26 +70,27 @@ mixin metadata(item)
           - continue
         - value = item[field]
 
-        tr(class=fieldAlias[`${item.itemType}.${field}`] || field)
-          th #{fieldName(item.itemType, field)}
-            a.delete-field(href='#' data-type=(fieldAlias[`${item.itemType}.${field}`] || field) onclick='deleteField(this)')
-              i.material-icons clear
-          td
-            if field == 'url' && value.match(/^https?:\/\//)
-              //- URL
-              a(href=value) #{value}
-            else if field == 'DOI'
-              //- Hyperlink DOI
-              a(href=`http://doi.org/${value}`) #{value}
-            else if field == 'date'
-              //- Remove SQL date from multipart dates
-              //- (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
-              | #{Zotero.Date.multipartToStr(value)}
-            else if field == 'accessDate' || field == 'dateAdded' || field == 'dateModified'
-              //- Convert dates to local format
-              | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
-            else
-              | #{value}
+        if value
+          tr(class=fieldAlias[`${item.itemType}.${field}`] || field)
+            th #{fieldName(item.itemType, field)}
+              a.delete-field(href='#' data-type=(fieldAlias[`${item.itemType}.${field}`] || field) onclick='deleteField(this)')
+                i.material-icons clear
+            td
+              if field == 'url' && value.match(/^https?:\/\//)
+                //- URL
+                a(href=value) #{value}
+              else if field == 'DOI'
+                //- Hyperlink DOI
+                a(href=`http://doi.org/${value}`) #{value}
+              else if field == 'date'
+                //- Remove SQL date from multipart dates
+                //- (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
+                | #{Zotero.Date.multipartToStr(value)}
+              else if field == 'accessDate' || field == 'dateAdded' || field == 'dateModified'
+                //- Convert dates to local format
+                | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
+              else
+                | #{value}
 //-
 mixin tags(item)
   if item.tags && item.tags.length
@@ -161,7 +162,7 @@ html
         right: 10px;
       }
 
-      xiframe {
+      iframe {
         display: none;
         width: 0;
         height: 0;

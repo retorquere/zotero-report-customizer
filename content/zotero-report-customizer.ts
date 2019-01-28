@@ -27,6 +27,8 @@ const fieldAlias: { [key: string]: string } = {}
 function* listGenerator(items, combineChildItems) {
   const fieldNames = {}
   function fieldName(itemType, field) {
+    if (field === 'citationKey' && itemType !== 'attachment' && itemType !== 'note') return 'Citation Key'
+
     const id = `${itemType}.${field}`
     if (typeof fieldNames[id] === 'undefined') {
       try {
@@ -40,6 +42,8 @@ function* listGenerator(items, combineChildItems) {
   }
 
   for (const item of items) {
+    if (Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) item.citationKey = (Zotero.BetterBibTeX.KeyManager.keys.findOne({ itemKey: item.key}) || {}).citekey
+
     if (item.reportSearchMatch && item.relations[Zotero.Relations.relatedItemPredicate]) {
       let relations = item.relations[Zotero.Relations.relatedItemPredicate]
       if (!Array.isArray(relations)) relations = [ relations ]
