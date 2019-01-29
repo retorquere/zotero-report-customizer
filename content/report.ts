@@ -144,8 +144,10 @@ const report = new class {
 
       if (this.config.items.sort && control.parentElement.dataset.type === this.config.items.sort) {
         control.classList.remove('md-inactive')
+        control.classList.remove('md-18')
       } else {
         control.classList.add('md-inactive')
+        control.classList.add('md-18')
       }
     }
 
@@ -155,13 +157,9 @@ const report = new class {
       this.log(`sorting ${items.length} items`)
 
       items.sort((a, b) => {
-        const tda = a.querySelector(`tr.${this.config.items.sort} td`)
-        const ta = tda ? tda.textContent : ''
-        const tdb = b.querySelector(`tr.${this.config.items.sort} td`)
-        const tb = tdb ? tdb.textContent : ''
-
-        this.log(`compare: ${ta} vs ${tb}`)
-        return ta.localeCompare(tb)
+        const selector = (this.config.items.sort === 'title') ? 'h2' : `tr.${this.config.items.sort} td`
+        const t = [a, b].map(e => (e.querySelector(selector) || { textContent: ''}).textContent)
+        return t[0].localeCompare(t[1])
       })
 
       for (const item of items) {
