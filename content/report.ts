@@ -77,7 +77,7 @@ const report = new class {
   public setSort(field) {
     this.log('setSort')
 
-    this.config.items.sort = this.config.fields.remove.includes(field.dataset.type) ? '' : field.dataset.type
+    this.config.items.sort = (field.dataset.type === this.config.items.sort || this.config.fields.remove.includes(field.dataset.type)) ? '' : field.dataset.type
     this.update()
     return false
   }
@@ -139,15 +139,28 @@ const report = new class {
       }
     }
 
+    for (const control of document.querySelectorAll('a > i.material-icons')) {
+      if (control.textContent !== 'sort_by_alpha') continue
+
+      if (this.config.items.sort && control.parentElement.dataset.type === this.config.items.sort) {
+        control.classList.remove('md-inactive')
+      } else {
+        control.classList.add('md-inactive')
+      }
+    }
+
     if (this.config.items.sort) {
       const container = document.getElementById('report')
       const items = Array.from(container.children)
+      this.log(`sorting ${items.length} items`)
+
       items.sort((a, b) => {
         const tda = a.querySelector(`tr.${this.config.items.sort} td`)
         const ta = tda ? tda.textContent : ''
-        const tdb = a.querySelector(`tr.${this.config.items.sort} td`)
+        const tdb = b.querySelector(`tr.${this.config.items.sort} td`)
         const tb = tdb ? tdb.textContent : ''
 
+        this.log(`compare: ${ta} vs ${tb}`)
         return ta.localeCompare(tb)
       })
 

@@ -37,11 +37,11 @@ mixin metadata(item)
     table
       tbody
         tr.itemType
-          td.edit
+          th.edit
             a(href='#' data-type='itemType' onclick='report.deleteField(this)')
-              i.material-icons clear
+              i.material-icons.md-dark.md-18 clear
             a(href='#' data-type='itemType' onclick='report.setSort(this)')
-              i.material-icons sort_by_alpha
+              i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
           th #{Zotero.getString('itemFields.itemType')}
           td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
   
@@ -49,11 +49,11 @@ mixin metadata(item)
         if item.creators
           each creator in item.creators
             tr.creator(class=creator.creatorType)
-              td.edit
+              th.edit
                 a(href='#' data-type='creator' onclick='report.deleteField(this)')
-                  i.material-icons clear
+                  i.material-icons.md-dark.md-18 clear
                 a(href='#' data-type='creator' onclick='report.setSort(this)')
-                  i.material-icons sort_by_alpha
+                  i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
               th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
               td
                 if typeof creator.name !== 'undefined'
@@ -80,11 +80,11 @@ mixin metadata(item)
           if value
             - var fieldClass = fieldAlias[`${item.itemType}.${field}`] || field
             tr(class=fieldClass)
-              td.edit
+              th.edit
                 a(href='#' data-type=fieldClass onclick='report.deleteField(this)')
-                  i.material-icons clear
+                  i.material-icons.md-dark.md-18 clear
                 a(href='#' data-type=fieldClass onclick='report.setSort(this)')
-                  i.material-icons sort_by_alpha
+                  i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
               th #{fieldName(item.itemType, field)}
               td
                 if field == 'url' && value.match(/^https?:\/\//)
@@ -108,7 +108,7 @@ mixin tags(item)
     h3.tags
       span.edit
         a(href='#' data-type='tags' onclick='report.deleteField(this)')
-          i.material-icons clear
+          i.material-icons.md-dark.md-18 clear
       | #{Zotero.getString('report.tags')}
     ul.tags
       each tag in item.tags
@@ -119,7 +119,7 @@ mixin attachments(item)
     h3.attachments
       span.edit
         a(href='#' data-type='attachments' onclick='report.deleteField(this)')
-          i.material-icons clear
+          i.material-icons.md-dark.md-18 clear
       | #{Zotero.getString('itemFields.attachments')}
     ul.attachments
       each attachment in item.attachments
@@ -153,17 +153,14 @@ html
     link(rel='stylesheet' type='text/css' media='screen,projection' href='zotero://report/detail_screen.css')
     link(rel='stylesheet' type='text/css' media='print' href='zotero://report/detail_print.css')
     style.
-      #dirty {
+      #save {
         display: none;
       }
 
       .edit {
         display: none;
       }
-      .edit .material-icons {
-        font-size: 15px !important;
-      }
-      td.edit {
+      th.edit {
         width: 40px !important;
       }
 
@@ -193,8 +190,8 @@ html
         font-weight: 400;
         src: local('Material Icons'),
           local('MaterialIcons-Regular'),
-          url(#{require('material-icons/iconfont/MaterialIcons-Regular.woff2')}) format('woff2'),
-          url(#{require('material-icons/iconfont/MaterialIcons-Regular.woff')}) format('woff')
+          url(#{require('material-design-icons/iconfont/MaterialIcons-Regular.woff2')}) format('woff2'),
+          url(#{require('material-design-icons/iconfont/MaterialIcons-Regular.woff')}) format('woff')
       }
 
       .material-icons {
@@ -224,19 +221,33 @@ html
         vertical-align: middle !important;
         padding-bottom: 3px;
       }
+
+      /* Rules for sizing the icon. */
+      .material-icons.md-18 { font-size: 18px; }
+      .material-icons.md-24 { font-size: 24px; }
+      .material-icons.md-36 { font-size: 36px; }
+      .material-icons.md-48 { font-size: 48px; }
+
+      /* Rules for using icons as black on a light background. */
+      .material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
+      .material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
+
+      /* Rules for using icons as white on a dark background. */
+      .material-icons.md-light { color: rgba(255, 255, 255, 1); }
+      .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
   body
     div.edit-header
       a#edit(href='#' onclick='report.toggleEdit()')
-        i.material-icons edit
+        i.material-icons.md-dark edit
       | 
       a#undo(href='#' onclick='report.restore()')
-        i.material-icons undo
+        i.material-icons.md-dark undo
       | 
       a#reset(href='#' onclick='report.reset()')
-        i.material-icons clear_all
+        i.material-icons.md-dark clear_all
       | 
       a#save(href='#' onclick='report.save()')
-        i.material-icons save
+        i.material-icons.md-dark save
       div
         pre#log
 
@@ -271,7 +282,7 @@ html
                 h3.notes
                   span.edit
                     a(href='#' data-type='notes' onclick='report.deleteField(this)')
-                      i.material-icons clear
+                      i.material-icons.md-dark.md-18 clear
                   | #{Zotero.getString('report.notes')}
 
               ul.notes
