@@ -22,6 +22,7 @@ const fields = `
   JOIN fields bf ON bf.fieldID = bfmc.baseFieldID
 `.replace(/\n/g, ' ').trim()
 const fieldAlias: { [key: string]: string } = {}
+const publicationTitleAlias: string[] = []
 
 function getLibraryIDFromkey(key) {
   for (const [libraryID, keys] of Object.entries(Zotero.Items._objectIDs)) {
@@ -44,6 +45,8 @@ function* listGenerator(items, combineChildItems) {
           return 'Citation key'
         case 'citationKeyConflicts':
           return 'Citation key conflicts'
+        case 'qualityReport':
+          return 'Quality report'
       }
     }
 
@@ -60,7 +63,7 @@ function* listGenerator(items, combineChildItems) {
   }
 
   for (const item of items) {
-    Zotero.debug(`item fields: ${Object.keys(item)}`)
+    // citation key
     if (item.itemType !== 'attachment' && item.itemType !== 'note' && Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) {
       const citekey = Zotero.BetterBibTeX.KeyManager.keys.findOne({ itemKey: item.key}) || {}
       item.citationKey = citekey.citekey
@@ -74,6 +77,30 @@ function* listGenerator(items, combineChildItems) {
       }
     }
 
+    // quality report
+    Zotero.logError(`item keys: ${Object.keys(item).join(', ')}`)
+    const qualityReport = []
+    const nonSpaceWhiteSpace = /[\u00A0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u200B\u202F\u205F\u3000\uFEFF]/
+    let creators = (item.creators || []).map(creator => (typeof creator.name !== 'undefined') ? creator.name : `${creator.firstName} ${creator.lastName}`.trim())
+    if (!creators.length) qualityReport.push('Item has no authors')
+
+    creators = creators.filter(creator => creator.match(nonSpaceWhiteSpace))
+    if (creators.length) qualityReport.push(`Creators with non-space whitespace: ${creators.join(', ')}`)
+
+    const publicationTitle = {
+      field: publicationTitleAlias.find(alias => item[alias]) || 'publicationTitle',
+      value: '',
+    }
+    if (publicationTitle.field) publicationTitle.value = item[publicationTitle.field] || ''
+    if (item.journalAbbrev && publicationTitle.value && item.journalAbbrev.length >= publicationTitle.value.length) {
+      qualityReport.push(`${fieldName(item.itemType, publicationTitle.field)} is shorter than the journal abbreviation')}`)
+    }
+    if (publicationTitle.value.indexOf('.') >= 0) {
+      qualityReport.push(`${fieldName(item.itemType, publicationTitle.field)} contains a period -- is it a journal abbreviation?`)
+    }
+    if (qualityReport.length) item.qualityReport = qualityReport
+
+    // pre-fetch relations because pug doesn't do async
     if (item.reportSearchMatch && item.relations[Zotero.Relations.relatedItemPredicate]) {
       let relations = item.relations[Zotero.Relations.relatedItemPredicate]
       if (!Array.isArray(relations)) relations = [ relations ]
@@ -137,6 +164,7 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
 
     for (const row of await Zotero.DB.queryAsync(fields)) {
       fieldAlias[`${row.typeName}.${row.fieldAlias}`] = row.fieldName
+      if (row.fieldName === 'title' && !publicationTitleAlias.includes(row.fieldAlias)) publicationTitleAlias.push(row.fieldAlias)
     }
 
     Zotero.Report.HTML.listGenerator = listGenerator

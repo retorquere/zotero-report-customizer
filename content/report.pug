@@ -18,6 +18,7 @@ doctype strict
 - nonMeta.add('contentType')
 - nonMeta.add('linkMode')
 - nonMeta.add('path')
+- nonMeta.add('qualityReport')
 mixin metadata(item)
   - var table = false
   //- https://github.com/pugjs/pug/issues/3020 is pretty dumb people. Make a breaking change already.
@@ -113,6 +114,16 @@ mixin tags(item)
     ul.tags
       each tag in item.tags
         li #{tag.tag}
+mixin qualityReport(item)
+  if item.qualityReport && item.qualityReport.length
+    h3.quality-report
+      span.edit
+        a(href='#' data-type='tags' onclick='report.deleteField(this)')
+          i.material-icons.md-dark.md-18 clear
+      | #{fieldName(item.itemType, 'qualityReport')}
+    ul.quality-report
+      each msg in item.qualityReport
+        li #{msg}
 //-
 mixin attachments(item)
   if item.attachments && item.attachments.length
@@ -307,6 +318,7 @@ html
             ul.related
               each relation in item.relations
                 li(id=`item_${relation.key}`) #{relation.title}
+          +qualityReport(item)
 script.
   const config = !{JSON.stringify(config)};
   const defaults = !{JSON.stringify(defaults)};
