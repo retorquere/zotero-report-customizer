@@ -56,13 +56,7 @@ mixin metadata(item)
                 a(href='#' data-type='creator' onclick='report.setSort(this)')
                   i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
               th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
-              td
-                if typeof creator.name !== 'undefined'
-                  //- One field
-                  | #{creator.name}
-                else
-                  //- Two field
-                  | #{(creator.firstName + ' ' + creator.lastName).trim()}
+              td #{creator.name}
   
         //- Move dateAdded and dateModified to the end of the object
         - var da = item.dateAdded

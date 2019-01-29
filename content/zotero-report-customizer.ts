@@ -77,15 +77,22 @@ function* listGenerator(items, combineChildItems) {
       }
     }
 
+    if (item.creators) {
+      for (const creator of item.creators) {
+        if (typeof creator.name !== 'undefined') continue
+        creator.name = `${creator.firstName} ${creator.lastName}`.trim()
+      }
+    }
+
     // quality report
-    Zotero.logError(`item keys: ${Object.keys(item).join(', ')}`)
     const qualityReport = []
     const nonSpaceWhiteSpace = /[\u00A0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u200B\u202F\u205F\u3000\uFEFF]/
-    let creators = (item.creators || []).map(creator => (typeof creator.name !== 'undefined') ? creator.name : `${creator.firstName} ${creator.lastName}`.trim())
-    if (!creators.length) qualityReport.push('Item has no authors')
-
-    creators = creators.filter(creator => creator.match(nonSpaceWhiteSpace))
-    if (creators.length) qualityReport.push(`Creators with non-space whitespace: ${creators.join(', ')}`)
+    if (!item.creators || !item.creators.length) {
+      qualityReport.push('Item has no authors')
+    } else {
+      const creators = item.creators.filter(creator => creator.name.match(nonSpaceWhiteSpace))
+      if (creators.length) qualityReport.push(`Creators with non-space whitespace: ${creators.map(creator => creator.name).join(', ')}`)
+    }
 
     const publicationTitle = {
       field: publicationTitleAlias.find(alias => item[alias]) || 'publicationTitle',
@@ -99,6 +106,12 @@ function* listGenerator(items, combineChildItems) {
       qualityReport.push(`${fieldName(item.itemType, publicationTitle.field)} contains a period -- is it a journal abbreviation?`)
     }
     if (qualityReport.length) item.qualityReport = qualityReport
+
+    // optionally single creators field
+    const joiner = Zotero.Prefs.get('report-customizer.join-authors')
+    if (item.creators && joiner) {
+      item.creators = [ { creatorType: item.creators[0].creatorType, name: item.creators.map(creator => creator.name).join(joiner) } ]
+    }
 
     // pre-fetch relations because pug doesn't do async
     if (item.reportSearchMatch && item.relations[Zotero.Relations.relatedItemPredicate]) {
