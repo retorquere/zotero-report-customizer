@@ -6,12 +6,11 @@ const backend = 'http://127.0.0.1:23119/report-customizer'
 const report = require('./report.pug')
 const save = require('./save.pug')({ backend })
 
-// declare const Components: any
+declare const Components: any
 function saveFile(path, contents) {
-  // const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
-  // file.initWithPath(path)
-  // Zotero.File.putContents(file, contents)
-  Zotero.debug(`${path}: ${contents}`)
+  const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
+  file.initWithPath(path)
+  Zotero.File.putContents(file, contents)
 }
 
 const fields = `
@@ -114,8 +113,10 @@ function* listGenerator(items, combineChildItems) {
   Zotero.debug(`report-customizer.config: ${JSON.stringify(config)}`)
 
   const html = report({ defaults, backend, config, fieldName, items, fieldAlias })
-  saveFile('/tmp/rc-report.html', html)
-  saveFile('/tmp/rc-save.html', save)
+  if (Zotero.Prefs.get('report-customizer.dump')) {
+    saveFile('/tmp/rc-report.html', html)
+    saveFile('/tmp/rc-save.html', save)
+  }
   yield html
 }
 

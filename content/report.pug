@@ -35,77 +35,92 @@ mixin metadata(item)
 
   if table
     table
-      tr.itemType
-        th #{Zotero.getString('itemFields.itemType')}
-          a.delete-field(href='#' data-type='itemType' onclick='report.deleteField(this)')
-            i.material-icons clear
-        td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
-
-      //- Creators
-      if item.creators
-        each creator in item.creators
-          tr.creator(class=creator.creatorType)
-            th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
-              a.delete-field(href='#' data-type='creator' onclick='report.deleteField(this)')
-                i.material-icons clear
-            td
-              if typeof creator.name !== 'undefined'
-                //- One field
-                | #{creator.name}
-              else
-                //- Two field
-                | #{(creator.firstName + ' ' + creator.lastName).trim()}
-
-      //- Move dateAdded and dateModified to the end of the object
-      - var da = item.dateAdded
-      - var dm = item.dateModified
-      - delete item.dateAdded
-      - delete item.dateModified
-      - item.dateAdded = da
-      - item.dateModified = dm
-
-      //- https://github.com/pugjs/pug/issues/3020 is pretty dumb people. Make a breaking change already.
-      each field in Object.keys(item)
-        if nonMeta.has(field) || !fieldName(item.itemType, field)
-          - continue
-        - value = item[field]
-
-        if value
-          tr(class=fieldAlias[`${item.itemType}.${field}`] || field)
-            th #{fieldName(item.itemType, field)}
-              a.delete-field(href='#' data-type=(fieldAlias[`${item.itemType}.${field}`] || field) onclick='report.deleteField(this)')
-                i.material-icons clear
-            td
-              if field == 'url' && value.match(/^https?:\/\//)
-                //- URL
-                a(href=value) #{value}
-              else if field == 'DOI'
-                //- Hyperlink DOI
-                a(href=`http://doi.org/${value}`) #{value}
-              else if field == 'date'
-                //- Remove SQL date from multipart dates
-                //- (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
-                | #{Zotero.Date.multipartToStr(value)}
-              else if field == 'accessDate' || field == 'dateAdded' || field == 'dateModified'
-                //- Convert dates to local format
-                | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
-              else
-                | #{value}
+      tbody
+        tr.itemType
+          td.edit
+            a(href='#' data-type='itemType' onclick='report.deleteField(this)')
+              i.material-icons clear
+            a(href='#' data-type='itemType' onclick='report.setSort(this)')
+              i.material-icons sort_by_alpha
+          th #{Zotero.getString('itemFields.itemType')}
+          td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
+  
+        //- Creators
+        if item.creators
+          each creator in item.creators
+            tr.creator(class=creator.creatorType)
+              td.edit
+                a(href='#' data-type='creator' onclick='report.deleteField(this)')
+                  i.material-icons clear
+                a(href='#' data-type='creator' onclick='report.setSort(this)')
+                  i.material-icons sort_by_alpha
+              th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
+              td
+                if typeof creator.name !== 'undefined'
+                  //- One field
+                  | #{creator.name}
+                else
+                  //- Two field
+                  | #{(creator.firstName + ' ' + creator.lastName).trim()}
+  
+        //- Move dateAdded and dateModified to the end of the object
+        - var da = item.dateAdded
+        - var dm = item.dateModified
+        - delete item.dateAdded
+        - delete item.dateModified
+        - item.dateAdded = da
+        - item.dateModified = dm
+  
+        //- https://github.com/pugjs/pug/issues/3020 is pretty dumb people. Make a breaking change already.
+        each field in Object.keys(item)
+          if nonMeta.has(field) || !fieldName(item.itemType, field)
+            - continue
+          - value = item[field]
+  
+          if value
+            - var fieldClass = fieldAlias[`${item.itemType}.${field}`] || field
+            tr(class=fieldClass)
+              td.edit
+                a(href='#' data-type=fieldClass onclick='report.deleteField(this)')
+                  i.material-icons clear
+                a(href='#' data-type=fieldClass onclick='report.setSort(this)')
+                  i.material-icons sort_by_alpha
+              th #{fieldName(item.itemType, field)}
+              td
+                if field == 'url' && value.match(/^https?:\/\//)
+                  //- URL
+                  a(href=value) #{value}
+                else if field == 'DOI'
+                  //- Hyperlink DOI
+                  a(href=`http://doi.org/${value}`) #{value}
+                else if field == 'date'
+                  //- Remove SQL date from multipart dates
+                  //- (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
+                  | #{Zotero.Date.multipartToStr(value)}
+                else if field == 'accessDate' || field == 'dateAdded' || field == 'dateModified'
+                  //- Convert dates to local format
+                  | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
+                else
+                  | #{value}
 //-
 mixin tags(item)
   if item.tags && item.tags.length
-    h3.tags #{Zotero.getString('report.tags')}
-      a.delete-field(href='#' data-type='tags' onclick='report.deleteField(this)')
-        i.material-icons clear
+    h3.tags
+      span.edit
+        a(href='#' data-type='tags' onclick='report.deleteField(this)')
+          i.material-icons clear
+      | #{Zotero.getString('report.tags')}
     ul.tags
       each tag in item.tags
         li #{tag.tag}
 //-
 mixin attachments(item)
   if item.attachments && item.attachments.length
-    h3.attachments #{Zotero.getString('itemFields.attachments')}
-      a.delete-field(href='#' data-type='attachments' onclick='report.deleteField(this)')
-        i.material-icons clear
+    h3.attachments
+      span.edit
+        a(href='#' data-type='attachments' onclick='report.deleteField(this)')
+          i.material-icons clear
+      | #{Zotero.getString('itemFields.attachments')}
     ul.attachments
       each attachment in item.attachments
         li(id=`item_${attachment.key}`)
@@ -121,8 +136,6 @@ mixin attachments(item)
 //-
 mixin note(text)
   div.notes
-    a.delete-field(href='#' data-type='notes' onclick='report.deleteField(this)')
-      i.material-icons clear
     //- If HTML tag or entity, parse as HTML
     if text.match(/(<(p|ul|ol|div|a|br|b|i|u|strong|em( >))|&[a-z]+;|&#[0-9]+;)/)
       //- Strip control characters (for notes that were
@@ -140,20 +153,18 @@ html
     link(rel='stylesheet' type='text/css' media='screen,projection' href='zotero://report/detail_screen.css')
     link(rel='stylesheet' type='text/css' media='print' href='zotero://report/detail_print.css')
     style.
-      h3, th, .notes {
-        position: relative;
-      }
-
       #dirty {
         display: none;
       }
 
-      .delete-field {
-        position: absolute;
-        top: 5px;
-        left: 5px;
+      .edit {
         display: none;
-        font-size: 10px !important;
+      }
+      .edit .material-icons {
+        font-size: 15px !important;
+      }
+      td.edit {
+        width: 40px !important;
       }
 
       .edit-header {
@@ -171,7 +182,7 @@ html
       }
 
       @media print {
-        .edit-header {
+        .edit-header, .edit {
           display: none !important;
         }
       }
@@ -209,6 +220,9 @@ html
 
         /* Support for IE. */
         font-feature-settings: 'liga';
+
+        vertical-align: middle !important;
+        padding-bottom: 3px;
       }
   body
     div.edit-header
@@ -226,7 +240,7 @@ html
       div
         pre#log
 
-    ul.report(class={combineChildItems: 'combineChildItems'})
+    ul#report.report(class={combineChildItems: 'combineChildItems'})
       each item in items
         li.item(id=`item_${item.key}` class=item.itemType)
           if item.title
@@ -254,7 +268,11 @@ html
             if item.reportChildren.notes.length
               //- Only display "Notes:" header if parent matches search
               if item.reportSearchMatch
-                h3.notes #{Zotero.getString('report.notes')}
+                h3.notes
+                  span.edit
+                    a(href='#' data-type='notes' onclick='report.deleteField(this)')
+                      i.material-icons clear
+                  | #{Zotero.getString('report.notes')}
 
               ul.notes
                 each note in item.reportChildren.notes

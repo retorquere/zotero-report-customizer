@@ -60,7 +60,7 @@ const report = new class {
     this.log('toggleEdit')
     this.editing = !this.editing
 
-    for (const x of document.getElementsByClassName('delete-field')) {
+    for (const x of document.getElementsByClassName('edit')) {
       (x as HTMLElement).style.display = this.editing ? 'inline-block' : 'none'
     }
 
@@ -70,6 +70,14 @@ const report = new class {
   public deleteField(field) {
     this.log('deleteField')
     if (this.config.fields.remove.indexOf(field.dataset.type) < 0) this.config.fields.remove.push(field.dataset.type)
+    this.update()
+    return false
+  }
+
+  public setSort(field) {
+    this.log('setSort')
+
+    this.config.items.sort = this.config.fields.remove.includes(field.dataset.type) ? '' : field.dataset.type
     this.update()
     return false
   }
@@ -128,6 +136,23 @@ const report = new class {
     for (const [type, display] of Object.entries(show)) {
       for (const field of document.getElementsByClassName(type)) {
         (field as HTMLElement).style.display = display
+      }
+    }
+
+    if (this.config.items.sort) {
+      const container = document.getElementById('report')
+      const items = Array.from(container.children)
+      items.sort((a, b) => {
+        const tda = a.querySelector(`tr.${this.config.items.sort} td`)
+        const ta = tda ? tda.textContent : ''
+        const tdb = a.querySelector(`tr.${this.config.items.sort} td`)
+        const tb = tdb ? tdb.textContent : ''
+
+        return ta.localeCompare(tb)
+      })
+
+      for (const item of items) {
+        container.appendChild(item)
       }
     }
   }
