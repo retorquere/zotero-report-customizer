@@ -37,7 +37,7 @@ mixin metadata(item)
     table
       tr.itemType
         th #{Zotero.getString('itemFields.itemType')}
-          a.delete-field(href='#' data-type='itemType' onclick='deleteField(this)')
+          a.delete-field(href='#' data-type='itemType' onclick='report.deleteField(this)')
             i.material-icons clear
         td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
 
@@ -46,7 +46,7 @@ mixin metadata(item)
         each creator in item.creators
           tr.creator(class=creator.creatorType)
             th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
-              a.delete-field(href='#' data-type='creator' onclick='deleteField(this)')
+              a.delete-field(href='#' data-type='creator' onclick='report.deleteField(this)')
                 i.material-icons clear
             td
               if typeof creator.name !== 'undefined'
@@ -73,7 +73,7 @@ mixin metadata(item)
         if value
           tr(class=fieldAlias[`${item.itemType}.${field}`] || field)
             th #{fieldName(item.itemType, field)}
-              a.delete-field(href='#' data-type=(fieldAlias[`${item.itemType}.${field}`] || field) onclick='deleteField(this)')
+              a.delete-field(href='#' data-type=(fieldAlias[`${item.itemType}.${field}`] || field) onclick='report.deleteField(this)')
                 i.material-icons clear
             td
               if field == 'url' && value.match(/^https?:\/\//)
@@ -95,7 +95,7 @@ mixin metadata(item)
 mixin tags(item)
   if item.tags && item.tags.length
     h3.tags #{Zotero.getString('report.tags')}
-      a.delete-field(href='#' data-type='tags' onclick='deleteField(this)')
+      a.delete-field(href='#' data-type='tags' onclick='report.deleteField(this)')
         i.material-icons clear
     ul.tags
       each tag in item.tags
@@ -104,7 +104,7 @@ mixin tags(item)
 mixin attachments(item)
   if item.attachments && item.attachments.length
     h3.attachments #{Zotero.getString('itemFields.attachments')}
-      a.delete-field(href='#' data-type='attachments' onclick='deleteField(this)')
+      a.delete-field(href='#' data-type='attachments' onclick='report.deleteField(this)')
         i.material-icons clear
     ul.attachments
       each attachment in item.attachments
@@ -121,7 +121,7 @@ mixin attachments(item)
 //-
 mixin note(text)
   div.notes
-    a.delete-field(href='#' data-type='notes' onclick='deleteField(this)')
+    a.delete-field(href='#' data-type='notes' onclick='report.deleteField(this)')
       i.material-icons clear
     //- If HTML tag or entity, parse as HTML
     if text.match(/(<(p|ul|ol|div|a|br|b|i|u|strong|em( >))|&[a-z]+;|&#[0-9]+;)/)
@@ -182,8 +182,8 @@ html
         font-weight: 400;
         src: local('Material Icons'),
           local('MaterialIcons-Regular'),
-          url(#{require('./MaterialIcons-Regular.woff2')}) format('woff2'),
-          url(#{require('./MaterialIcons-Regular.woff')}) format('woff')
+          url(#{require('material-icons/iconfont/MaterialIcons-Regular.woff2')}) format('woff2'),
+          url(#{require('material-icons/iconfont/MaterialIcons-Regular.woff')}) format('woff')
       }
 
       .material-icons {
@@ -212,16 +212,16 @@ html
       }
   body
     div.edit-header
-      a#edit(href='#' onclick='toggleEdit()')
+      a#edit(href='#' onclick='report.toggleEdit()')
         i.material-icons edit
       | 
-      a#undo(href='#' onclick='restore()')
+      a#undo(href='#' onclick='report.restore()')
         i.material-icons undo
       | 
-      a#reset(href='#' onclick='reset()')
+      a#reset(href='#' onclick='report.reset()')
         i.material-icons clear_all
       | 
-      a#save(href='#' onclick='save()')
+      a#save(href='#' onclick='report.save()')
         i.material-icons save
       div
         pre#log
