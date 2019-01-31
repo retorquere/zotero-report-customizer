@@ -50,6 +50,8 @@ const report = new class {
 
     this.config = JSON.parse(JSON.stringify(config))
     this.update()
+
+    document.getElementById('edit-header').style.display = location.href.match(/^file:/i) ? 'none' : ''
   }
 
   public dirty() {

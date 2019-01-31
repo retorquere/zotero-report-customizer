@@ -65,17 +65,28 @@ function* listGenerator(items, combineChildItems) {
   const tagCount: { [key: string]: number } = {}
   for (const item of items) {
     // citation key
-    if (item.itemType !== 'attachment' && item.itemType !== 'note' && Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) {
-      const citekey = Zotero.BetterBibTeX.KeyManager.keys.findOne({ itemKey: item.key}) || {}
-      item.citationKey = citekey.citekey
-      if (item.citationKey) {
-        const conflicts = Zotero.BetterBibTeX.KeyManager.keys.find({
-          itemKey: { $ne: item.key },
-          citekey: item.citationKey,
-          libraryID: getLibraryIDFromkey(item.key),
-        })
-        item.citationKeyConflicts = conflicts.length || ''
+    if (item.itemType !== 'attachment' && item.itemType !== 'note') {
+      if (Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) {
+        const citekey = Zotero.BetterBibTeX.KeyManager.keys.findOne({ itemKey: item.key}) || {}
+        item.citationKey = citekey.citekey
+        if (item.citationKey) {
+          const conflicts = Zotero.BetterBibTeX.KeyManager.keys.find({
+            itemKey: { $ne: item.key },
+            citekey: item.citationKey,
+            libraryID: getLibraryIDFromkey(item.key),
+          })
+          item.citationKeyConflicts = conflicts.length || ''
+        }
+
+      } else {
+        if (item.extra) {
+          item.extra = item.extra.replace(/(?:^|\n)citation key\s*:\s*([^\s]+)(?:\n|$)/i, (m, citationKey) => {
+            item.citationKey = citationKey
+            return '\n'
+          }).trim()
+        }
       }
+
     }
 
     if (item.creators) {
