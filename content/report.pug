@@ -108,6 +108,7 @@ mixin tags(item)
     ul.tags
       each tag in item.tags
         li #{tag.tag}
+          sup #{tagCount[tag.tag]}
 mixin qualityReport(item)
   if item.qualityReport && item.qualityReport.length
     h3.quality-report

@@ -62,6 +62,7 @@ function* listGenerator(items, combineChildItems) {
     return fieldNames[id]
   }
 
+  const tagCount: { [key: string]: number } = {}
   for (const item of items) {
     // citation key
     if (item.itemType !== 'attachment' && item.itemType !== 'note' && Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) {
@@ -82,6 +83,11 @@ function* listGenerator(items, combineChildItems) {
         if (typeof creator.name !== 'undefined') continue
         creator.name = `${creator.firstName} ${creator.lastName}`.trim()
       }
+    }
+
+    // tag count
+    for (const tag of (item.tags || [])) {
+      tagCount[tag.tag] = (tagCount[tag.tag] || 0) + 1
     }
 
     // quality report
@@ -152,7 +158,7 @@ function* listGenerator(items, combineChildItems) {
   }
   Zotero.debug(`report-customizer.config: ${JSON.stringify(config)}`)
 
-  const html = report({ defaults, backend, config, fieldName, items, fieldAlias })
+  const html = report({ defaults, backend, config, fieldName, items, fieldAlias, tagCount })
   if (Zotero.Prefs.get('report-customizer.dump')) {
     saveFile('/tmp/rc-report.html', html)
     saveFile('/tmp/rc-save.html', save)
