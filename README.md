@@ -28,6 +28,8 @@ In the generated report, click the pencil to remove remove fields and change the
 
 ## Includes indexing status of attachments
 
+(not ported yet to 5.0)
+
 Shows indexing status of attachments, plus links to select attachment
 
 If you experience any problems, or are unclear on how to use it, I'll be glad to [help](https://retorquere.github.io/zotero-report-customizer/support.html).
