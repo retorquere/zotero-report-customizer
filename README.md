@@ -14,8 +14,7 @@ from the report, and they will simple not show up from that point on.
 
 ## Integration with [Zotero: Better BibTeX](https://retorquere.github.io/zotero-report-customizer/better-bibtex/)
 
-This plugin integrates with [Zotero: Better BibTeX](https://retorquere.github.io/zotero-report-customizer/better-bibtex/), to display the
-bibtex key plus any conflicts between them.
+This plugin integrates with (but does not require) [Zotero: Better BibTeX](https://retorquere.github.io/zotero-report-customizer/better-bibtex/), to display the bibtex key plus any conflicts between them.
 
 ## Customizing the fields to display
 
