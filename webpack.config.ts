@@ -11,9 +11,15 @@ import 'zotero-plugin/copy-assets'
 import 'zotero-plugin/rdf'
 import 'zotero-plugin/version'
 
-async function make_config() {
+export default (async function() {
   fs.ensureDirSync('gen/typings')
   fs.writeFileSync('gen/typings/report-config.d.ts', (await compileFromFile('content/report-config.json')).replace(/\nexport interface /g, '\ninterface '))
+
+  fs.writeFileSync(
+    'gen/materialdesignicons.css',
+    fs.readFileSync('node_modules/@mdi/font/css/materialdesignicons.css', 'utf-8').replace(/@font-face\s*\{(.|\r|\n)*?\}/, ''),
+    'utf-8'
+  )
 
   return {
     mode: 'development',
@@ -73,7 +79,4 @@ async function make_config() {
       libraryTarget: 'assign',
     },
   }
-}
-
-const config = make_config()
-export default config
+})()

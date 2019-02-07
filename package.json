@@ -9,7 +9,9 @@
     "build": "webpack",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
-    "postversion": "git push --follow-tags"
+    "postversion": "git push --follow-tags",
+    "start": "rm -f ~/.BBTZ5TEST/extensions/*.xpi && echo `pwd`/build > ~/.BBTZ5TEST/extensions/report-customizer@iris-advies.com && /usr/lib/zotero/zotero -P BBTZ5TEST -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &"
+
   },
   "repository": {
     "type": "git",
@@ -24,6 +26,7 @@
   },
   "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
   "dependencies": {
+    "@mdi/font": "^3.4.93",
     "@types/source-map": "^0.5.7",
     "ajv": "^6.7.0",
     "circular-dependency-plugin": "^5.0.2",
@@ -34,7 +37,6 @@
     "install": "^0.12.2",
     "json-schema-defaults": "^0.4.0",
     "json-schema-to-typescript": "^6.1.1",
-    "material-design-icons": "^3.0.1",
     "npm": "^6.7.0",
     "nunjucks": "^3.1.7",
     "pug": "^2.0.3",

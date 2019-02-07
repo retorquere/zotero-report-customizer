@@ -19,6 +19,17 @@ doctype strict
 - nonMeta.add('linkMode')
 - nonMeta.add('path')
 - nonMeta.add('qualityReport')
+//-
+mixin fieldEdit(type)
+  a(href='#' data-type=type onclick='report.deleteField(this)')
+    span.mdi.mdi-dark.mdi-delete
+  a(href='#' data-type=type onclick='report.setSort(this)')
+    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending
+  a(href='#' data-type=type onclick='report.moveUp(this)')
+    span.mdi.mdi-dark.mdi-chevron-up
+  a(href='#' data-type=type onclick='report.moveDown(this)')
+    span.mdi.mdi-dark.mdi-chevron-down
+//-
 mixin metadata(item)
   - var table = false
   //- https://github.com/pugjs/pug/issues/3020 is pretty dumb people. Make a breaking change already.
@@ -39,10 +50,7 @@ mixin metadata(item)
       tbody
         tr.itemType
           th.edit
-            a(href='#' data-type='itemType' onclick='report.deleteField(this)')
-              i.material-icons.md-dark.md-18 clear
-            a(href='#' data-type='itemType' onclick='report.setSort(this)')
-              i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
+            +fieldEdit('itemType')
           th #{Zotero.getString('itemFields.itemType')}
           td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
   
@@ -51,10 +59,7 @@ mixin metadata(item)
           each creator in item.creators
             tr.creator(class=creator.creatorType)
               th.edit
-                a(href='#' data-type='creator' onclick='report.deleteField(this)')
-                  i.material-icons.md-dark.md-18 clear
-                a(href='#' data-type='creator' onclick='report.setSort(this)')
-                  i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
+                +fieldEdit('creator')
               th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
               td #{creator.name}
   
@@ -73,13 +78,9 @@ mixin metadata(item)
           - value = item[field]
   
           if value
-            - var fieldClass = fieldAlias[`${item.itemType}.${field}`] || field
             tr(class=fieldClass)
               th.edit
-                a(href='#' data-type=fieldClass onclick='report.deleteField(this)')
-                  i.material-icons.md-dark.md-18 clear
-                a(href='#' data-type=fieldClass onclick='report.setSort(this)')
-                  i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
+                +fieldEdit(fieldAlias[`${item.itemType}.${field}`] || field)
               th #{fieldName(item.itemType, field)}
               td
                 if field == 'url' && value.match(/^https?:\/\//)
@@ -101,7 +102,7 @@ mixin tags(item)
     h3.tags
       span.edit
         a(href='#' data-type='tags' onclick='report.deleteField(this)')
-          i.material-icons.md-dark.md-18 clear
+          span.mdi.mdi-dark.mdi-delete
       | #{Zotero.getString('report.tags')}
     ul.tags
       each tag in item.tags
@@ -114,7 +115,7 @@ mixin qualityReport(item)
     h3.quality-report
       span.edit
         a(href='#' data-type='tags' onclick='report.deleteField(this)')
-          i.material-icons.md-dark.md-18 clear
+          span.mdi.mdi-dark.mdi-delete
       | #{fieldName(item.itemType, 'qualityReport')}
     ul.quality-report
       each msg in item.qualityReport
@@ -125,7 +126,7 @@ mixin attachments(item)
     h3.attachments
       span.edit
         a(href='#' data-type='attachments' onclick='report.deleteField(this)')
-          i.material-icons.md-dark.md-18 clear
+          span.mdi.mdi-dark.mdi-delete
       | #{Zotero.getString('itemFields.attachments')}
     ul.attachments
       each attachment in item.attachments
@@ -198,100 +199,26 @@ html
       }
 
       @font-face {
-        font-family: 'Material Icons';
-        font-style: normal;
-        font-weight: 400;
-        src: local('Material Icons'),
-          local('MaterialIcons-Regular'),
-          url(#{require('material-design-icons/iconfont/MaterialIcons-Regular.woff2')}) format('woff2'),
-          url(#{require('material-design-icons/iconfont/MaterialIcons-Regular.woff')}) format('woff')
-      }
-
-      .material-icons {
-        font-family: 'Material Icons';
+        font-family: 'Material Design Icons';
         font-weight: normal;
         font-style: normal;
-        font-size: 24px;  /* Preferred icon size */
-        display: inline-block;
-        line-height: 1;
-        text-transform: none;
-        letter-spacing: normal;
-        word-wrap: normal;
-        white-space: nowrap;
-        direction: ltr;
-
-        /* Support for all WebKit browsers. */
-        -webkit-font-smoothing: antialiased;
-        /* Support for Safari and Chrome. */
-        text-rendering: optimizeLegibility;
-
-        /* Support for Firefox. */
-        -moz-osx-font-smoothing: grayscale;
-
-        /* Support for IE. */
-        font-feature-settings: 'liga';
-
-        vertical-align: middle !important;
-        padding-bottom: 3px;
+        src: url(#{require('@mdi/font/fonts/materialdesignicons-webfont.woff2')}) format('woff2');
       }
 
-      /* Rules for sizing the icon. */
-      .material-icons.md-18 { font-size: 18px; }
-      .material-icons.md-24 { font-size: 24px; }
-      .material-icons.md-36 { font-size: 36px; }
-      .material-icons.md-48 { font-size: 48px; }
-
-      /* Rules for using icons as black on a light background. */
-      .material-icons.md-dark { color: rgba(0, 0, 0, 0.54); }
-      .material-icons.md-dark.md-inactive { color: rgba(0, 0, 0, 0.26); }
-
-      /* Rules for using icons as white on a dark background. */
-      .material-icons.md-light { color: rgba(255, 255, 255, 1); }
-      .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
-
-      /* Tooltip container */
-      .tooltip {
-        position: relative;
-        display: inline-block;
-        border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
-      }
-
-      /* Tooltip text */
-      .tooltip .tooltiptext {
-        visibility: hidden;
-        width: 120px;
-        background-color: black;
-        color: #fff;
-        text-align: center;
-        padding: 5px 0;
-        border-radius: 6px;
-
-        /* Position the tooltip text - see examples below! */
-        position: absolute;
-        z-index: 1;
-      }
-
-      /* Show the tooltip text when you mouse over the tooltip container */
-      .tooltip:hover .tooltiptext {
-        visibility: visible;
-      }
+      !{require('!raw-loader!../gen/materialdesignicons.css')}
   body
     div#edit-header
       a#edit(href='#' onclick='report.toggleEdit()')
-        i.material-icons.md-dark.tooltip edit
-          span.tooltiptext Edit
+        span.mdi.mdi-dark.mdi-24px.mdi-pencil
       | 
       a#undo(href='#' onclick='report.restore()')
-        i.material-icons.md-dark.tooltip undo
-          span.tooltiptext Restore to last save
+        span.mdi.mdi-dark.mdi-24px.mdi-undo
       | 
       a#reset(href='#' onclick='report.reset()')
-        i.material-icons.md-dark.tooltip clear_all
-          span.tooltiptext Clear all customizations
+        span.mdi.mdi-dark.mdi-24px.mdi-restore
       | 
       a#save(href='#' onclick='report.save()')
-        i.material-icons.md-dark.tooltip save
-          span.tooltiptext Save
+        span.mdi.mdi-dark.mdi-24px.mdi-content-save
       div
         pre#log
 
@@ -304,14 +231,14 @@ html
               h2
                 span.edit
                   a(href='#' data-type='title' onclick='report.setSort(this)')
-                    i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
+                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending
                 | !{item.title}
             else
               //- Non-matching parent, so display "Parent Item: [Title]". titles may have html-ish code, so don't escape
               h2.parentItem
                 span.edit
                   a(href='#' data-type='title' onclick='report.setSort(this)')
-                    i.material-icons.md-dark.md-18.md-inactive sort_by_alpha
+                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending
                 | #{Zotero.getString('report.parentItem')}
                 span !{item.title}
 
@@ -333,7 +260,7 @@ html
                 h3.notes
                   span.edit
                     a(href='#' data-type='notes' onclick='report.deleteField(this)')
-                      i.material-icons.md-dark.md-18 clear
+                      span.mdi.mdi-dark.mdi-delete
                   | #{Zotero.getString('report.notes')}
 
               ul.notes

@@ -77,9 +77,34 @@ const report = new class {
   }
 
   public setSort(field) {
-    this.log('setSort')
+    this.log(`setSort = ${this.config.items.sort}`)
 
-    this.config.items.sort = (field.dataset.type === this.config.items.sort || this.config.fields.remove.includes(field.dataset.type)) ? '' : field.dataset.type
+    if (this.config.fields.remove.includes(field.dataset.type)) {
+      // don't sort on removed field
+      this.config.items.sort = ''
+
+    } else if (this.config.items.sort.match(new RegExp(`^-?${field.dataset.type}$`))) {
+      // same field, toggle
+      switch (`${this.config.items.sort} `[0]) {
+        case ' ': // no sort set, set to ascending
+          this.config.items.sort = field.dataset.type
+          break
+
+        case '-': // currently descending, turn off
+          this.config.items.sort = ''
+          break
+
+        default: // currently ascneding, set to descending
+          this.config.items.sort = `-${field.dataset.type}`
+          break
+      }
+
+    } else {
+      this.config.items.sort = field.dataset.type
+
+    }
+
+    this.log(`setSort => ${this.config.items.sort}`)
     this.update()
     return false
   }
@@ -141,15 +166,17 @@ const report = new class {
       }
     }
 
-    for (const control of document.querySelectorAll('a > i.material-icons')) {
-      if (control.textContent !== 'sort_by_alpha') continue
+    const sort = this.config.items.sort.replace(/^-/, '')
 
-      if (this.config.items.sort && control.parentElement.dataset.type === this.config.items.sort) {
-        control.classList.remove('md-inactive')
-        control.classList.remove('md-18')
-      } else {
-        control.classList.add('md-inactive')
-        control.classList.add('md-18')
+    for (const control of document.querySelectorAll('a > span.mdi-sort-ascending, a > span.mdi-sort-descending')) {
+      const actions = {
+        'mdi-inactive':         control.parentElement.dataset.type !== sort,
+        'mdi-24px':             control.parentElement.dataset.type === sort,
+        'mdi-sort-ascending':   this.config.items.sort[0] !== '-',
+        'mdi-sort-descending':  this.config.items.sort[0] === '-',
+      }
+      for (const [className, add] of Object.entries(actions)) {
+        control.classList[add ? 'add' : 'remove'](className)
       }
     }
 
@@ -158,15 +185,31 @@ const report = new class {
       const items = Array.from(container.children)
       this.log(`sorting ${items.length} items`)
 
+      const order = this.config.items.sort[0] === '-' ? 1 : 0
       items.sort((a, b) => {
-        const selector = (this.config.items.sort === 'title') ? 'h2' : `tr.${this.config.items.sort} td`
+        const selector = (sort === 'title') ? 'h2' : `tr.${sort} td`
         const t = [a, b].map(e => (e.querySelector(selector) || { textContent: ''}).textContent)
-        return t[0].localeCompare(t[1])
+        return t[order].localeCompare(t[1 - order])
       })
 
       for (const item of items) {
         container.appendChild(item)
       }
+    }
+
+    for (const table of document.querySelectorAll('table')) {
+      let first = true
+      for (const up of table.querySelectorAll('span.mdi-chevron-up')) {
+        (up as HTMLElement).style.display = first ? 'none' : 'inline-block'
+        first = false
+      }
+
+      let last = null
+      for (const down of table.querySelectorAll('span.mdi-chevron-down')) {
+        (down as HTMLElement).style.display = 'inline-block'
+        last = down
+      }
+      (last as HTMLElement).style.display = 'none'
     }
   }
 }
