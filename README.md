@@ -1,10 +1,6 @@
 # Report Customizer for Zotero
 
-Install by downloading the [latest version](https://github.com/retorquere/zotero-report-customizer/releases). If you are not
-prompted with a Firefox installation dialog then double-click the downloaded xpi; Firefox ought to start and present you
-with the installation dialog.
-
-For standalone Zotero, do the following:
+Install by downloading the [latest version](https://github.com/retorquere/zotero-report-customizer/releases), and then
 
 1. In the main menu go to Tools > Add-ons
 2. Select 'Extensions'
