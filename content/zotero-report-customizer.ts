@@ -31,6 +31,21 @@ function getLibraryIDFromkey(key) {
   return undefined
 }
 
+function normalizeDate(str) {
+  if (!str) return ''
+
+  if (Zotero.Date.isMultipart(str)) return Zotero.Date.multipartToSQL(str)
+
+  const date = Zotero.Date.strToDate(str)
+  if (date.month) date.month = `0${date.month + 1}`.slice(-2) // tslint:disable-line:no-magic-numbers
+  if (date.day) date.day = `0${date.day}`.slice(-2) // tslint:disable-line:no-magic-numbers
+
+  if (date.day) return `${date.year}-${date.month}-${date.day}`
+  if (date.month) return `${date.year}-${date.month}`
+  if (date.year) return `${date.year}`
+  return ''
+}
+
 const schema = require('./report-config.json')
 const ajv = new Ajv({allErrors: true})
 const validate = ajv.compile(schema)
@@ -88,6 +103,8 @@ function* listGenerator(items, combineChildItems) {
       }
 
     }
+
+    if (item.date) item.date = normalizeDate(item.date)
 
     if (item.creators) {
       for (const creator of item.creators) {
@@ -169,7 +186,7 @@ function* listGenerator(items, combineChildItems) {
   }
   Zotero.debug(`report-customizer.config: ${JSON.stringify(config)}`)
 
-  const html = report({ defaults, backend, config, fieldName, items, fieldAlias, tagCount })
+  const html = report({ defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
   if (Zotero.Prefs.get('report-customizer.dump')) {
     saveFile('/tmp/rc-report.html', html)
     saveFile('/tmp/rc-save.html', save)

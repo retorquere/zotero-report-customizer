@@ -89,12 +89,10 @@ mixin metadata(item)
                   //- Hyperlink DOI
                   a(href=`http://doi.org/${value}`) #{value}
                 else if field == 'date'
-                  //- Remove SQL date from multipart dates
-                  //- (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
-                  | #{Zotero.Date.multipartToStr(value)}
+                  | #{value}
                 else if field == 'accessDate' || field == 'dateAdded' || field == 'dateModified'
-                  //- Convert dates to local format
-                  | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
+                  //- | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
+                  | #{value.replace(/T.*/, '')}
                 else
                   | #{value}
 //-
@@ -110,6 +108,7 @@ mixin tags(item)
         li #{tag.tag}
           if tagCount[tag.tag] > 1
             sup #{tagCount[tag.tag]}
+//-
 mixin qualityReport(item)
   if item.qualityReport && item.qualityReport.length
     h3.quality-report
@@ -249,19 +248,50 @@ html
       /* Rules for using icons as white on a dark background. */
       .material-icons.md-light { color: rgba(255, 255, 255, 1); }
       .material-icons.md-light.md-inactive { color: rgba(255, 255, 255, 0.3); }
+
+      /* Tooltip container */
+      .tooltip {
+        position: relative;
+        display: inline-block;
+        border-bottom: 1px dotted black; /* If you want dots under the hoverable text */
+      }
+
+      /* Tooltip text */
+      .tooltip .tooltiptext {
+        visibility: hidden;
+        width: 120px;
+        background-color: black;
+        color: #fff;
+        text-align: center;
+        padding: 5px 0;
+        border-radius: 6px;
+
+        /* Position the tooltip text - see examples below! */
+        position: absolute;
+        z-index: 1;
+      }
+
+      /* Show the tooltip text when you mouse over the tooltip container */
+      .tooltip:hover .tooltiptext {
+        visibility: visible;
+      }
   body
     div#edit-header
       a#edit(href='#' onclick='report.toggleEdit()')
-        i.material-icons.md-dark edit
+        i.material-icons.md-dark.tooltip edit
+          span.tooltiptext Edit
       | 
       a#undo(href='#' onclick='report.restore()')
-        i.material-icons.md-dark undo
+        i.material-icons.md-dark.tooltip undo
+          span.tooltiptext Restore to last save
       | 
       a#reset(href='#' onclick='report.reset()')
-        i.material-icons.md-dark clear_all
+        i.material-icons.md-dark.tooltip clear_all
+          span.tooltiptext Clear all customizations
       | 
       a#save(href='#' onclick='report.save()')
-        i.material-icons.md-dark save
+        i.material-icons.md-dark.tooltip save
+          span.tooltiptext Save
       div
         pre#log
 
