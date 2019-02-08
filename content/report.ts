@@ -1,3 +1,4 @@
+declare const Zotero: any
 declare const config: ReportConfig
 declare const defaults: ReportConfig
 
@@ -49,6 +50,7 @@ const report = new class {
     this.saved = false
 
     this.config = JSON.parse(JSON.stringify(config))
+    this.log(`loaded: ${JSON.stringify(this.config)}`)
     this.update()
 
     document.getElementById('edit-header').style.display = location.href.match(/^file:/i) ? 'none' : ''
@@ -62,8 +64,8 @@ const report = new class {
     this.log('toggleEdit')
     this.editing = !this.editing
 
-    for (const x of document.getElementsByClassName('edit')) {
-      (x as HTMLElement).style.display = this.editing ? 'inline-block' : 'none'
+    for (const x of document.getElementsByClassName('edit') as HTMLCollectionOf<HTMLElement>) {
+      x.style.display = this.editing ? 'inline-block' : 'none'
     }
 
     return false
@@ -72,6 +74,62 @@ const report = new class {
   public deleteField(field) {
     this.log('deleteField')
     if (this.config.fields.remove.indexOf(field.dataset.type) < 0) this.config.fields.remove.push(field.dataset.type)
+    this.update()
+    return false
+  }
+
+  public moveUp(field) {
+    this.log(`moveUp: ${this.config.fields.order.join(',')}`)
+
+    if (field.dataset.type && field.dataset.pred && this.config.fields.remove.indexOf(field.dataset.type) < 0) {
+
+      const order = []
+      for (const type of this.config.fields.order) {
+        switch (type) {
+          case field.dataset.type:
+            break
+          case field.dataset.pred:
+            order.push(field.dataset.type)
+            order.push(field.dataset.pred)
+            break
+          default:
+            order.push(type)
+            break
+        }
+      }
+      this.config.fields.order = order
+
+      this.log(`moveUp: ${field.dataset.type} => ${field.dataset.pred} = ${this.config.fields.order.join(',')}`)
+    }
+
+    this.update()
+    return false
+  }
+
+  public moveDown(field) {
+    this.log('moveDown')
+
+    if (field.dataset.type && field.dataset.next && this.config.fields.remove.indexOf(field.dataset.type) < 0) {
+
+      const order = []
+      for (const type of this.config.fields.order) {
+        switch (type) {
+          case field.dataset.type:
+            break
+          case field.dataset.next:
+            order.push(field.dataset.next)
+            order.push(field.dataset.type)
+            break
+          default:
+            order.push(type)
+            break
+        }
+      }
+      this.config.fields.order = order
+
+      this.log(`moveDown: ${field.dataset.type} => ${field.dataset.next} = ${this.config.fields.order.join(',')}`)
+    }
+
     this.update()
     return false
   }
@@ -137,9 +195,11 @@ const report = new class {
   }
 
   public log(msg) {
-    return
-    const pre = document.getElementById('log')
-    pre.textContent += `${msg}\n`
+    try {
+      Zotero.debug(`report-customizer: ${msg}`)
+    } catch (err) {
+      console.log(`report-customizer: ${msg}`) // tslint:disable-line:no-console
+    }
   }
 
   private update() {
@@ -149,21 +209,11 @@ const report = new class {
     document.getElementById('undo').style.display = !equal(this.config, config) ? 'inline-block' : 'none'
     document.getElementById('reset').style.display = !equal(this.config, defaults) && !equal(config, defaults) ? 'inline-block' : 'none'
 
-    const show: {[key: string]: string} = {}
-
-    for (const field of document.querySelectorAll('[data-type]')) {
-      const type = (field as HTMLElement).dataset.type
-      show[type] = ''
-    }
-
-    for (const type of this.config.fields.remove) {
-      show[type] = 'none'
-    }
-
-    for (const [type, display] of Object.entries(show)) {
-      for (const field of document.getElementsByClassName(type)) {
-        (field as HTMLElement).style.display = display
-      }
+    const style = document.getElementById('style')
+    if (this.config.fields.remove.length) {
+      style.textContent = this.config.fields.remove.map(type => `.${type}`).join(', ') + ' { display: none; }'
+    } else {
+      style.textContent = ''
     }
 
     const sort = this.config.items.sort.replace(/^-/, '')
@@ -180,15 +230,20 @@ const report = new class {
       }
     }
 
-    if (this.config.items.sort) {
+    if (sort) {
+      // sort items
       const container = document.getElementById('report')
       const items = Array.from(container.children)
       this.log(`sorting ${items.length} items`)
 
       const order = this.config.items.sort[0] === '-' ? 1 : 0
+      const selector = (sort === 'title') ? 'h2' : `tr.${sort} td`
       items.sort((a, b) => {
-        const selector = (sort === 'title') ? 'h2' : `tr.${sort} td`
-        const t = [a, b].map(e => (e.querySelector(selector) || { textContent: ''}).textContent)
+        const t = [a, b].map((e: HTMLElement) => {
+          e = e.querySelector(selector)
+          if (!e) return '\u10FFFF' // maximum unicode codepoint, will put this item last in sort
+          return e.dataset.sort || e.textContent
+        })
         return t[order].localeCompare(t[1 - order])
       })
 
@@ -197,19 +252,50 @@ const report = new class {
       }
     }
 
-    for (const table of document.querySelectorAll('table')) {
-      let first = true
-      for (const up of table.querySelectorAll('span.mdi-chevron-up')) {
-        (up as HTMLElement).style.display = first ? 'none' : 'inline-block'
-        first = false
+    // reorder fields and show reorder controls
+    for (const tbody of document.querySelectorAll('tbody')) {
+      const rows: HTMLElement[] = Array.from(tbody.children).map((row: HTMLElement, i) => {
+        row.dataset.index = `${i}`
+        return row
+      })
+
+      rows.sort((a: HTMLElement, b: HTMLElement) => {
+        const ai = this.config.fields.order.indexOf(a.dataset.sort)
+        const bi = this.config.fields.order.indexOf(b.dataset.sort)
+
+        if (ai === bi) return parseInt(a.dataset.index) - parseInt(b.dataset.index)
+        return ai - bi
+      })
+
+      for (const row of rows) {
+        tbody.appendChild(row)
       }
 
-      let last = null
-      for (const down of table.querySelectorAll('span.mdi-chevron-down')) {
-        (down as HTMLElement).style.display = 'inline-block'
-        last = down
+      let pred: string = null
+      for (const up of tbody.querySelectorAll('span.mdi-chevron-up') as NodeListOf<HTMLElement>) {
+        if (this.config.fields.remove.includes(up.parentElement.dataset.type)) continue
+
+        if (pred) {
+          up.parentElement.style.display = 'inline-block'
+          up.parentElement.dataset.pred = pred
+        } else {
+          up.parentElement.style.display = 'none'
+        }
+        pred = up.parentElement.dataset.type
       }
-      (last as HTMLElement).style.display = 'none'
+
+      let next: string = null
+      for (const down of Array.from(tbody.querySelectorAll('span.mdi-chevron-down')).reverse() as HTMLElement[]) {
+        if (this.config.fields.remove.includes(down.parentElement.dataset.type)) continue
+
+        if (next) {
+          down.parentElement.style.display = 'inline-block'
+          down.parentElement.dataset.next = next
+        } else {
+          down.parentElement.style.display = 'none'
+        }
+        next = down.parentElement.dataset.type
+      }
     }
   }
 }

@@ -5,9 +5,9 @@ doctype strict
 - nonMeta.add('reportChildren')
 - nonMeta.add('key')
 - nonMeta.add('version')
+- nonMeta.add('creators')
 - nonMeta.add('itemType')
 - nonMeta.add('title')
-- nonMeta.add('creators')
 - nonMeta.add('note')
 - nonMeta.add('collections')
 - nonMeta.add('relations')
@@ -34,10 +34,10 @@ mixin metadata(item)
   - var table = false
   //- https://github.com/pugjs/pug/issues/3020 is pretty dumb people. Make a breaking change already.
   each field in Object.keys(item)
-    if nonMeta.has(field) || field == 'dateAdded' || field == 'dateModified'
-      - table = false
-    else if field == 'creators'
+    if field == 'creators'
       - table = item[field].length
+    else if nonMeta.has(field) || field == 'dateAdded' || field == 'dateModified'
+      - table = false
     else
       - item[field] = `${item[field]}`.trim()
       - table = item[field] && fieldName(item.itemType, field)
@@ -48,7 +48,7 @@ mixin metadata(item)
   if table
     table
       tbody
-        tr.itemType
+        tr.itemType(data-sort='itemType')
           th.edit
             +fieldEdit('itemType')
           th #{Zotero.getString('itemFields.itemType')}
@@ -56,20 +56,13 @@ mixin metadata(item)
   
         //- Creators
         if item.creators
-          each creator in item.creators
-            tr.creator(class=creator.creatorType)
+          each creator, index in item.creators
+            tr.creator(class=creator.creatorType data-sort='creator')
               th.edit
-                +fieldEdit('creator')
+                if index === 0
+                  +fieldEdit('creator')
               th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
               td #{creator.name}
-  
-        //- Move dateAdded and dateModified to the end of the object
-        - var da = item.dateAdded
-        - var dm = item.dateModified
-        - delete item.dateAdded
-        - delete item.dateModified
-        - item.dateAdded = da
-        - item.dateModified = dm
   
         //- https://github.com/pugjs/pug/issues/3020 is pretty dumb people. Make a breaking change already.
         each field in Object.keys(item)
@@ -78,11 +71,13 @@ mixin metadata(item)
           - value = item[field]
   
           if value
-            tr(class=fieldClass)
+            - fieldClass = fieldAlias[`${item.itemType}.${field}`] || field
+            - fieldClasses = fieldClass === field ? field : `${fieldClass} ${field}`
+            tr(class=fieldClasses data-sort=fieldClass)
               th.edit
-                +fieldEdit(fieldAlias[`${item.itemType}.${field}`] || field)
+                +fieldEdit(fieldClass)
               th #{fieldName(item.itemType, field)}
-              td
+              td(data-sort=['accessDate', 'dateAdded', 'dateModified'].includes(field) ? value.replace(/T.*/, '') : (field === 'date' ? normalizeDate(value) : null))
                 if field == 'url' && value.match(/^https?:\/\//)
                   //- URL
                   a(href=value) #{value}
@@ -90,10 +85,11 @@ mixin metadata(item)
                   //- Hyperlink DOI
                   a(href=`http://doi.org/${value}`) #{value}
                 else if field == 'date'
-                  | #{value}
+                  //- Remove SQL date from multipart dates
+                  //- (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
+                  | #{Zotero.Date.multipartToStr(value)}
                 else if field == 'accessDate' || field == 'dateAdded' || field == 'dateModified'
-                  //- | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
-                  | #{value.replace(/T.*/, '')}
+                  | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
                 else
                   | #{value}
 //-
@@ -114,7 +110,7 @@ mixin qualityReport(item)
   if item.qualityReport && item.qualityReport.length
     h3.quality-report
       span.edit
-        a(href='#' data-type='tags' onclick='report.deleteField(this)')
+        a(href='#' data-type='qualityReport' onclick='report.deleteField(this)')
           span.mdi.mdi-dark.mdi-delete
       | #{fieldName(item.itemType, 'qualityReport')}
     ul.quality-report
@@ -206,6 +202,7 @@ html
       }
 
       !{require('!raw-loader!../gen/materialdesignicons.css')}
+    style#style
   body
     div#edit-header
       a#edit(href='#' onclick='report.toggleEdit()')
@@ -219,8 +216,6 @@ html
       | 
       a#save(href='#' onclick='report.save()')
         span.mdi.mdi-dark.mdi-24px.mdi-content-save
-      div
-        pre#log
 
     ul#report.report(class={combineChildItems: 'combineChildItems'})
       each item in items

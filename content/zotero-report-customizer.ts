@@ -18,10 +18,12 @@ const fields = `
   FROM itemTypes it
   JOIN itemTypeFields itf ON it.itemTypeID = itf.itemTypeID
   JOIN fields f ON f.fieldID = itf.fieldID
-  JOIN baseFieldMappingsCombined bfmc ON it.itemTypeID = bfmc.itemTypeID AND f.fieldID = bfmc.fieldID
-  JOIN fields bf ON bf.fieldID = bfmc.baseFieldID
+  LEFT JOIN baseFieldMappingsCombined bfmc ON it.itemTypeID = bfmc.itemTypeID AND f.fieldID = bfmc.fieldID
+  LEFT JOIN fields bf ON bf.fieldID = bfmc.baseFieldID
+  ORDER BY itf.orderIndex
 `.replace(/\n/g, ' ').trim()
 const fieldAlias: { [key: string]: string } = {}
+const defaultFieldOrder: string[] = ['itemType', 'creator']
 const publicationTitleAlias: string[] = []
 
 function getLibraryIDFromkey(key) {
@@ -104,8 +106,6 @@ function* listGenerator(items, combineChildItems) {
 
     }
 
-    if (item.date) item.date = normalizeDate(item.date)
-
     if (item.creators) {
       for (const creator of item.creators) {
         if (typeof creator.name !== 'undefined') continue
@@ -186,6 +186,11 @@ function* listGenerator(items, combineChildItems) {
   }
   Zotero.debug(`report-customizer.config: ${JSON.stringify(config)}`)
 
+  for (const field of defaultFieldOrder) {
+    if (!config.fields.order.includes(field)) config.fields.order.push(field)
+  }
+  Zotero.debug(`fieldOrder: ${defaultFieldOrder.join(',')} vs ${config.fields.order.join(',')}`)
+
   const html = report({ defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
   if (Zotero.Prefs.get('report-customizer.dump')) {
     saveFile('/tmp/rc-report.html', html)
@@ -209,10 +214,17 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
 
     await Zotero.Schema.initializationPromise
 
+    const defaultFieldOrderEnd = ['dateAdded', 'dateModified']
     for (const row of await Zotero.DB.queryAsync(fields)) {
       fieldAlias[`${row.typeName}.${row.fieldAlias}`] = row.fieldName
       if (row.fieldName === 'title' && !publicationTitleAlias.includes(row.fieldAlias)) publicationTitleAlias.push(row.fieldAlias)
+
+      if (!defaultFieldOrder.includes(row.fieldName) && !defaultFieldOrderEnd.includes(row.fieldName)) defaultFieldOrder.push(row.fieldName)
     }
+    for (const field of defaultFieldOrderEnd) {
+      defaultFieldOrder.push(field)
+    }
+    defaults.fields.order = defaultFieldOrder.slice()
 
     Zotero.Report.HTML.listGenerator = listGenerator
 
