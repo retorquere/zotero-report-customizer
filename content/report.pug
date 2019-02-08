@@ -108,12 +108,12 @@ mixin tags(item)
 //-
 mixin qualityReport(item)
   if item.qualityReport && item.qualityReport.length
-    h3.quality-report
+    h3.qualityReport
       span.edit
         a(href='#' data-type='qualityReport' onclick='report.deleteField(this)')
           span.mdi.mdi-dark.mdi-delete
       | #{fieldName(item.itemType, 'qualityReport')}
-    ul.quality-report
+    ul.qualityReport
       each msg in item.qualityReport
         li #{msg}
 //-
