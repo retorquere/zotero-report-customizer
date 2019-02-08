@@ -191,6 +191,24 @@ function* listGenerator(items, combineChildItems) {
   }
   Zotero.debug(`fieldOrder: ${defaultFieldOrder.join(',')} vs ${config.fields.order.join(',')}`)
 
+  // Zotero doesn't save the document as it is displayed... make it so that the default load is as displayed... oy.
+  if (config.items.sort) {
+    const sort = config.items.sort.replace(/^-/, '')
+    const order = config.items.sort[0] === '-' ? 1 : 0
+    const onISODate = ['accessDate', 'dateAdded', 'dateModified'].includes(sort)
+    items.sort((a, b) => {
+      const t = [a, b].map(item => {
+        if (!item[sort]) return '\u10FFFF' // maximum unicode codepoint, will put this item last in sort
+        if (sort === 'creator' && !item.creators.length) return '\u10FFFF'
+        if (onISODate) return item[sort].replace(/T.*/, '')
+        if (sort === 'date') return normalizeDate(item[sort])
+        return item[sort]
+      })
+
+      return t[order].localeCompare(t[1 - order])
+    })
+  }
+
   const html = report({ defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
   if (Zotero.Prefs.get('report-customizer.dump')) {
     saveFile('/tmp/rc-report.html', html)

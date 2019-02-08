@@ -30,4 +30,5 @@ If you experience any problems, or are unclear on how to use it, I'll be glad to
 
 ## **NOTE**
 
-The customized report can currently only be printed, not saved. I'm looking into this.
+The report customizations must be saved by clicking the Save icon before the report can be saved to disk.
+I'm looking into this.

@@ -48,50 +48,54 @@ mixin metadata(item)
   if table
     table
       tbody
-        tr.itemType(data-sort='itemType')
-          th.edit
-            +fieldEdit('itemType')
-          th #{Zotero.getString('itemFields.itemType')}
-          td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
-  
-        //- Creators
-        if item.creators
-          each creator, index in item.creators
-            tr.creator(class=creator.creatorType data-sort='creator')
-              th.edit
-                if index === 0
-                  +fieldEdit('creator')
-              th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
-              td #{creator.name}
-  
-        //- https://github.com/pugjs/pug/issues/3020 is pretty dumb people. Make a breaking change already.
-        each field in Object.keys(item)
-          if nonMeta.has(field) || !fieldName(item.itemType, field)
-            - continue
-          - value = item[field]
-  
-          if value
-            - fieldClass = fieldAlias[`${item.itemType}.${field}`] || field
-            - fieldClasses = fieldClass === field ? field : `${fieldClass} ${field}`
-            tr(class=fieldClasses data-sort=fieldClass)
-              th.edit
-                +fieldEdit(fieldClass)
-              th #{fieldName(item.itemType, field)}
-              td(data-sort=['accessDate', 'dateAdded', 'dateModified'].includes(field) ? value.replace(/T.*/, '') : (field === 'date' ? normalizeDate(value) : null))
-                if field == 'url' && value.match(/^https?:\/\//)
-                  //- URL
-                  a(href=value) #{value}
-                else if field == 'DOI'
-                  //- Hyperlink DOI
-                  a(href=`http://doi.org/${value}`) #{value}
-                else if field == 'date'
-                  //- Remove SQL date from multipart dates
-                  //- (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
-                  | #{Zotero.Date.multipartToStr(value)}
-                else if field == 'accessDate' || field == 'dateAdded' || field == 'dateModified'
-                  | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
-                else
-                  | #{value}
+        //- because Zotero won't save the DOM as it is displayed...
+        for field in config.fields.order
+          case field
+            when 'itemType'
+              tr.itemType(data-sort='itemType')
+                th.edit
+                  +fieldEdit('itemType')
+                th #{Zotero.getString('itemFields.itemType')}
+                td #{Zotero.ItemTypes.getLocalizedString(item.itemType)}
+
+            when 'creator'
+              //- Creators
+              if item.creators
+                each creator, index in item.creators
+                  tr.creator(class=creator.creatorType data-sort='creator')
+                    th.edit
+                      if index === 0
+                        +fieldEdit('creator')
+                    th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
+                    td #{creator.name}
+
+            default
+              if nonMeta.has(field) || !fieldName(item.itemType, field)
+                - continue
+              - value = item[field]
+
+              if value
+                - fieldClass = fieldAlias[`${item.itemType}.${field}`] || field
+                - fieldClasses = fieldClass === field ? field : `${fieldClass} ${field}`
+                tr(class=fieldClasses data-sort=fieldClass)
+                  th.edit
+                    +fieldEdit(fieldClass)
+                  th #{fieldName(item.itemType, field)}
+                  td(data-sort=['accessDate', 'dateAdded', 'dateModified'].includes(field) ? value.replace(/T.*/, '') : (field === 'date' ? normalizeDate(value) : null))
+                    if field == 'url' && value.match(/^https?:\/\//)
+                      //- URL
+                      a(href=value) #{value}
+                    else if field == 'DOI'
+                      //- Hyperlink DOI
+                      a(href=`http://doi.org/${value}`) #{value}
+                    else if field == 'date'
+                      //- Remove SQL date from multipart dates
+                      //- (e.g. '2006-00-00 Summer 2006' becomes 'Summer 2006')
+                      | #{Zotero.Date.multipartToStr(value)}
+                    else if field == 'accessDate' || field == 'dateAdded' || field == 'dateModified'
+                      | #{Zotero.Date.isoToDate(value, true).toLocaleString()}
+                    else
+                      | #{value}
 //-
 mixin tags(item)
   if item.tags && item.tags.length
@@ -203,6 +207,8 @@ html
 
       !{require('!raw-loader!../gen/materialdesignicons.css')}
     style#style
+      if config.fields.remove.length
+        | !{config.fields.remove.map(type => `.${type}`).join(', ')} { display: none; }
   body
     div#edit-header
       a#edit(href='#' onclick='report.toggleEdit()')
