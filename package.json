@@ -1,6 +1,6 @@
 {
   "name": "zotero-report-customizer",
-  "version": "5.0.16",
+  "version": "5.0.17",
   "description": "Zotero Report Customizer",
   "scripts": {
     "lint": "tslint -t stylish 'content/**/*.ts' 'pages/**/*.ts'",
@@ -11,7 +11,6 @@
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags",
     "start": "rm -f ~/.BBTZ5TEST/extensions/*.xpi && echo `pwd`/build > ~/.BBTZ5TEST/extensions/report-customizer@iris-advies.com && /usr/lib/zotero/zotero -P BBTZ5TEST -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &"
-
   },
   "repository": {
     "type": "git",
