@@ -1,4 +1,3 @@
-declare const Zotero: any
 declare const config: ReportConfig
 declare const defaults: ReportConfig
 
@@ -40,20 +39,26 @@ function equal(a, b) {
 }
 
 const report = new class {
+  public active: boolean
   public saved: boolean
+  public backend: Window
 
   private config: ReportConfig
   private editing: boolean
 
   constructor() {
+    this.active = location.href.startsWith('zotero://')
     this.editing = false
     this.saved = false
 
-    this.config = JSON.parse(JSON.stringify(config))
-    this.log(`loaded: ${JSON.stringify(this.config)}`)
-    this.update()
+    if (this.active) {
+      this.config = JSON.parse(JSON.stringify(config))
+      this.log(`loaded: ${JSON.stringify(this.config)}`)
 
-    document.getElementById('edit-header').style.display = location.href.match(/^file:/i) ? 'none' : ''
+      this.update()
+    } else {
+      this.removeNode(document.getElementById('edit-header'))
+    }
   }
 
   public dirty() {
@@ -184,11 +189,10 @@ const report = new class {
   public save() {
     if (!this.dirty()) return false
 
-    const backend = (document.getElementById('backend') as HTMLIFrameElement).contentWindow
-    if (backend) {
-      backend.postMessage(JSON.stringify(this.config), '*')
+    if (this.backend) {
+      this.backend.postMessage(JSON.stringify(this.config), '*')
     } else {
-      alert(`backend not available: ${!!document.getElementById('backend')}`)
+      alert('backend not available')
     }
 
     return false
@@ -200,6 +204,10 @@ const report = new class {
     } catch (err) {
       console.log(`report-customizer: ${msg}`) // tslint:disable-line:no-console
     }
+  }
+
+  private removeNode(node) {
+    node.parentNode.removeChild(node)
   }
 
   private update() {
@@ -300,20 +308,35 @@ const report = new class {
   }
 }
 
-window.onbeforeunload = function(e) { // tslint:disable-line:only-arrow-functions
-  return report.dirty() ? true : undefined
-}
+if (report.active) {
+  report.log('loading report')
 
-window.onmessage = function(e) { // tslint:disable-line:only-arrow-functions
-  // e.data can be 'saved' or 'error'
-  report.log('message: got ' + e.data)
+  window.onbeforeunload = function(e) { // tslint:disable-line:only-arrow-functions
+    return report.dirty() ? true : undefined
+  }
 
-  // this will prevent the onbeforeunload complaining
-  window.onbeforeunload = undefined
+  window.onmessage = function(e) { // tslint:disable-line:only-arrow-functions
+    // e.data can be 'saved' or 'error'
+    report.log('message: got ' + e.data)
 
-  // this will reload the report and thereby get the latest saved state
-  location.reload(true)
+    // this will prevent the onbeforeunload complaining
+    window.onbeforeunload = undefined
+
+    // this will reload the report and thereby get the latest saved state
+    location.reload(true)
+  }
+
+  // load dynamically so it isn't saved to disk
+  const div = document.getElementById('backend') as HTMLElement
+  const iframe = div.ownerDocument.createElement('iframe') as HTMLIFrameElement
+  iframe.addEventListener('load', () => {
+    report.backend = iframe.contentWindow
+  })
+  iframe.style.display = 'none'
+  iframe.src = backend
+  div.appendChild(iframe)
+
+  report.log('report loaded')
 }
 
 // onload does not seem to fire within Zotero
-report.log('report loaded')

@@ -210,6 +210,7 @@ html
       if config.fields.remove.length
         | !{config.fields.remove.map(type => `.${type}`).join(', ')} { display: none; }
   body
+    div#backend
     div#edit-header
       a#edit(href='#' onclick='report.toggleEdit()')
         span.mdi.mdi-dark.mdi-24px.mdi-pencil
@@ -280,8 +281,8 @@ html
               each relation in item.relations
                 li(id=`item_${relation.key}`) #{relation.title}
           +qualityReport(item)
-script.
-  const config = !{JSON.stringify(config)};
-  const defaults = !{JSON.stringify(defaults)};
-  !{require('!inline-ts!./report.ts')}
-iframe#backend(src=backend)
+  script.
+    const config = !{JSON.stringify(config)};
+    const defaults = !{JSON.stringify(defaults)};
+    const backend = !{JSON.stringify(backend)};
+    !{require('!inline-ts!./report.ts')}

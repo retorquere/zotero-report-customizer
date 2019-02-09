@@ -1,11 +1,11 @@
 // tslint:disable: no-console
 
-declare const backend: string
-
 function log(msg) {
-  return
-  const pre = document.getElementById('log')
-  pre.textContent += `${msg}\n`
+  try {
+    Zotero.debug(msg)
+  } catch (err) {
+    console.log(msg)
+  }
 }
 
 window.onmessage = function(e) { // tslint:disable-line:only-arrow-functions
