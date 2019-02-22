@@ -230,7 +230,8 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
     if (this.initialized) return
     this.initialized = true
 
-    await Zotero.Schema.initializationPromise
+    // await Zotero.Schema.initializationPromise
+    await Zotero.Schema.schemaUpdatePromise
 
     const defaultFieldOrderEnd = ['dateAdded', 'dateModified']
     for (const row of await Zotero.DB.queryAsync(fields)) {
