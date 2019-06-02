@@ -217,7 +217,7 @@ function* listGenerator(items, combineChildItems) {
   yield html
 }
 
-export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disable-line:variable-name
+const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disable-line:variable-name
   private initialized: boolean = false
 
   constructor() {
@@ -280,3 +280,5 @@ export let ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:d
     }
   }
 }
+
+export = ReportCustomizer

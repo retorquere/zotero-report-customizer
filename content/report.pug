@@ -22,13 +22,13 @@ doctype strict
 //-
 mixin fieldEdit(type)
   a(href='#' data-type=type onclick='report.deleteField(this)')
-    span.mdi.mdi-dark.mdi-delete
+    span.mdi.mdi-dark.mdi-delete(title='delete')
   a(href='#' data-type=type onclick='report.setSort(this)')
-    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending
+    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort')
   a(href='#' data-type=type onclick='report.moveUp(this)')
-    span.mdi.mdi-dark.mdi-chevron-up
+    span.mdi.mdi-dark.mdi-chevron-up(title='move up')
   a(href='#' data-type=type onclick='report.moveDown(this)')
-    span.mdi.mdi-dark.mdi-chevron-down
+    span.mdi.mdi-dark.mdi-chevron-down(title='move down')
 //-
 mixin metadata(item)
   - var table = false
@@ -102,7 +102,7 @@ mixin tags(item)
     h3.tags
       span.edit
         a(href='#' data-type='tags' onclick='report.deleteField(this)')
-          span.mdi.mdi-dark.mdi-delete
+          span.mdi.mdi-dark.mdi-delete(title='delete')
       | #{Zotero.getString('report.tags')}
     ul.tags
       each tag in item.tags
@@ -115,7 +115,7 @@ mixin qualityReport(item)
     h3.qualityReport
       span.edit
         a(href='#' data-type='qualityReport' onclick='report.deleteField(this)')
-          span.mdi.mdi-dark.mdi-delete
+          span.mdi.mdi-dark.mdi-delete(title='delete')
       | #{fieldName(item.itemType, 'qualityReport')}
     ul.qualityReport
       each msg in item.qualityReport
@@ -126,7 +126,7 @@ mixin attachments(item)
     h3.attachments
       span.edit
         a(href='#' data-type='attachments' onclick='report.deleteField(this)')
-          span.mdi.mdi-dark.mdi-delete
+          span.mdi.mdi-dark.mdi-delete(title='delete')
       | #{Zotero.getString('itemFields.attachments')}
     ul.attachments
       each attachment in item.attachments
@@ -157,13 +157,13 @@ html
     meta(http-equiv='Content-Type' content='text/html; charset=utf-8')
     title #{Zotero.getString('report.title.default')}
     style.
-      !{require('!raw-loader!./detail.css')}
+      !{require('!!raw-loader!./detail.css').default}
 
       @media screen {
-        !{require('!raw-loader!./detail_screen.css')}
+        !{require('!!raw-loader!./detail_screen.css').default}
       }
       @media print {
-        !{require('!raw-loader!./detail_print.css')}
+        !{require('!!raw-loader!./detail_print.css').default}
       }
 
       #save {
@@ -205,7 +205,7 @@ html
         src: url(#{require('@mdi/font/fonts/materialdesignicons-webfont.woff2')}) format('woff2');
       }
 
-      !{require('!raw-loader!../gen/materialdesignicons.css')}
+      !{require('!!raw-loader!../gen/materialdesignicons.css').default}
     style#style
       if config.fields.remove.length
         | !{config.fields.remove.map(type => `.${type}`).join(', ')} { display: none; }
@@ -213,16 +213,16 @@ html
     div#backend
     div#edit-header
       a#edit(href='#' onclick='report.toggleEdit()')
-        span.mdi.mdi-dark.mdi-24px.mdi-pencil
+        span.mdi.mdi-dark.mdi-24px.mdi-pencil(title='edit')
       | 
       a#undo(href='#' onclick='report.restore()')
-        span.mdi.mdi-dark.mdi-24px.mdi-undo
+        span.mdi.mdi-dark.mdi-24px.mdi-undo(title='undo')
       | 
       a#reset(href='#' onclick='report.reset()')
-        span.mdi.mdi-dark.mdi-24px.mdi-restore
+        span.mdi.mdi-dark.mdi-24px.mdi-restore(title='restore')
       | 
       a#save(href='#' onclick='report.save()')
-        span.mdi.mdi-dark.mdi-24px.mdi-content-save
+        span.mdi.mdi-dark.mdi-24px.mdi-content-save(title='save')
 
     ul#report.report(class={combineChildItems: 'combineChildItems'})
       each item in items
@@ -233,14 +233,14 @@ html
               h2
                 span.edit
                   a(href='#' data-type='title' onclick='report.setSort(this)')
-                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending
+                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort ascending')
                 | !{item.title}
             else
               //- Non-matching parent, so display "Parent Item: [Title]". titles may have html-ish code, so don't escape
               h2.parentItem
                 span.edit
                   a(href='#' data-type='title' onclick='report.setSort(this)')
-                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending
+                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort ascending')
                 | #{Zotero.getString('report.parentItem')}
                 span !{item.title}
 
@@ -262,7 +262,7 @@ html
                 h3.notes
                   span.edit
                     a(href='#' data-type='notes' onclick='report.deleteField(this)')
-                      span.mdi.mdi-dark.mdi-delete
+                      span.mdi.mdi-dark.mdi-delete(title='delete')
                   | #{Zotero.getString('report.notes')}
 
               ul.notes
@@ -285,4 +285,4 @@ html
     const config = !{JSON.stringify(config)};
     const defaults = !{JSON.stringify(defaults)};
     const backend = !{JSON.stringify(backend)};
-    !{require('!inline-ts!./report.ts')}
+    !{require('!!inline-ts!./report.ts')}
