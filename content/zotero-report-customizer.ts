@@ -1,10 +1,20 @@
 declare const Zotero: any
+declare const Zotero_Report_Interface: any
+declare const ZoteroPane_Local: any
 
 import Ajv = require('ajv')
 
 const backend = 'http://127.0.0.1:23119/report-customizer'
 const report = require('./report.pug')
 const save = require('./save.pug')({ backend })
+
+const marker = 'ReportCustomizerMonkeyPatched'
+
+function patch(object, method, patcher) {
+  if (object[method][marker]) throw new Error(`${method} re-patched`)
+  object[method] = patcher(object[method])
+  object[method][marker] = true
+}
 
 declare const Components: any
 function saveFile(path, contents) {
@@ -23,7 +33,7 @@ const fields = `
   ORDER BY itf.orderIndex
 `.replace(/\n/g, ' ').trim()
 const fieldAlias: { [key: string]: string } = {}
-const defaultFieldOrder: string[] = ['itemType', 'creator']
+const defaultFieldOrder: string[] = ['itemType', 'bibliography', 'creator']
 const publicationTitleAlias: string[] = []
 
 function getLibraryIDFromkey(key) {
@@ -64,6 +74,8 @@ function* listGenerator(items, combineChildItems) {
           return 'Citation key conflicts'
         case 'qualityReport':
           return 'Quality report'
+        case 'bibliography':
+          return 'Bibliography'
       }
     }
 
@@ -78,6 +90,8 @@ function* listGenerator(items, combineChildItems) {
     }
     return fieldNames[id]
   }
+
+  const bibliography = Zotero.Prefs.get('report-customizer.bibliography') ? Zotero.ReportCustomizer.bibliography : {}
 
   const tagCount: { [key: string]: number } = {}
   for (const item of items) {
@@ -105,6 +119,8 @@ function* listGenerator(items, combineChildItems) {
       }
 
     }
+
+    item.bibliography = bibliography[item.key]
 
     if (item.creators) {
       for (const creator of item.creators) {
@@ -218,12 +234,23 @@ function* listGenerator(items, combineChildItems) {
 }
 
 const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disable-line:variable-name
+  public bibliography: { [key: string]: string }
+
   private initialized: boolean = false
 
   constructor() {
     window.addEventListener('load', event => {
       this.init().catch(err => Zotero.logError(err))
     }, false)
+  }
+
+  public get_bibliography(items) {
+    this.bibliography = {}
+    const format = Zotero.Prefs.get('export.quickCopy.setting')
+
+    for (const item of items) {
+      this.bibliography[item.key] = Zotero.QuickCopy.getContentFromItems([item], format, null, false).text
+    }
   }
 
   private async init() {
@@ -282,3 +309,39 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
 }
 
 export = ReportCustomizer
+
+// otherwise this entry point won't be reloaded: https://github.com/webpack/webpack/issues/156
+delete require.cache[module.id]
+
+patch(Zotero_Report_Interface, 'loadCollectionReport', original => function loadCollectionReport(event) {
+  try {
+    const source = ZoteroPane_Local.getSelectedCollection() || ZoteroPane_Local.getSelectedSavedSearch()
+    if (source) {
+      // source.key?
+      if (source instanceof Zotero.Collection) {
+        // get items of collection
+
+      } else {
+        // get items of search
+
+      }
+    }
+
+    ReportCustomizer.get_bibliography([])
+  } catch (err) {
+    Zotero.logError(err)
+  }
+
+  return original(event)
+})
+
+patch(Zotero_Report_Interface, 'loadItemReport', original => function loadItemReport(event) {
+  try {
+    ReportCustomizer.get_bibliography(ZoteroPane_Local.getSelectedItems() || [])
+
+  } catch (err) {
+    Zotero.logError(err)
+  }
+
+  return original(event)
+})
