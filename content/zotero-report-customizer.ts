@@ -8,10 +8,15 @@ const backend = 'http://127.0.0.1:23119/report-customizer'
 const report = require('./report.pug')
 const save = require('./save.pug')({ backend })
 
+function debug(msg) {
+  Zotero.debug(`{zotero-report-customizer} ${msg}`)
+}
+
 const marker = 'ReportCustomizerMonkeyPatched'
 
 function patch(object, method, patcher) {
-  if (object[method][marker]) throw new Error(`${method} re-patched`)
+  debug(`patching ${method}`)
+  if (object[method][marker]) return
   object[method] = patcher(object[method])
   object[method][marker] = true
 }
@@ -82,9 +87,9 @@ function* listGenerator(items, combineChildItems) {
     const id = `${itemType}.${field}`
     if (typeof fieldNames[id] === 'undefined') {
       try {
-        fieldNames[id] = Zotero.ItemFields.getLocalizedString(itemType, field)
+        fieldNames[id] = Zotero.ItemFields.getLocalizedString(itemType, field) || ''
       } catch (err) {
-        Zotero.debug(`Localized string not available for '${id}'`, 2)
+        debug(`Localized string not available for '${id}'`)
         fieldNames[id] = ''
       }
     }
@@ -92,6 +97,8 @@ function* listGenerator(items, combineChildItems) {
   }
 
   const bibliography = Zotero.Prefs.get('report-customizer.bibliography') ? Zotero.ReportCustomizer.bibliography : {}
+
+  debug(`listGenerator.bibliography = ${JSON.stringify(bibliography, null, 2)}`)
 
   const tagCount: { [key: string]: number } = {}
   for (const item of items) {
@@ -120,7 +127,8 @@ function* listGenerator(items, combineChildItems) {
 
     }
 
-    item.bibliography = bibliography[item.key]
+    if (item.key) item.bibliography = bibliography[item.key]
+    debug(JSON.stringify(item, null, 2))
 
     if (item.creators) {
       for (const creator of item.creators) {
@@ -181,7 +189,7 @@ function* listGenerator(items, combineChildItems) {
     }
   }
 
-  Zotero.debug('getting report-customizer.config...')
+  debug('getting report-customizer.config...')
   let serialized = null
   try {
     serialized = Zotero.Prefs.get('report-customizer.config')
@@ -200,12 +208,12 @@ function* listGenerator(items, combineChildItems) {
     Zotero.logError(`Config does not conform to schema, resetting: ${validate.errors}`)
     config = defaults
   }
-  Zotero.debug(`report-customizer.config: ${JSON.stringify(config)}`)
+  debug(`report-customizer.config: ${JSON.stringify(config)}`)
 
   for (const field of defaultFieldOrder) {
     if (!config.fields.order.includes(field)) config.fields.order.push(field)
   }
-  Zotero.debug(`fieldOrder: ${defaultFieldOrder.join(',')} vs ${config.fields.order.join(',')}`)
+  debug(`fieldOrder: ${defaultFieldOrder.join(',')} vs ${config.fields.order.join(',')}`)
 
   // Zotero doesn't save the document as it is displayed... make it so that the default load is as displayed... oy.
   if (config.items.sort) {
@@ -234,7 +242,7 @@ function* listGenerator(items, combineChildItems) {
 }
 
 const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disable-line:variable-name
-  public bibliography: { [key: string]: string }
+  public bibliography: { [key: string]: string } = {}
 
   private initialized: boolean = false
 
@@ -246,11 +254,17 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
 
   public get_bibliography(items) {
     this.bibliography = {}
+
+    if (!Zotero.Prefs.get('report-customizer.bibliography')) return
+
+    debug(`get bibliography for ${items.length} items`)
+
     const format = Zotero.Prefs.get('export.quickCopy.setting')
 
     for (const item of items) {
       this.bibliography[item.key] = Zotero.QuickCopy.getContentFromItems([item], format, null, false).text
     }
+    debug(JSON.stringify(this.bibliography, null, 2))
   }
 
   private async init() {
@@ -285,7 +299,7 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
             return [200, 'text/html', save] // tslint:disable-line:no-magic-numbers
 
           case 'POST':
-            Zotero.debug(`saving report-customizer.config ${JSON.stringify(req.data)}`)
+            debug(`saving report-customizer.config ${JSON.stringify(req.data)}`)
 
             try {
               if (!validate(req.data)) throw new Error(`Config does not conform to schema, ignoring: ${validate.errors}`)
@@ -315,19 +329,21 @@ delete require.cache[module.id]
 
 patch(Zotero_Report_Interface, 'loadCollectionReport', original => function loadCollectionReport(event) {
   try {
-    const source = ZoteroPane_Local.getSelectedCollection() || ZoteroPane_Local.getSelectedSavedSearch()
-    if (source) {
-      // source.key?
-      if (source instanceof Zotero.Collection) {
-        // get items of collection
+    let source = null
+    let items = []
 
-      } else {
-        // get items of search
+    if (source = ZoteroPane_Local.getSelectedCollection()) {
+      items = source.getChildItems()
 
-      }
+    } else if (source = ZoteroPane_Local.getSelectedSavedSearch()) {
+      items = ZoteroPane_Local.getSortedItems()
+
+    } else {
+      items = []
+
     }
 
-    ReportCustomizer.get_bibliography([])
+    ReportCustomizer.get_bibliography(items)
   } catch (err) {
     Zotero.logError(err)
   }

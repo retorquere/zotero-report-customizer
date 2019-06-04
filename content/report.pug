@@ -19,6 +19,7 @@ doctype strict
 - nonMeta.add('linkMode')
 - nonMeta.add('path')
 - nonMeta.add('qualityReport')
+- nonMeta.add('bibliography')
 //-
 mixin fieldEdit(type)
   a(href='#' data-type=type onclick='report.deleteField(this)')
@@ -227,14 +228,14 @@ html
     ul#report.report(class={combineChildItems: 'combineChildItems'})
       each item in items
         li.item(id=`item_${item.key}` class=item.itemType)
-          if item.title
+          if item.bibliography || item.title
             if item.reportSearchMatch
               //- Top-level item matched search, so display title. titles may have html-ish code, so don't escape
               h2
                 span.edit
                   a(href='#' data-type='title' onclick='report.setSort(this)')
                     span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort ascending')
-                | !{item.title}
+                | !{item.bibliography || item.title}
             else
               //- Non-matching parent, so display "Parent Item: [Title]". titles may have html-ish code, so don't escape
               h2.parentItem
@@ -242,7 +243,7 @@ html
                   a(href='#' data-type='title' onclick='report.setSort(this)')
                     span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort ascending')
                 | #{Zotero.getString('report.parentItem')}
-                span !{item.title}
+                span !{item.bibliography || item.title}
 
           //- If parent matches search, display parent item metadata table and tags
           if item.reportSearchMatch
