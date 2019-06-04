@@ -137,9 +137,12 @@ function* listGenerator(items, combineChildItems) {
       }
     }
 
-    // tag count
-    for (const tag of (item.tags || [])) {
-      tagCount[tag.tag] = (tagCount[tag.tag] || 0) + 1
+    if (item.tags) {
+      // tag count
+      item.tags.sort((a, b) => a.tag.localeCompare(b.tag, undefined, { sensitivity: 'base' }))
+      for (const tag of item.tags) {
+        tagCount[tag.tag] = (tagCount[tag.tag] || 0) + 1
+      }
     }
 
     // quality report
