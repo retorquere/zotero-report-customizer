@@ -38,7 +38,7 @@ const fields = `
   ORDER BY itf.orderIndex
 `.replace(/\n/g, ' ').trim()
 const fieldAlias: { [key: string]: string } = {}
-const defaultFieldOrder: string[] = ['itemType', 'bibliography', 'creator']
+const defaultFieldOrder: string[] = ['itemType', 'citationKey', 'citationKeyConflicts', 'bibliography', 'creator']
 const publicationTitleAlias: string[] = []
 
 function getLibraryIDFromkey(key) {
@@ -292,12 +292,13 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
       defaultFieldOrder.push(field)
     }
     defaults.fields.order = defaultFieldOrder.slice()
+    debug(`defaults.fields = ${JSON.stringify(defaults.fields)}`)
 
     Zotero.Report.HTML.listGenerator = listGenerator
 
     Zotero.Server.Endpoints['/report-customizer'] = class {
       public supportedMethods = ['GET', 'POST']
-      public supportedDataTypes = '*'
+      public supportedDataTypes = 'application/json'
       public permitBookmarklet = false
 
       public init(req) {
