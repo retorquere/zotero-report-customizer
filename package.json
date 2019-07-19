@@ -42,7 +42,7 @@
     "pug": "^2.0.4",
     "pug-cli": "^1.0.0-alpha6",
     "pug-loader": "^2.4.0",
-    "raw-loader": "^3.0.0",
+    "raw-loader": "^3.1.0",
     "rimraf": "^2.6.3",
     "ts-loader": "^6.0.4",
     "ts-node": "^8.3.0",
@@ -54,8 +54,8 @@
   },
   "xpi": {
     "name": "Zotero Report Customizer",
-    "updateLink": "https://github.com/Emiliano Heyns/zotero-report-customizer/releases/download/v{version}/zotero-auto-index-{version}.xpi",
-    "releaseURL": "https://github.com/Emiliano Heyns/zotero-report-customizer/releases/download/release/"
+    "updateLink": "https://github.com/retorquere/zotero-report-customizer/releases/download/v{version}/zotero-report-customizer-{version}.xpi",
+    "releaseURL": "https://github.com/retorquere/zotero-report-customizer/releases/download/release/"
   },
   "devDependencies": {
     "url-loader": "^2.1.0"
