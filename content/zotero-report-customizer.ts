@@ -298,7 +298,7 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
 
     Zotero.Server.Endpoints['/report-customizer'] = class {
       public supportedMethods = ['GET', 'POST']
-      public supportedDataTypes = 'application/json'
+      public supportedDataTypes = ['application/json']
       public permitBookmarklet = false
 
       public init(req) {
