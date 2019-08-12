@@ -240,7 +240,9 @@ function* listGenerator(items, combineChildItems) {
     })
   }
 
-  const html = report({ defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
+  const css = Zotero.Prefs.get('report-customizer.css')
+  debug(JSON.stringify({ css, defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate }))
+  const html = report({ css, defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
   if (Zotero.Prefs.get('report-customizer.dump')) {
     saveFile('/tmp/rc-report.html', html)
     saveFile('/tmp/rc-save.html', save)

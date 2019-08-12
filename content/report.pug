@@ -210,6 +210,9 @@ html
     style#style
       if config.fields.remove.length
         | !{config.fields.remove.map(type => `.${type}`).join(', ')} { display: none; }
+    if css
+      style#custom
+        | !{css}
     script(type='text/javascript' async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML')
   body
     div#backend
