@@ -81,8 +81,6 @@ function* listGenerator(items, combineChildItems) {
           return 'Quality report'
         case 'bibliography':
           return 'Bibliography'
-        case 'selectLink':
-          return 'Select in Zotero'
       }
     }
 
@@ -104,8 +102,6 @@ function* listGenerator(items, combineChildItems) {
 
   const tagCount: { [key: string]: number } = {}
   for (const item of items) {
-    item.selectLink = `zotero://select/items/${item.libraryID || 0}_${item.key}`
-
     if (item.tags) {
       // tag count
       item.tags.sort((a, b) => a.tag.localeCompare(b.tag, undefined, { sensitivity: 'base' }))

@@ -31,6 +31,9 @@ mixin fieldEdit(type)
   a(href='#' data-type=type onclick='report.moveDown(this)')
     span.mdi.mdi-dark.mdi-chevron-down(title='move down')
 //-
+mixin selectLink(item)
+  - var link = `zotero://select/items/${item.libraryID || 0}_${item.key}`
+  a(href=link) #{link}
 mixin metadata(item)
   - var table = false
   //- https://github.com/pugjs/pug/issues/3020 is pretty dumb people. Make a breaking change already.
@@ -70,6 +73,15 @@ mixin metadata(item)
                     th(class=creator.creatorType) #{Zotero.getString('creatorTypes.' + creator.creatorType)}
                     td #{creator.name}
 
+            when 'selectLink'
+              if item.key
+                tr.selectLink(data-sort='selectLink')
+                  th.edit
+                    +fieldEdit('selectLink')
+                  th Select in Zotero
+                  td
+                    +selectLink(item)
+
             default
               if nonMeta.has(field) || !fieldName(item.itemType, field)
                 - continue
@@ -85,8 +97,6 @@ mixin metadata(item)
                   td(data-sort=['accessDate', 'dateAdded', 'dateModified'].includes(field) ? value.replace(/T.*/, '') : (field === 'date' ? normalizeDate(value) : null))
                     if field == 'url' && value.match(/^https?:\/\//)
                       //- URL
-                      a(href=value) #{value}
-                    else if field == 'selectLink'
                       a(href=value) #{value}
                     else if field == 'DOI'
                       //- Hyperlink DOI
@@ -146,10 +156,10 @@ mixin attachments(item)
 //-
 mixin note(item)
   div.notes
-    //- If HTML tag or entity, parse as HTML
-    if item.selectLink
+    if item.key
       .selectLink
-        a(href=item.selectLink) #{item.selectLink}
+        +selectLink(item)
+    //- If HTML tag or entity, parse as HTML
     if item.note.match(/(<(p|ul|ol|div|a|br|b|i|u|strong|em( >))|&[a-z]+;|&#[0-9]+;)/)
       //- Strip control characters (for notes that were
       //- added before item.setNote() started doing this)
