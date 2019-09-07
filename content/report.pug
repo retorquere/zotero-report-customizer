@@ -142,18 +142,21 @@ mixin attachments(item)
 
           //- Attachment note
           if attachment.note
-            +note(attachment.note)
+            +note(attachment)
 //-
-mixin note(text)
+mixin note(item)
   div.notes
     //- If HTML tag or entity, parse as HTML
-    if text.match(/(<(p|ul|ol|div|a|br|b|i|u|strong|em( >))|&[a-z]+;|&#[0-9]+;)/)
+    if item.selectLink
+      .selectLink
+        a(href=item.selectLink) #{item.selectLink}
+    if item.note.match(/(<(p|ul|ol|div|a|br|b|i|u|strong|em( >))|&[a-z]+;|&#[0-9]+;)/)
       //- Strip control characters (for notes that were
       //- added before item.setNote() started doing this)
-      | !{domParser.parseFromString(`<div>${text.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')}</div>`, 'text/html').body.innerHTML}
+      | !{domParser.parseFromString(`<div>${item.note.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, '')}</div>`, 'text/html').body.innerHTML}
     else
       //- Otherwise, treat as plain text
-      p.plaintext #{text}
+      p.plaintext #{item.note}
 //-
 html
   head
@@ -255,7 +258,7 @@ html
 
             //- Independent note
             if item.note
-              +note(item.note)
+              +note(item)
 
           //- Children
           if item.reportChildren
@@ -272,7 +275,7 @@ html
               ul.notes
                 each note in item.reportChildren.notes
                   li(id=`item_${note.key}`)
-                    +note(note.note)
+                    +note(note)
                     +tags(note)
 
             //- Child attachments
