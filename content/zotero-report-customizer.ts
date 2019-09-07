@@ -81,6 +81,8 @@ function* listGenerator(items, combineChildItems) {
           return 'Quality report'
         case 'bibliography':
           return 'Bibliography'
+        case 'selectLink':
+          return 'Select in Zotero'
       }
     }
 
@@ -125,6 +127,7 @@ function* listGenerator(items, combineChildItems) {
         }
       }
 
+      item.selectLink = `zotero://select/items/${item.libraryID || 0}_${item.key}`
     }
 
     if (item.key) item.bibliography = bibliography[item.key]
@@ -281,7 +284,7 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
     // await Zotero.Schema.initializationPromise
     await Zotero.Schema.schemaUpdatePromise
 
-    const defaultFieldOrderEnd = ['dateAdded', 'dateModified']
+    const defaultFieldOrderEnd = ['selectLink', 'dateAdded', 'dateModified']
     for (const row of await Zotero.DB.queryAsync(fields)) {
       fieldAlias[`${row.typeName}.${row.fieldAlias}`] = row.fieldName
       if (row.fieldName === 'title' && !publicationTitleAlias.includes(row.fieldAlias)) publicationTitleAlias.push(row.fieldAlias)

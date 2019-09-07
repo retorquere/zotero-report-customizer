@@ -86,6 +86,8 @@ mixin metadata(item)
                     if field == 'url' && value.match(/^https?:\/\//)
                       //- URL
                       a(href=value) #{value}
+                    else if field == 'selectLink'
+                      a(href=value) #{value}
                     else if field == 'DOI'
                       //- Hyperlink DOI
                       a(href=`http://doi.org/${value}`) #{value}
