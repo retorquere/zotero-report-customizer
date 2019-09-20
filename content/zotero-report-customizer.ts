@@ -240,6 +240,7 @@ function* listGenerator(items, combineChildItems) {
     })
   }
 
+  // tslint:disable-next-line:variable-name
   const MathJax = Zotero.Prefs.get('report-customizer.MathJax') ? JSON.parse(Zotero.Prefs.get('report-customizer.MathJax')) : null
   const html = report({ MathJax, defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
   if (Zotero.Prefs.get('report-customizer.dump')) {
