@@ -225,6 +225,9 @@ html
     style#style
       if config.fields.remove.length
         | !{config.fields.remove.map(type => `.${type}`).join(', ')} { display: none; }
+    script
+      if MathJax
+        | var MathJax = !{JSON.stringify(MathJax)};
     script(type='text/javascript' async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML')
   body
     div#backend

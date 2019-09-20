@@ -24,6 +24,8 @@ In the generated report, click the pencil to remove remove fields and change the
 
 You can replace the title with a bibliography line in the report. The customizer offers a [hidden preference](https://www.zotero.org/support/preferences/hidden_preferences) called `extensions.zotero.report-customizer.bibliography`. If you toggle that to `true`, the title in the report will be replaced with a bibliography rendering according to the default quick-copy format (Prefs - Export - Default Format).
 
+If you want a custom MathJax config, you can add it as a JSON-encoded [configuration block](https://docs.mathjax.org/en/latest/options/input/tex.html?highlight=inlinemath#the-configuration-block) (anything you want, sans the leading `MathJax =` and trailing `;`, in a string preference named `extensions.zotero.report-customizer.MathJax`.
+
 ## Includes indexing status of attachments
 
 (not ported yet to 5.0)

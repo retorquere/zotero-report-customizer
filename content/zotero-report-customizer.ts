@@ -240,7 +240,8 @@ function* listGenerator(items, combineChildItems) {
     })
   }
 
-  const html = report({ defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
+  const MathJax = Zotero.Prefs.get('report-customizer.MathJax') ? JSON.parse(Zotero.Prefs.get('report-customizer.MathJax')) : null
+  const html = report({ MathJax, defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
   if (Zotero.Prefs.get('report-customizer.dump')) {
     saveFile('/tmp/rc-report.html', html)
     saveFile('/tmp/rc-save.html', save)
