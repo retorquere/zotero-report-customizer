@@ -144,7 +144,9 @@ mixin attachments(item)
     ul.attachments
       each attachment in item.attachments
         li(id=`item_${attachment.key}`)
-          if attachment.title
+          if attachment.url
+            a(href=attachment.url)= attachment.title || attachment.url
+          else if attachment.title
             | #{attachment.title}
 
           //- Attachment tags
