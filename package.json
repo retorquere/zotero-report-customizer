@@ -25,32 +25,32 @@
   },
   "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
   "dependencies": {
-    "@mdi/font": "^4.4.95",
+    "@mdi/font": "^4.5.95",
     "@types/source-map": "^0.5.7",
     "ajv": "^6.10.2",
     "circular-dependency-plugin": "^5.2.0",
     "dedent": "^0.7.0",
     "fs-extra": "^8.1.0",
-    "handlebars": "^4.2.0",
+    "handlebars": "^4.4.3",
     "indent-string": "^4.0.0",
     "install": "^0.13.0",
     "json-schema-defaults": "^0.4.0",
     "json-schema-to-typescript": "^7.1.0",
-    "npm": "^6.11.3",
-    "npm-check-updates": "^3.1.23",
+    "npm": "^6.12.0",
+    "npm-check-updates": "^3.1.24",
     "nunjucks": "^3.2.0",
     "pug": "^2.0.4",
     "pug-cli": "^1.0.0-alpha6",
     "pug-loader": "^2.4.0",
     "raw-loader": "^3.1.0",
     "rimraf": "^3.0.0",
-    "ts-loader": "^6.1.1",
+    "ts-loader": "^6.2.0",
     "ts-node": "^8.4.1",
     "tslint": "^5.20.0",
     "typescript": "^3.6.3",
-    "webpack": "^4.40.2",
+    "webpack": "^4.41.0",
     "webpack-cli": "^3.3.9",
-    "zotero-plugin": "^0.0.89"
+    "zotero-plugin": "^0.0.91"
   },
   "xpi": {
     "name": "Zotero Report Customizer",
@@ -58,6 +58,6 @@
     "releaseURL": "https://github.com/retorquere/zotero-report-customizer/releases/download/release/"
   },
   "devDependencies": {
-    "url-loader": "^2.1.0"
+    "url-loader": "^2.2.0"
   }
 }

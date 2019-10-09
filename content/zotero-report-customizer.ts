@@ -4,7 +4,7 @@ declare const ZoteroPane_Local: any
 
 import Ajv = require('ajv')
 
-const backend = 'http://127.0.0.1:23119/report-customizer'
+const backend = `http://127.0.0.1:${Zotero.Prefs.get('httpServer.port')}/report-customizer`
 const report = require('./report.pug')
 const save = require('./save.pug')({ backend })
 
