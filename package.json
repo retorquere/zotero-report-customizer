@@ -1,6 +1,6 @@
 {
   "name": "zotero-report-customizer",
-  "version": "5.0.31",
+  "version": "5.0.32",
   "description": "Zotero Report Customizer",
   "scripts": {
     "lint": "tslint -t stylish 'content/**/*.ts' 'pages/**/*.ts'",
