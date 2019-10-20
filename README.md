@@ -18,7 +18,7 @@ This plugin integrates with (but does not require) [Zotero: Better BibTeX](https
 
 ## Customizing the fields to display
 
-In the generated report, click the pencil to remove remove fields and change the order and sort. The back arrow reset all current edits, the erase-all (three lines) resets all to default. If the save icon appears that means there are unsaved changes.
+In the generated report, click the pencil to remove fields and change the order and sort. The back arrow reset all current edits, the erase-all (three lines) resets all to default. If the save icon appears that means there are unsaved changes.
 
 ## Showing a bibliography rendering instead of the item title
 
