@@ -32,7 +32,13 @@ mixin fieldEdit(type)
     span.mdi.mdi-dark.mdi-chevron-down(title='move down')
 //-
 mixin selectLink(item)
-  - var link = `zotero://select/items/${item.libraryID || 0}_${item.key}`
+  - var link
+  if Zotero.Prefs.get('report-customizer.link.web')
+    - link = item.uri.replace(/^http:/, 'https:')
+  else if ! item.libraryID || item.libraryID === Zotero.Libraries.userLibraryID
+    - link = `zotero://select/library/items/${item.key}`
+  else
+    - link = `zotero://select/groups/${item.libraryID}/items/${item.key}`
   a(href=link) #{link}
 mixin metadata(item)
   - var table = false

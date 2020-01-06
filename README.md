@@ -26,6 +26,8 @@ You can replace the title with a bibliography line in the report. The customizer
 
 If you want a custom MathJax config, you can add it as a JSON-encoded [configuration block](https://docs.mathjax.org/en/latest/options/input/tex.html?highlight=inlinemath#the-configuration-block) (anything you want, sans the leading `MathJax =` and trailing `;`, in a string preference named `extensions.zotero.report-customizer.MathJax`.
 
+If you want select-links to go to the Zotero website, create a boolean preference named `extensions.zotero.report-customizer.link.web` and set it to `true`.
+
 ## Includes indexing status of attachments
 
 (not ported yet to 5.0)
