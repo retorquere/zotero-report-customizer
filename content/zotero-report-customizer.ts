@@ -21,13 +21,6 @@ function patch(object, method, patcher) {
   object[method][marker] = true
 }
 
-declare const Components: any
-function saveFile(path, contents) {
-  const file = Components.classes['@mozilla.org/file/local;1'].createInstance(Components.interfaces.nsILocalFile)
-  file.initWithPath(path)
-  Zotero.File.putContents(file, contents)
-}
-
 const fields = `
   SELECT DISTINCT it.typeName, COALESCE(bf.fieldName, f.fieldName) as fieldName, CASE WHEN bf.fieldName IS NULL THEN NULL ELSE f.fieldName END as fieldAlias
   FROM itemTypes it
@@ -243,8 +236,8 @@ function* listGenerator(items, combineChildItems) {
   // tslint:disable-next-line:variable-name
   const html = report({ MathJax: Zotero.Prefs.get('report-customizer.MathJax'), defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
   if (Zotero.Prefs.get('report-customizer.dump')) {
-    saveFile('/tmp/rc-report.html', html)
-    saveFile('/tmp/rc-save.html', save)
+    debug(`report-customizer-save:\n${save}`)
+    debug(`report-customizer-report:\n${html}`)
   }
   yield html
 }
