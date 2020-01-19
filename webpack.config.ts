@@ -44,7 +44,7 @@ export default (async function() {
 
     resolveLoader: {
       alias: {
-        'json-jsesc-loader': 'zotero-plugin/loader/json',
+        'jsesc-loader': path.join(__dirname, './loaders/jsesc'),
         'wrap-loader': 'zotero-plugin/loader/wrap',
         'inline-ts': path.join(__dirname, './loaders/inline-ts.ts'),
       },
@@ -52,9 +52,11 @@ export default (async function() {
     module: {
       rules: [
         { test: /\.pug$/, use: [ 'pug-loader' ] },
-        { test: /\.json$/, type: 'javascript/auto', use: [ 'json-jsesc-loader' ] }, // https://github.com/webpack/webpack/issues/6572
-        { test: /\.woff2?$/, use: [ 'url-loader' ] },
-        { test: /\.ts$/, exclude: [ /node_modules/ ], use: [ 'wrap-loader', 'ts-loader' ] },
+        { test: /\.css$/, use: [ 'jsesc-loader', 'css-loader' ] },
+        { test: /\.ts$/, exclude: [ /node_modules/ ], use: [ 'ts-loader' ] },
+        { test: /\.woff2?$/,
+          use: [ { loader: 'url-loader', options: { limit: 1024 * 1024 } } ], // allow up to a megabyte
+        },
       ],
     },
 
