@@ -87,7 +87,7 @@ function* listGenerator(items, combineChildItems) {
     const id = `${itemType}.${field}`
     if (typeof fieldNames[id] === 'undefined') {
       try {
-        fieldNames[id] = Zotero.ItemFields.getLocalizedString(itemType, field) || ''
+        fieldNames[id] = Zotero.ItemFields.getLocalizedString(field) || ''
       } catch (err) {
         debug(`Localized string not available for '${id}'`)
         fieldNames[id] = ''

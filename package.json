@@ -10,7 +10,8 @@
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags",
-    "start": "rm -f ~/.BBTZ5TEST/extensions/*report-customizer*xpi && echo `pwd`/build > ~/.BBTZ5TEST/extensions/report-customizer@iris-advies.com && /Applications/Zotero.app/Contents/MacOS/zotero -P BBTZ5TEST -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &"
+    "prestart": "rm -f /tmp/rc-*.html",
+    "start": "/Applications/Zotero.app/Contents/MacOS/zotero -P BBTZ5TEST -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &"
   },
   "repository": {
     "type": "git",
@@ -25,9 +26,10 @@
   },
   "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
   "dependencies": {
-    "@mdi/font": "^4.7.95",
+    "@mdi/font": "^4.8.95",
     "@types/source-map": "^0.5.7",
-    "ajv": "^6.10.2",
+    "ajv": "^6.11.0",
+    "apply-loader": "^2.0.0",
     "circular-dependency-plugin": "^5.2.0",
     "dedent": "^0.7.0",
     "fs-extra": "^8.1.0",
@@ -46,7 +48,7 @@
     "ts-loader": "^6.2.1",
     "ts-node": "^8.6.2",
     "tslint": "^5.20.1",
-    "typescript": "^3.7.4",
+    "typescript": "^3.7.5",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
     "zotero-plugin": "^0.0.96"
@@ -57,6 +59,10 @@
     "releaseURL": "https://github.com/retorquere/zotero-report-customizer/releases/download/release/"
   },
   "devDependencies": {
+    "css-loader": "^3.4.2",
+    "file-loader": "^5.0.2",
+    "jsesc": "^2.5.2",
+    "to-string-loader": "^1.1.6",
     "url-loader": "^3.0.0"
   }
 }
