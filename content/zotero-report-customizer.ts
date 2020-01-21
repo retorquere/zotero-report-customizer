@@ -56,7 +56,7 @@ function normalizeDate(str) {
   return ''
 }
 
-const schema = require('./report-config.json')
+const schema = require('./report-config-schema.json')
 const ajv = new Ajv({allErrors: true})
 const validate = ajv.compile(schema)
 const defaults = require('json-schema-defaults')(schema)
