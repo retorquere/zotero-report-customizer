@@ -13,7 +13,7 @@ import 'zotero-plugin/version'
 
 export default (async function() {
   fs.ensureDirSync('gen/typings')
-  fs.writeFileSync('gen/typings/report-config.d.ts', (await compileFromFile('content/report-config.json')).replace(/\nexport interface /g, '\ninterface '))
+  fs.writeFileSync('gen/typings/report-config.d.ts', (await compileFromFile('content/report-config-schema.json')).replace(/\nexport interface /g, '\ninterface '))
 
   fs.writeFileSync(
     'gen/materialdesignicons.css',
