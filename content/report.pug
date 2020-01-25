@@ -1,4 +1,9 @@
 doctype strict
+script.
+  const saved = !{JSON.stringify(saved)};
+  const defaults = !{JSON.stringify(defaults)};
+  const backend = !{JSON.stringify(backend)};
+  !{require('!!inline-ts!./report.ts')}
 - const domParser = Components.classes['@mozilla.org/xmlextras/domparser;1'].createInstance(Components.interfaces.nsIDOMParser)
 - const nonMeta = new Set([])
 - nonMeta.add('reportSearchMatch')
@@ -59,7 +64,7 @@ mixin metadata(item)
     table
       tbody
         //- because Zotero won't save the DOM as it is displayed...
-        for field in config.fields.order
+        for field in saved.fields.order
           case field
             when 'itemType'
               tr.itemType(data-sort='itemType')
@@ -190,7 +195,7 @@ html
         !{require('!!raw-loader!./detail_print.css').default}
       }
 
-      #save {
+      #log {
         display: none;
       }
 
@@ -201,10 +206,28 @@ html
         width: 40px !important;
       }
 
+      a.disabled > .mdi {
+        filter: opacity(0.3);
+      }
+
+      .mdi span.tooltip {
+        display: none
+      }
+      .mdi:hover span.tooltip {
+        display:block;
+        position:absolute;
+        top:2em; left:2em;
+        /* width:15em; */
+        border:1px solid #0cf;
+        background-color:#cff; color:#000;
+        text-align: center;
+      }
+
       #edit-header {
         position: sticky;
         top: 10px;
         right: 10px;
+        display: none;
       }
 
       iframe {
@@ -214,7 +237,6 @@ html
         border: none;
         position: absolute;
       }
-
 
       @media print {
         #edit-header, .edit {
@@ -231,8 +253,8 @@ html
 
       !{require('!!raw-loader!../gen/materialdesignicons.css').default}
     style#style
-      if config.fields.remove.length
-        | !{config.fields.remove.map(type => `.${type}`).join(', ')} { display: none; }
+      if saved.fields.remove.length
+        | !{saved.fields.remove.map(type => `.${type}`).join(', ')} { display: none; }
     if MathJax
       script.
         try {
@@ -242,19 +264,12 @@ html
         }
     script(type='text/javascript' async src='https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/MathJax.js?config=TeX-MML-AM_CHTML')
   body
-    div#backend
+    iframe#backend(style='display: none')
     div#edit-header
-      a#edit(href='#' onclick='report.toggleEdit()')
-        span.mdi.mdi-dark.mdi-24px.mdi-pencil(title='edit')
-      | 
-      a#undo(href='#' onclick='report.restore()')
-        span.mdi.mdi-dark.mdi-24px.mdi-undo(title='undo')
-      | 
-      a#reset(href='#' onclick='report.reset()')
-        span.mdi.mdi-dark.mdi-24px.mdi-restore(title='restore')
-      | 
-      a#save(href='#' onclick='report.save()')
-        span.mdi.mdi-dark.mdi-24px.mdi-content-save(title='save')
+      each icon, action in { 'edit': 'pencil', 'undo': 'undo', 'redo': 'redo', 'reload': 'reload', 'nuke': 'nuke', 'save': 'content-save' }
+        | 
+        a(id=action href='#' onclick=`report.${action}()`)
+          span.mdi.mdi-dark.mdi-24px(class=`mdi-${icon}` title=action)
 
     ul#report.report(class={combineChildItems: 'combineChildItems'})
       each item in items
@@ -265,14 +280,14 @@ html
               h2
                 span.edit
                   a(href='#' data-type='title' onclick='report.setSort(this)')
-                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort ascending')
+                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort')
                 | !{item.bibliography || item.title}
             else
               //- Non-matching parent, so display "Parent Item: [Title]". titles may have html-ish code, so don't escape
               h2.parentItem
                 span.edit
                   a(href='#' data-type='title' onclick='report.setSort(this)')
-                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort ascending')
+                    span.mdi.mdi-dark.mdi-inactive.mdi-sort-ascending(title='sort')
                 | #{Zotero.getString('report.parentItem')}
                 span !{item.bibliography || item.title}
 
@@ -313,8 +328,6 @@ html
               each relation in item.relations
                 li(id=`item_${relation.key}`) #{relation.title}
           +qualityReport(item)
-  script.
-    const config = !{JSON.stringify(config)};
-    const defaults = !{JSON.stringify(defaults)};
-    const backend = !{JSON.stringify(backend)};
-    !{require('!!inline-ts!./report.ts')}
+  textarea#log(rows='10' cols='50')
+script.
+  if (report) report.start()
