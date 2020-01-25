@@ -61,8 +61,17 @@ const ajv = new Ajv({allErrors: true})
 const validate = ajv.compile(schema)
 const defaults = require('json-schema-defaults')(schema)
 
+const pending = 'ReportCustomizer: Zotero is still loading, please try again later.'
+
+Zotero.Report.HTML.listGenerator = function*(items, combineChildItems) {
+  yield pending
+}
+
 function* listGenerator(items, combineChildItems) {
-  yield Zotero.Schema.schemaUpdatePromise
+  if (Zotero.Schema.schemaUpdatePromise.isPending()) {
+    yield pending
+    return
+  }
 
   const fieldNames = {}
   function fieldName(itemType, field) {
@@ -275,6 +284,8 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
     if (this.initialized) return
     this.initialized = true
 
+    Zotero.Report.HTML.listGenerator = listGenerator
+
     // await Zotero.Schema.initializationPromise
     await Zotero.Schema.schemaUpdatePromise
 
@@ -290,8 +301,6 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
     }
     defaults.fields.order = defaultFieldOrder.slice()
     debug(`defaults.fields = ${JSON.stringify(defaults.fields)}`)
-
-    Zotero.Report.HTML.listGenerator = listGenerator
 
     Zotero.Server.Endpoints['/report-customizer'] = class {
       public supportedMethods = ['GET', 'POST']

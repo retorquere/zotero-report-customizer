@@ -206,20 +206,23 @@ html
         width: 40px !important;
       }
 
-      a.disabled > .mdi {
+      a.disabled {
+        cursor: default;
+      }
+      a.disabled .mdi {
         filter: opacity(0.3);
       }
 
-      .mdi span.tooltip {
+      span.tooltip {
         display: none
       }
-      .mdi:hover span.tooltip {
+      a:hover span.tooltip {
         display:block;
         position:absolute;
         top:2em; left:2em;
-        /* width:15em; */
-        border:1px solid #0cf;
-        background-color:#cff; color:#000;
+        border:1px solid black;
+        background-color: white;
+        color: black;
         text-align: center;
       }
 
