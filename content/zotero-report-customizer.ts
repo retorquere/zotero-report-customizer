@@ -62,6 +62,8 @@ const validate = ajv.compile(schema)
 const defaults = require('json-schema-defaults')(schema)
 
 function* listGenerator(items, combineChildItems) {
+  yield Zotero.Schema.schemaUpdatePromise
+
   const fieldNames = {}
   function fieldName(itemType, field) {
     if (itemType !== 'attachment' && itemType !== 'note') {
@@ -234,11 +236,12 @@ function* listGenerator(items, combineChildItems) {
   }
 
   // tslint:disable-next-line:variable-name
-  const html = report({ MathJax: Zotero.Prefs.get('report-customizer.MathJax'), defaults, backend, config, fieldName, items, fieldAlias, tagCount, normalizeDate })
-  if (Zotero.Prefs.get('report-customizer.dump')) {
-    debug(`report-customizer-save:\n${save}`)
-    debug(`report-customizer-report:\n${html}`)
-  }
+  const mathJax = Zotero.Prefs.get('report-customizer.MathJax')
+  const saved = Zotero.ReportCustomizer.load()
+  const html = report({ saved, defaults, backend, mathJax, fieldName, items, fieldAlias, tagCount, normalizeDate })
+  // if (Zotero.Prefs.get('report-customizer.dump'))
+  debug(`report-customizer-report:\n${html}`)
+  debug(`report-customizer-save:\n${save}`)
   yield html
 }
 
@@ -322,12 +325,22 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
       }
     }
   }
+
+  public load() {
+    try {
+      return JSON.parse(Zotero.Prefs.get('report-customizer.config'))
+    } catch (err) {
+      Zotero.debug('report-customizer.load:', err.message)
+      return defaults
+    }
+  }
+
+  public save(config) {
+    Zotero.Prefs.set('report-customizer.config', JSON.stringify(config))
+  }
 }
 
 export = ReportCustomizer
-
-// otherwise this entry point won't be reloaded: https://github.com/webpack/webpack/issues/156
-delete require.cache[module.id]
 
 patch(Zotero_Report_Interface, 'loadCollectionReport', original => function loadCollectionReport(event) {
   try {
@@ -363,3 +376,6 @@ patch(Zotero_Report_Interface, 'loadItemReport', original => function loadItemRe
 
   return original(event)
 })
+
+// otherwise this entry point won't be reloaded: https://github.com/webpack/webpack/issues/156
+delete require.cache[module.id]

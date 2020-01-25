@@ -10,8 +10,8 @@
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags",
-    "prestart": "rm -f /tmp/rc-*.html",
-    "start": "/Applications/Zotero.app/Contents/MacOS/zotero -P BBTZ5TEST -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &"
+    "_prestart": "npm run build && rm -f ~/.BBTZ5TEST/extensions/*report-customizer*xpi && echo `pwd`/build > ~/.BBTZ5TEST/extensions/report-customizer@iris-advies.com",
+    "start": "/Applications/Zotero.app/Contents/MacOS/zotero -P BBTZ5TEST -jsconsole -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &"
   },
   "repository": {
     "type": "git",

@@ -1,5 +1,6 @@
-declare const config: ReportConfig
+declare const saved: ReportConfig
 declare const defaults: ReportConfig
+declare const backend: string
 
 function equal(a, b) {
   const ta = typeof a
@@ -38,58 +39,102 @@ function equal(a, b) {
   return true
 }
 
-const report = new class {
-  public active: boolean
-  public saved: boolean
+const report = location.href.startsWith('zotero://') && new class Report {
+  public saved = false
   public backend: Window
 
-  private config: ReportConfig
-  private editing: boolean
+  private history: ReportConfig[]
+  private state = 0
+  private editing = false
+  private logging = true
 
-  constructor() {
-    this.active = location.href.startsWith('zotero://')
-    this.editing = false
-    this.saved = false
+  public constructor() {
+    this.history = [ saved ]
 
-    if (this.active) {
-      this.config = JSON.parse(JSON.stringify(config))
-      this.log(`loaded: ${JSON.stringify(this.config)}`)
+    window.onbeforeunload = this.onbeforeunload.bind(this)
+    window.onmessage = this.onmessage.bind(this)
+  }
 
-      this.update()
-    } else {
-      this.removeNode(document.getElementById('edit-header'))
+  public start() {
+    // this will load the backend, which will send a message back when it's loaded. 'onload' doesn't fire (anymore?) for the reports
+    const iframe = (document.getElementById('backend') as HTMLIFrameElement)
+    iframe.src = backend
+
+    for (const button of document.getElementsByClassName('mdi') as HTMLCollectionOf<HTMLElement>) {
+      button.style.position = 'relative'
+      const tooltip = document.createElement('span')
+      tooltip.classList.add('tooltip')
+      tooltip.innerText = button.getAttribute('title')
+      button.appendChild(tooltip)
+    }
+
+    this.log('showing edit header')
+    document.getElementById('edit-header').style.display = 'block'
+  }
+
+  public onbeforeunload() {
+    return report.dirty() ? true : undefined
+  }
+
+  public onmessage(e) {
+    switch (e.data?.kind) {
+      case 'loaded':
+        const iframe = (document.getElementById('backend') as HTMLIFrameElement)
+        this.backend = iframe.contentWindow
+        this.log('backend loaded')
+        this.update()
+        break
+
+      default: // same behavior for 'error' and 'saved'
+        // this will prevent the onbeforeunload complaining
+        window.onbeforeunload = undefined
+        if (e.data?.kind === 'error') this.log(e.data.message)
+        location.reload(true)
+        break
     }
   }
 
   public dirty() {
-    return !equal(config, this.config)
+    return !equal(this.history[0], this.config())
   }
 
-  public toggleEdit() {
-    this.log('toggleEdit')
+  public edit() {
     this.editing = !this.editing
 
     for (const x of document.getElementsByClassName('edit') as HTMLCollectionOf<HTMLElement>) {
       x.style.display = this.editing ? 'inline-block' : 'none'
     }
 
+    this.update()
+
     return false
   }
 
+  private push(): ReportConfig {
+    this.log(`push: ${this.history.length - 1} => ${this.state + 1}`)
+    this.history.splice(this.state + 1)
+    this.history.push(JSON.parse(JSON.stringify(this.history[this.state])))
+    this.state += 1
+    return this.config()
+  }
+
+  private config(): ReportConfig {
+    return this.history[this.state]
+  }
+
   public deleteField(field) {
-    this.log('deleteField')
-    if (this.config.fields.remove.indexOf(field.dataset.type) < 0) this.config.fields.remove.push(field.dataset.type)
+    if (this.config().fields.remove.indexOf(field.dataset.type) < 0) {
+      this.push().fields.remove.push(field.dataset.type)
+    }
     this.update()
     return false
   }
 
   public moveUp(field) {
-    this.log(`moveUp: ${this.config.fields.order.join(',')}`)
-
-    if (field.dataset.type && field.dataset.pred && this.config.fields.remove.indexOf(field.dataset.type) < 0) {
+    if (field.dataset.type && field.dataset.pred && this.config().fields.remove.indexOf(field.dataset.type) < 0) {
 
       const order = []
-      for (const type of this.config.fields.order) {
+      for (const type of this.config().fields.order) {
         switch (type) {
           case field.dataset.type:
             break
@@ -102,9 +147,7 @@ const report = new class {
             break
         }
       }
-      this.config.fields.order = order
-
-      this.log(`moveUp: ${field.dataset.type} => ${field.dataset.pred} = ${this.config.fields.order.join(',')}`)
+      this.push().fields.order = order
     }
 
     this.update()
@@ -112,12 +155,10 @@ const report = new class {
   }
 
   public moveDown(field) {
-    this.log('moveDown')
-
-    if (field.dataset.type && field.dataset.next && this.config.fields.remove.indexOf(field.dataset.type) < 0) {
+    if (field.dataset.type && field.dataset.next && this.config().fields.remove.indexOf(field.dataset.type) < 0) {
 
       const order = []
-      for (const type of this.config.fields.order) {
+      for (const type of this.config().fields.order) {
         switch (type) {
           case field.dataset.type:
             break
@@ -130,9 +171,7 @@ const report = new class {
             break
         }
       }
-      this.config.fields.order = order
-
-      this.log(`moveDown: ${field.dataset.type} => ${field.dataset.next} = ${this.config.fields.order.join(',')}`)
+      this.push().fields.order = order
     }
 
     this.update()
@@ -140,48 +179,78 @@ const report = new class {
   }
 
   public setSort(field) {
-    this.log(`setSort = ${this.config.items.sort}`)
+    const config = this.config()
 
-    if (this.config.fields.remove.includes(field.dataset.type)) {
+    if (config.fields.remove.includes(field.dataset.type)) {
       // don't sort on removed field
-      this.config.items.sort = ''
+      this.push().items.sort = ''
 
-    } else if (this.config.items.sort.match(new RegExp(`^-?${field.dataset.type}$`))) {
+    } else if (config.items.sort.match(new RegExp(`^-?${field.dataset.type}$`))) {
       // same field, toggle
-      switch (`${this.config.items.sort} `[0]) {
+      switch (`${config.items.sort} `[0]) {
         case ' ': // no sort set, set to ascending
-          this.config.items.sort = field.dataset.type
+          this.push().items.sort = field.dataset.type
           break
 
         case '-': // currently descending, turn off
-          this.config.items.sort = ''
+          this.push().items.sort = ''
           break
 
-        default: // currently ascneding, set to descending
-          this.config.items.sort = `-${field.dataset.type}`
+        default: // currently ascending, set to descending
+          this.push().items.sort = `-${field.dataset.type}`
           break
       }
 
     } else {
-      this.config.items.sort = field.dataset.type
+      this.push().items.sort = field.dataset.type
 
     }
 
-    this.log(`setSort => ${this.config.items.sort}`)
     this.update()
     return false
   }
 
-  public restore() {
-    this.log('restore')
-    this.config = JSON.parse(JSON.stringify(config))
+  public canUndo() {
+    return this.editing && this.state > 0
+  }
+  public undo() {
+    if (!this.canUndo()) return false
+
+    this.state -= 1
     this.update()
     return false
   }
 
-  public reset() {
-    this.log('reset')
-    this.config = JSON.parse(JSON.stringify(defaults))
+  public canRedo() {
+    return this.editing && this.state < (this.history.length - 1)
+  }
+  public redo() {
+    if (!this.canRedo()) return false
+
+    this.state += 1
+    this.update()
+    return false
+  }
+
+  public canNuke() {
+    return this.editing && !equal(this.config(), defaults)
+  }
+  public nuke() {
+    if (!this.canNuke()) return false
+
+    this.push()
+    this.history[this.state] = defaults
+    this.update()
+    return false
+  }
+
+  public canReload() {
+    return this.editing && this.state > 0
+  }
+  public reload() {
+    if (!this.canReload()) return false
+
+    this.state = 0
     this.update()
     return false
   }
@@ -190,48 +259,66 @@ const report = new class {
     if (!this.dirty()) return false
 
     if (this.backend) {
-      this.backend.postMessage(JSON.stringify(this.config), '*')
+      this.backend.postMessage(JSON.stringify(this.config()), '*')
     } else {
-      alert('backend not available')
+      this.log('backend not available')
     }
+
+    this.update()
 
     return false
   }
 
-  public log(msg) {
-    try {
-      Zotero.debug(`report-customizer: ${msg}`)
-    } catch (err) {
-      console.log(`report-customizer: ${msg}`) // tslint:disable-line:no-console
+  private log(msg) {
+    const log = document.getElementById('log') as HTMLInputElement
+    log.value += `${msg}\n`
+    log.scrollTop = log.scrollHeight
+  }
+
+  public update() {
+    if (this.logging) document.getElementById('log').style.display = 'block'
+    this.log(`\nupdate: ${this.state} of ${this.history.length - 1}`)
+
+    const state = {
+      edit: true,
+      undo: this.canUndo(),
+      redo: this.canRedo(),
+      reload: this.canReload(),
+      nuke: this.canNuke(),
+      save: this.dirty(),
     }
-  }
-
-  private removeNode(node) {
-    node.parentNode.removeChild(node)
-  }
-
-  private update() {
-    this.log('update; dirty=' + this.dirty())
-
-    document.getElementById('save').style.display = this.dirty() ? 'inline-block' : 'none'
-    document.getElementById('undo').style.display = !equal(this.config, config) ? 'inline-block' : 'none'
-    document.getElementById('reset').style.display = !equal(this.config, defaults) && !equal(config, defaults) ? 'inline-block' : 'none'
+    for (const [name, on] of Object.entries(state)) {
+      const button = document.getElementById(name)
+      try {
+        if (this.editing) {
+          button.classList[on ? 'remove' : 'add']('disabled')
+          button.style.display = 'inline-block'
+          this.log(`${name} ${on ? 'enabled' : 'disabled'}`)
+        } else {
+          button.style.display = on ? 'block' : 'none'
+          this.log(`${name} ${on ? 'shown' : 'hidden'}`)
+        }
+      } catch (err) {
+        this.log(`button ${name} not found`)
+      }
+    }
 
     const style = document.getElementById('style')
-    if (this.config.fields.remove.length) {
-      style.textContent = this.config.fields.remove.map(type => `.${type}`).join(', ') + ' { display: none; }'
+    const config = this.config()
+    if (config.fields.remove.length) {
+      style.textContent = config.fields.remove.map(type => `.${type}`).join(', ') + ' { display: none; }'
     } else {
       style.textContent = ''
     }
 
-    const sort = this.config.items.sort.replace(/^-/, '')
+    const sort = config.items.sort.replace(/^-/, '')
 
     for (const control of document.querySelectorAll('a > span.mdi-sort-ascending, a > span.mdi-sort-descending')) {
       const actions = {
         'mdi-inactive':         control.parentElement.dataset.type !== sort,
         'mdi-24px':             control.parentElement.dataset.type === sort,
-        'mdi-sort-ascending':   this.config.items.sort[0] !== '-',
-        'mdi-sort-descending':  this.config.items.sort[0] === '-',
+        'mdi-sort-ascending':   config.items.sort[0] !== '-',
+        'mdi-sort-descending':  config.items.sort[0] === '-',
       }
       for (const [className, add] of Object.entries(actions)) {
         control.classList[add ? 'add' : 'remove'](className)
@@ -242,9 +329,8 @@ const report = new class {
       // sort items
       const container = document.getElementById('report')
       const items = Array.from(container.children)
-      this.log(`sorting ${items.length} items`)
 
-      const order = this.config.items.sort[0] === '-' ? 1 : 0
+      const order = config.items.sort[0] === '-' ? 1 : 0
       const selector = (sort === 'title') ? 'h2' : `tr.${sort} td`
       items.sort((a, b) => {
         const t = [a, b].map((e: HTMLElement) => {
@@ -268,8 +354,8 @@ const report = new class {
       })
 
       rows.sort((a: HTMLElement, b: HTMLElement) => {
-        const ai = this.config.fields.order.indexOf(a.dataset.sort)
-        const bi = this.config.fields.order.indexOf(b.dataset.sort)
+        const ai = config.fields.order.indexOf(a.dataset.sort)
+        const bi = config.fields.order.indexOf(b.dataset.sort)
 
         if (ai === bi) return parseInt(a.dataset.index) - parseInt(b.dataset.index)
         return ai - bi
@@ -281,7 +367,7 @@ const report = new class {
 
       let pred: string = null
       for (const up of tbody.querySelectorAll('span.mdi-chevron-up') as NodeListOf<HTMLElement>) {
-        if (this.config.fields.remove.includes(up.parentElement.dataset.type)) continue
+        if (config.fields.remove.includes(up.parentElement.dataset.type)) continue
 
         if (pred) {
           up.parentElement.style.display = 'inline-block'
@@ -294,7 +380,7 @@ const report = new class {
 
       let next: string = null
       for (const down of Array.from(tbody.querySelectorAll('span.mdi-chevron-down')).reverse() as HTMLElement[]) {
-        if (this.config.fields.remove.includes(down.parentElement.dataset.type)) continue
+        if (config.fields.remove.includes(down.parentElement.dataset.type)) continue
 
         if (next) {
           down.parentElement.style.display = 'inline-block'
@@ -307,36 +393,3 @@ const report = new class {
     }
   }
 }
-
-if (report.active) {
-  report.log('loading report')
-
-  window.onbeforeunload = function(e) { // tslint:disable-line:only-arrow-functions
-    return report.dirty() ? true : undefined
-  }
-
-  window.onmessage = function(e) { // tslint:disable-line:only-arrow-functions
-    // e.data can be 'saved' or 'error'
-    report.log('message: got ' + e.data)
-
-    // this will prevent the onbeforeunload complaining
-    window.onbeforeunload = undefined
-
-    // this will reload the report and thereby get the latest saved state
-    location.reload(true)
-  }
-
-  // load dynamically so it isn't saved to disk
-  const div = document.getElementById('backend') as HTMLElement
-  const iframe = div.ownerDocument.createElement('iframe') as HTMLIFrameElement
-  iframe.addEventListener('load', () => {
-    report.backend = iframe.contentWindow
-  })
-  iframe.style.display = 'none'
-  iframe.src = backend
-  div.appendChild(iframe)
-
-  report.log('report loaded')
-}
-
-// onload does not seem to fire within Zotero

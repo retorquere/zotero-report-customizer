@@ -5,4 +5,15 @@ html
       pre#log
 script.
   const backend = !{JSON.stringify(backend)};
-  !{require('!!inline-ts!./save.ts')}
+  window.onmessage = function(e) {
+    if (e.data) {
+      fetch(backend, { method: 'POST', body: e.data })
+        .then(() => {
+          window.parent.postMessage({ kind: 'saved' }, '*')
+        })
+        .catch(err => {
+          window.parent.postMessage({ kind: 'error', message: err.message }, '*')
+        })
+    }
+  }
+  window.parent.postMessage({ kind: 'loaded' }, '*')
