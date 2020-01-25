@@ -46,7 +46,7 @@ const report = location.href.startsWith('zotero://') && new class Report {
   private history: ReportConfig[]
   private state = 0
   private editing = false
-  private logging = true
+  private logging = false
 
   public constructor() {
     this.history = [ saved ]
@@ -61,11 +61,11 @@ const report = location.href.startsWith('zotero://') && new class Report {
     iframe.src = backend
 
     for (const button of document.getElementsByClassName('mdi') as HTMLCollectionOf<HTMLElement>) {
-      button.style.position = 'relative'
       const tooltip = document.createElement('span')
       tooltip.classList.add('tooltip')
-      tooltip.innerText = button.getAttribute('title')
-      button.appendChild(tooltip)
+      tooltip.innerText = button.getAttribute('title');
+      (button.parentNode as HTMLElement).style.position = 'relative'
+      button.parentNode.appendChild(tooltip)
     }
 
     this.log('showing edit header')
@@ -88,7 +88,7 @@ const report = location.href.startsWith('zotero://') && new class Report {
       default: // same behavior for 'error' and 'saved'
         // this will prevent the onbeforeunload complaining
         window.onbeforeunload = undefined
-        if (e.data?.kind === 'error') this.log(e.data.message)
+        if (e.data?.kind === 'error') alert(e.data.message)
         location.reload(true)
         break
     }
@@ -245,7 +245,7 @@ const report = location.href.startsWith('zotero://') && new class Report {
   }
 
   public canReload() {
-    return this.editing && this.state > 0
+    return this.editing && this.state > 0 && this.dirty()
   }
   public reload() {
     if (!this.canReload()) return false
@@ -295,7 +295,7 @@ const report = location.href.startsWith('zotero://') && new class Report {
           button.style.display = 'inline-block'
           this.log(`${name} ${on ? 'enabled' : 'disabled'}`)
         } else {
-          button.style.display = on ? 'block' : 'none'
+          button.style.display = on ? 'inline-block' : 'none'
           this.log(`${name} ${on ? 'shown' : 'hidden'}`)
         }
       } catch (err) {
