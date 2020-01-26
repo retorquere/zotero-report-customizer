@@ -73,7 +73,7 @@ const report = location.href.startsWith('zotero://') && new class Report {
   }
 
   public onbeforeunload() {
-    return report.dirty() ? true : undefined
+    return this.dirty() ? true : undefined
   }
 
   public onmessage(e) {
