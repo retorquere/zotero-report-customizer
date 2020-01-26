@@ -113,7 +113,7 @@ const report = location.href.startsWith('zotero://') && new class Report {
   private push(): ReportConfig {
     this.log(`push: ${this.history.length - 1} => ${this.state + 1}`)
     this.history.splice(this.state + 1)
-    this.history.push(JSON.parse(JSON.stringify(this.history[this.state])))
+    this.history.push(JSON.parse(JSON.stringify(this.config())))
     this.state += 1
     return this.config()
   }
@@ -214,10 +214,10 @@ const report = location.href.startsWith('zotero://') && new class Report {
     return this.editing && this.state > 0
   }
   public undo() {
-    if (!this.canUndo()) return false
-
-    this.state -= 1
-    this.update()
+    if (this.canUndo()) {
+      this.state -= 1
+      this.update()
+    }
     return false
   }
 
@@ -225,10 +225,10 @@ const report = location.href.startsWith('zotero://') && new class Report {
     return this.editing && this.state < (this.history.length - 1)
   }
   public redo() {
-    if (!this.canRedo()) return false
-
-    this.state += 1
-    this.update()
+    if (this.canRedo()) {
+      this.state += 1
+      this.update()
+    }
     return false
   }
 
@@ -236,11 +236,11 @@ const report = location.href.startsWith('zotero://') && new class Report {
     return this.editing && !equal(this.config(), defaults)
   }
   public nuke() {
-    if (!this.canNuke()) return false
-
-    this.push()
-    this.history[this.state] = defaults
-    this.update()
+    if (this.canNuke()) {
+      this.push()
+      this.history[this.state] = defaults
+      this.update()
+    }
     return false
   }
 
@@ -248,35 +248,36 @@ const report = location.href.startsWith('zotero://') && new class Report {
     return this.editing && this.state > 0 && this.dirty()
   }
   public reload() {
-    if (!this.canReload()) return false
-
-    this.state = 0
-    this.update()
+    if (this.canReload()) {
+      this.state = 0
+      this.update()
+    }
     return false
   }
 
   public save() {
-    if (!this.dirty()) return false
+    if (this.dirty()) {
+      if (this.backend) {
+        this.backend.postMessage(JSON.stringify(this.config()), '*')
+      } else {
+        alert('backend not available')
+      }
 
-    if (this.backend) {
-      this.backend.postMessage(JSON.stringify(this.config()), '*')
-    } else {
-      this.log('backend not available')
+      this.update()
     }
-
-    this.update()
-
     return false
   }
 
   private log(msg) {
+    if (!this.logging) return
+
+    document.getElementById('log').style.display = 'block'
     const log = document.getElementById('log') as HTMLInputElement
     log.value += `${msg}\n`
     log.scrollTop = log.scrollHeight
   }
 
   public update() {
-    if (this.logging) document.getElementById('log').style.display = 'block'
     this.log(`\nupdate: ${this.state} of ${this.history.length - 1}`)
 
     const state = {
