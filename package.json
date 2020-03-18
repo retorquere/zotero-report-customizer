@@ -38,7 +38,7 @@
     "install": "^0.13.0",
     "json-schema-defaults": "^0.4.0",
     "json-schema-to-typescript": "^8.0.1",
-    "npm-check-updates": "^4.0.1",
+    "npm-check-updates": "^4.0.4",
     "nunjucks": "^3.2.0",
     "pug": "^2.0.4",
     "pug-cli": "^1.0.0-alpha6",
