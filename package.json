@@ -37,7 +37,7 @@
     "indent-string": "^4.0.0",
     "install": "^0.13.0",
     "json-schema-defaults": "^0.4.0",
-    "json-schema-to-typescript": "^8.0.1",
+    "json-schema-to-typescript": "^8.2.0",
     "npm-check-updates": "^4.0.1",
     "nunjucks": "^3.2.0",
     "pug": "^2.0.4",
