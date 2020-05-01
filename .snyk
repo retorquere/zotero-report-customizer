@@ -1,0 +1,36 @@
+# Snyk (https://snyk.io) policy file, patches or ignores known vulnerabilities.
+version: v1.14.1
+ignore: {}
+# patches apply the minimum changes required to fix a vulnerability
+patch:
+  SNYK-JS-LODASH-567746:
+    - json-schema-to-typescript > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - npm-check-updates > node-alias > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - zotero-plugin > archiver > async > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - pug > pug-code-gen > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - pug > pug-filters > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - pug > pug-code-gen > pug-attrs > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - pug-cli > pug > pug-code-gen > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - zotero-plugin > pug > pug-code-gen > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - pug-cli > pug > pug-filters > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - zotero-plugin > pug > pug-filters > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - pug-cli > pug > pug-code-gen > pug-attrs > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - zotero-plugin > pug > pug-code-gen > pug-attrs > constantinople > babel-types > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - npm-check-updates > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - zotero-plugin > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
+    - zotero-plugin > request-promise > request-promise-core > lodash:
+        patched: '2020-05-01T04:54:08.955Z'
