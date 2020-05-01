@@ -11,7 +11,9 @@
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags",
     "prestart": "npm run build && rm -f ~/.BBTZ5TEST/extensions.json && rm -f ~/.BBTZ5TEST/extensions/*report-customizer*xpi && echo `pwd`/build/ > ~/.BBTZ5TEST/extensions/report-customizer@iris-advies.com",
-    "start": "/Applications/Zotero.app/Contents/MacOS/zotero -P BBTZ5TEST -jsconsole -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &"
+    "start": "/Applications/Zotero.app/Contents/MacOS/zotero -P BBTZ5TEST -jsconsole -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &",
+    "snyk-protect": "snyk protect",
+    "prepare": "npm run snyk-protect"
   },
   "repository": {
     "type": "git",
@@ -51,7 +53,8 @@
     "typescript": "^3.7.5",
     "webpack": "^4.41.5",
     "webpack-cli": "^3.3.10",
-    "zotero-plugin": "^0.0.98"
+    "zotero-plugin": "^0.0.98",
+    "snyk": "^1.316.1"
   },
   "xpi": {
     "name": "Zotero Report Customizer",
@@ -64,5 +67,6 @@
     "jsesc": "^2.5.2",
     "to-string-loader": "^1.1.6",
     "url-loader": "^3.0.0"
-  }
+  },
+  "snyk": true
 }
