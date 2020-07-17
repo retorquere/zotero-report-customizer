@@ -28,7 +28,7 @@
   "dependencies": {
     "@mdi/font": "^4.8.95",
     "@types/source-map": "^0.5.7",
-    "ajv": "^6.11.0",
+    "ajv": "^6.12.3",
     "apply-loader": "^2.0.0",
     "circular-dependency-plugin": "^5.2.0",
     "dedent": "^0.7.0",
