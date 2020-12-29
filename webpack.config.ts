@@ -5,6 +5,7 @@ import * as fs from 'fs-extra'
 
 import CircularDependencyPlugin = require('circular-dependency-plugin')
 import { compileFromFile } from 'json-schema-to-typescript'
+import PostCompile = require('post-compile-webpack-plugin')
 
 import 'zotero-plugin/make-dirs'
 import 'zotero-plugin/copy-assets'
@@ -26,21 +27,22 @@ export default (async function() {
     devtool: false,
     optimization: {
       flagIncludedChunks: true,
-      occurrenceOrder: false,
       usedExports: true,
       minimize: false,
       concatenateModules: false,
-      noEmitOnErrors: true,
-      namedModules: true,
-      namedChunks: true,
-      // runtimeChunk: false,
+      emitOnErrors: false,
+      moduleIds: 'named',
+      chunkIds: 'named',
+      runtimeChunk: {
+        name: 'webpack',
+      },
     },
 
     resolve: {
       extensions: ['.ts', '.js'],
     },
 
-    node: { fs: 'empty' },
+    node: false,
 
     resolveLoader: {
       alias: {
@@ -62,6 +64,23 @@ export default (async function() {
 
     plugins: [
       new CircularDependencyPlugin({ failOnError: true }),
+      new PostCompile(() => {
+        const wrapped_webpack = `${target_dir}/${webpack_js}`
+        if (fs.existsSync(wrapped_webpack)) {
+          let js = fs.readFileSync(`${target_dir}/${webpack_js}`, 'utf-8')
+
+          const prefix = 'if (!Zotero.webpackChunkReportCustomizer) {\n\n'
+          const postfix = '\n\n}\n'
+
+          if (!js.startsWith(prefix)) js = `${prefix}${js}${postfix}`
+
+          fs.writeFileSync(`${target_dir}/${webpack_js}`, js)
+
+        } else {
+          console.log(`${wrapped_webpack} does not exist -- compilation error?`)
+
+        }
+      }),
     ],
 
     context: path.resolve(__dirname, './content'),
@@ -74,8 +93,7 @@ export default (async function() {
       globalObject: 'Zotero',
       path: path.resolve(__dirname, './build/content'),
       filename: '[name].js',
-      jsonpFunction: 'WebPackedReportCustomizer',
-      devtoolLineToLine: true,
+      uniqueName: 'ReportCustomizer',
       pathinfo: true,
       library: 'Zotero.[name]',
       libraryTarget: 'assign',
