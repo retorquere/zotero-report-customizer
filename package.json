@@ -40,7 +40,7 @@
     "json-schema-to-typescript": "^10.0.3",
     "npm-check-updates": "^10.2.5",
     "nunjucks": "^3.2.2",
-    "pug": "^3.0.0",
+    "pug": "^3.0.1",
     "pug-cli": "^1.0.0-alpha6",
     "pug-loader": "^2.4.0",
     "raw-loader": "^4.0.2",
