@@ -2,6 +2,8 @@ declare const saved: ReportConfig
 declare const defaults: ReportConfig
 declare const backend: string
 
+import type { ReportConfig } from '../typings/report-config'
+
 function equal(a, b) {
   const ta = typeof a
   const tb = typeof b
@@ -25,11 +27,10 @@ function equal(a, b) {
 
   if (aa) {
     if (a.length !== b.length) return false
-
-  } else {
+  }
+  else {
     if ((a === null) !== (b === null)) return false
     if (Object.keys(a).length !== Object.keys(b).length) return false
-
   }
 
   for (const i in a) {
@@ -39,7 +40,8 @@ function equal(a, b) {
   return true
 }
 
-const report = location.href.startsWith('zotero://') && new class Report {
+// @ts-ignore
+const report = location.href.startsWith('zotero://') && new class Report { // eslint-disable-line @typescript-eslint/no-unused-vars
   public saved = false
   public backend: Window
 
@@ -77,9 +79,10 @@ const report = location.href.startsWith('zotero://') && new class Report {
   }
 
   public onmessage(e) {
+    let iframe: HTMLIFrameElement
     switch (e.data?.kind) {
       case 'loaded':
-        const iframe = (document.getElementById('backend') as HTMLIFrameElement)
+        iframe = (document.getElementById('backend') as HTMLIFrameElement)
         this.backend = iframe.contentWindow
         this.log('backend loaded')
         this.update()
@@ -184,8 +187,8 @@ const report = location.href.startsWith('zotero://') && new class Report {
     if (config.fields.remove.includes(field.dataset.type)) {
       // don't sort on removed field
       this.push().items.sort = ''
-
-    } else if (config.items.sort.match(new RegExp(`^-?${field.dataset.type}$`))) {
+    }
+    else if (config.items.sort.match(new RegExp(`^-?${field.dataset.type}$`))) {
       // same field, toggle
       switch (`${config.items.sort} `[0]) {
         case ' ': // no sort set, set to ascending
@@ -200,10 +203,9 @@ const report = location.href.startsWith('zotero://') && new class Report {
           this.push().items.sort = `-${field.dataset.type}`
           break
       }
-
-    } else {
+    }
+    else {
       this.push().items.sort = field.dataset.type
-
     }
 
     this.update()
@@ -259,7 +261,8 @@ const report = location.href.startsWith('zotero://') && new class Report {
     if (this.dirty()) {
       if (this.backend) {
         this.backend.postMessage(JSON.stringify(this.config()), '*')
-      } else {
+      }
+      else {
         alert('backend not available')
       }
 
@@ -295,11 +298,13 @@ const report = location.href.startsWith('zotero://') && new class Report {
           button.classList[on ? 'remove' : 'add']('disabled')
           button.style.display = 'inline-block'
           this.log(`${name} ${on ? 'enabled' : 'disabled'}`)
-        } else {
+        }
+        else {
           button.style.display = on ? 'inline-block' : 'none'
           this.log(`${name} ${on ? 'shown' : 'hidden'}`)
         }
-      } catch (err) {
+      }
+      catch (err) {
         this.log(`button ${name} not found`)
       }
     }
@@ -307,8 +312,9 @@ const report = location.href.startsWith('zotero://') && new class Report {
     const style = document.getElementById('style')
     const config = this.config()
     if (config.fields.remove.length) {
-      style.textContent = config.fields.remove.map(type => `.${type}`).join(', ') + ' { display: none; }'
-    } else {
+      style.textContent = config.fields.remove.map(type => `.${type}`).join(', ') + ' { display: none; }' // eslint-disable-line prefer-template
+    }
+    else {
       style.textContent = ''
     }
 
@@ -367,13 +373,14 @@ const report = location.href.startsWith('zotero://') && new class Report {
       }
 
       let pred: string = null
-      for (const up of tbody.querySelectorAll('span.mdi-chevron-up') as NodeListOf<HTMLElement>) {
+      for (const up of tbody.querySelectorAll('span.mdi-chevron-up')) {
         if (config.fields.remove.includes(up.parentElement.dataset.type)) continue
 
         if (pred) {
           up.parentElement.style.display = 'inline-block'
           up.parentElement.dataset.pred = pred
-        } else {
+        }
+        else {
           up.parentElement.style.display = 'none'
         }
         pred = up.parentElement.dataset.type
@@ -386,7 +393,8 @@ const report = location.href.startsWith('zotero://') && new class Report {
         if (next) {
           down.parentElement.style.display = 'inline-block'
           down.parentElement.dataset.next = next
-        } else {
+        }
+        else {
           down.parentElement.style.display = 'none'
         }
         next = down.parentElement.dataset.type

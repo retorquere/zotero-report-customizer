@@ -1,11 +1,27 @@
+/* eslint-disable @typescript-eslint/no-unsafe-return, prefer-arrow/prefer-arrow-functions, no-magic-numbers */
+
 declare const Zotero: any
 declare const Zotero_Report_Interface: any
 declare const ZoteroPane_Local: any
 
-import Ajv = require('ajv')
+import Ajv from 'ajv'
 
 const backend = `http://127.0.0.1:${Zotero.Prefs.get('httpServer.port')}/report-customizer`
 const report = require('./report.pug')
+const inline = {
+  js: {
+    report: require('!!inline-ts!./report.ts'),
+  },
+  css: {
+    detail: require('./detail.css'),
+    detail_screen: require('./detail_screen.css'),
+    detail_print: require('./detail_print.css'),
+    material: require('../gen/materialdesignicons.css'),
+  },
+  font: {
+    material: require('@mdi/font/fonts/materialdesignicons-webfont.woff2'),
+  },
+}
 const save = require('./save.pug')({ backend })
 
 function debug(msg) {
@@ -35,7 +51,7 @@ const defaultFieldOrder: string[] = ['itemType', 'citationKey', 'citationKeyConf
 const publicationTitleAlias: string[] = []
 
 function getLibraryIDFromkey(key) {
-  for (const [libraryID, keys] of Object.entries(Zotero.Items._objectIDs)) {
+  for (const [libraryID, keys] of Object.entries(Zotero.Items._objectIDs)) { // eslint-disable-line no-underscore-dangle
     if (keys[key]) return parseInt(libraryID)
   }
   return undefined
@@ -46,9 +62,9 @@ function normalizeDate(str) {
 
   if (Zotero.Date.isMultipart(str)) return Zotero.Date.multipartToSQL(str)
 
-  const date = Zotero.Date.strToDate(str)
-  if (date.month) date.month = `0${date.month + 1}`.slice(-2) // tslint:disable-line:no-magic-numbers
-  if (date.day) date.day = `0${date.day}`.slice(-2) // tslint:disable-line:no-magic-numbers
+  const date: { month?: number | string, day?: number | string, year?: number } = Zotero.Date.strToDate(str)
+  if (typeof date.month === 'number') date.month = `0${date.month + 1}`.slice(-2)
+  if (typeof date.day === 'number') date.day = `0${date.day}`.slice(-2)
 
   if (date.day) return `${date.year}-${date.month}-${date.day}`
   if (date.month) return `${date.year}-${date.month}`
@@ -63,11 +79,11 @@ const defaults = require('json-schema-defaults')(schema)
 
 const pending = 'ReportCustomizer: Zotero is still loading, please try again later.'
 
-Zotero.Report.HTML.listGenerator = function*(items, combineChildItems) {
+Zotero.Report.HTML.listGenerator = function*(_items, _combineChildItems) {
   yield pending
 }
 
-function* listGenerator(items, combineChildItems) {
+function* listGenerator(items, _combineChildItems) {
   if (Zotero.Schema.schemaUpdatePromise.isPending()) {
     yield pending
     return
@@ -92,7 +108,8 @@ function* listGenerator(items, combineChildItems) {
     if (typeof fieldNames[id] === 'undefined') {
       try {
         fieldNames[id] = Zotero.ItemFields.getLocalizedString(field) || ''
-      } catch (err) {
+      }
+      catch (err) {
         debug(`Localized string not available for '${id}'`)
         fieldNames[id] = ''
       }
@@ -128,8 +145,8 @@ function* listGenerator(items, combineChildItems) {
         })
         item.citationKeyConflicts = conflicts.length || ''
       }
-
-    } else {
+    }
+    else {
       if (item.extra) {
         item.extra = item.extra.replace(/(?:^|\n)citation key\s*:\s*([^\s]+)(?:\n|$)/i, (m, citationKey) => {
           item.citationKey = citationKey
@@ -158,7 +175,8 @@ function* listGenerator(items, combineChildItems) {
     const nonSpaceWhiteSpace = /[\u00A0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u200B\u202F\u205F\u3000\uFEFF]/
     if (!item.creators || !item.creators.length) {
       qualityReport.push('Item has no authors')
-    } else {
+    }
+    else {
       const creators = item.creators.filter(creator => creator.name.match(nonSpaceWhiteSpace))
       if (creators.length) qualityReport.push(`Creators with non-space whitespace: ${creators.map(creator => creator.name).join(', ')}`)
     }
@@ -187,14 +205,15 @@ function* listGenerator(items, combineChildItems) {
       let relations = item.relations[Zotero.Relations.relatedItemPredicate]
       if (!Array.isArray(relations)) relations = [ relations ]
 
-      const _relations = []
+      const item_relations = []
       for (const relation of relations) {
-        const _relation = yield Zotero.URI.getURIItem(relation)
-        if (_relation) _relations.push({ key: _relation.key, title: _relation.getDisplayTitle() })
+        const item_relation = yield Zotero.URI.getURIItem(relation)
+        if (item_relation) item_relations.push({ key: item_relation.key, title: item_relation.getDisplayTitle() })
       }
-      item.relations = _relations.length ? _relations : null
+      item.relations = item_relations.length ? item_relations : null
 
-    } else {
+    }
+    else {
       item.relations = null
 
     }
@@ -204,14 +223,16 @@ function* listGenerator(items, combineChildItems) {
   let serialized = null
   try {
     serialized = Zotero.Prefs.get('report-customizer.config')
-  } catch (err) {
+  }
+  catch (err) {
     Zotero.logError(`Cannot retrieve report-customizer.config: ${err}`)
   }
   let config = defaults
   if (serialized) {
     try {
       config = JSON.parse(serialized)
-    } catch (err) {
+    }
+    catch (err) {
       Zotero.logError(`Cannot parse report-customizer.config ${JSON.stringify(serialized)}: ${err}`)
     }
   }
@@ -244,23 +265,22 @@ function* listGenerator(items, combineChildItems) {
     })
   }
 
-  // tslint:disable-next-line:variable-name
   const mathJax = Zotero.Prefs.get('report-customizer.MathJax')
   const saved = Zotero.ReportCustomizer.load()
-  const html = report({ saved, defaults, backend, mathJax, fieldName, items, fieldAlias, tagCount, normalizeDate })
+  const html = report({ inline, saved, defaults, backend, mathJax, fieldName, items, fieldAlias, tagCount, normalizeDate })
   // if (Zotero.Prefs.get('report-customizer.dump'))
   debug(`report-customizer-report:\n${html}`)
   debug(`report-customizer-save:\n${save}`)
   yield html
 }
 
-const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disable-line:variable-name
+const ReportCustomizer = Zotero.ReportCustomizer || new class {
   public bibliography: { [key: string]: string } = {}
 
-  private initialized: boolean = false
+  private initialized = false
 
   constructor() {
-    window.addEventListener('load', event => {
+    window.addEventListener('load', _event => {
       this.init().catch(err => Zotero.logError(err))
     }, false)
   }
@@ -310,7 +330,7 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
       public init(req) {
         switch (req.method) {
           case 'GET':
-            return [200, 'text/html', save] // tslint:disable-line:no-magic-numbers
+            return [200, 'text/html', save]
 
           case 'POST':
             debug(`saving report-customizer.config ${JSON.stringify(req.data)}`)
@@ -319,16 +339,15 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
               if (!validate(req.data)) throw new Error(`Config does not conform to schema, ignoring: ${validate.errors}`)
 
               Zotero.Prefs.set('report-customizer.config', JSON.stringify(req.data))
-              return [200, 'text/plain', 'config saved'] // tslint:disable-line:no-magic-numbers
-
-            } catch (err) {
-              Zotero.logError(`error saving report-customizer data: ${err}`)
-
+              return [200, 'text/plain', 'config saved']
             }
-            return [500, `error saving report-customizer data ${JSON.stringify(req.data)}`, 'text/plain'] // tslint:disable-line:no-magic-numbers
+            catch (err) {
+              Zotero.logError(`error saving report-customizer data: ${err}`)
+            }
+            return [500, `error saving report-customizer data ${JSON.stringify(req.data)}`, 'text/plain']
 
           default:
-            return [500, `unexpected method ${req.method}`, 'text/plain'] // tslint:disable-line:no-magic-numbers
+            return [500, `unexpected method ${req.method}`, 'text/plain']
 
         }
       }
@@ -338,7 +357,8 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class { // tslint:disabl
   public load() {
     try {
       return JSON.parse(Zotero.Prefs.get('report-customizer.config'))
-    } catch (err) {
+    }
+    catch (err) {
       Zotero.debug('report-customizer.load:', err.message)
       return defaults
     }
@@ -359,16 +379,17 @@ patch(Zotero_Report_Interface, 'loadCollectionReport', original => function load
     if (source = ZoteroPane_Local.getSelectedCollection()) {
       items = source.getChildItems()
 
-    } else if (source = ZoteroPane_Local.getSelectedSavedSearch()) {
+    }
+    else if (source = ZoteroPane_Local.getSelectedSavedSearch()) {
       items = ZoteroPane_Local.getSortedItems()
-
-    } else {
+    }
+    else {
       items = []
-
     }
 
     ReportCustomizer.get_bibliography(items)
-  } catch (err) {
+  }
+  catch (err) {
     Zotero.logError(err)
   }
 
@@ -378,8 +399,8 @@ patch(Zotero_Report_Interface, 'loadCollectionReport', original => function load
 patch(Zotero_Report_Interface, 'loadItemReport', original => function loadItemReport(event) {
   try {
     ReportCustomizer.get_bibliography(ZoteroPane_Local.getSelectedItems() || [])
-
-  } catch (err) {
+  }
+  catch (err) {
     Zotero.logError(err)
   }
 

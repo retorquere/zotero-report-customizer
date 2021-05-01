@@ -3,7 +3,7 @@ script.
   const saved = !{JSON.stringify(saved)};
   const defaults = !{JSON.stringify(defaults)};
   const backend = !{JSON.stringify(backend)};
-  !{require('!!inline-ts!./report.ts')}
+  #{inline.js.report}
 - const domParser = Components.classes['@mozilla.org/xmlextras/domparser;1'].createInstance(Components.interfaces.nsIDOMParser)
 - const nonMeta = new Set([])
 - nonMeta.add('reportSearchMatch')
@@ -186,13 +186,13 @@ html
     meta(http-equiv='Content-Type' content='text/html; charset=utf-8')
     title #{Zotero.getString('report.title.default')}
     style.
-      !{require('!!raw-loader!./detail.css').default}
+      #{inline.css.detail}
 
       @media screen {
-        !{require('!!raw-loader!./detail_screen.css').default}
+        #{inline.css.detail_screen}
       }
       @media print {
-        !{require('!!raw-loader!./detail_print.css').default}
+        #{inline.css.detail_print}
       }
 
       #log {
@@ -251,10 +251,10 @@ html
         font-family: 'Material Design Icons';
         font-weight: normal;
         font-style: normal;
-        src: url(#{require('@mdi/font/fonts/materialdesignicons-webfont.woff2').default}) format('woff2');
+        src: url(#{inline.font.material}) format('woff2');
       }
 
-      !{require('!!raw-loader!../gen/materialdesignicons.css').default}
+      #{inline.css.material}
     style#style
       if saved.fields.remove.length
         | !{saved.fields.remove.map(type => `.${type}`).join(', ')} { display: none; }
