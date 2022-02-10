@@ -70,7 +70,6 @@ async function bundle(config) {
     banner: { js: 'if (!Zotero.ReportCustomizer) {\n' },
     footer: { js: '\n}' },
     globalThis: true,
-    globalName: 'Zotero.ReportCustomizer',
   })
 })().catch(err => {
   console.log(err)

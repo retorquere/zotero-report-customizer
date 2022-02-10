@@ -6,6 +6,5 @@
 	xmlns="http://www.mozilla.org/keymaster/gatekeeper/there.is.only.xul">
 	
 	<!-- Include the main extension logic -->
-  <script src="chrome://zotero/content/include.js"/>
-  <script src="chrome://zotero-report-customizer/content/ReportCustomizer.js"/>
+  <script src="chrome://zotero-report-customizer/content/zotero-report-customizer.js"/>
 </overlay>

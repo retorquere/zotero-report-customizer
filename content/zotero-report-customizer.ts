@@ -24,8 +24,32 @@ const inline = {
 }
 const save = require('./save.pug')({ backend })
 
-function debug(msg) {
-  Zotero.debug(`{zotero-report-customizer} ${msg}`)
+function debug(...msg) {
+  const txt: string[] = []
+  let error: string
+  for (const m of msg) {
+    if (m instanceof Error) {
+      if (error) {
+        txt.push(`Error<${m.message}>`)
+      }
+      else {
+        error = `${m.message}\n${m.stack}`.trim()
+      }
+    }
+    else if (typeof m === 'string') {
+      txt.push(m)
+    }
+    else {
+      try {
+        txt.push(JSON.stringify(m))
+      }
+      catch (err) {
+        txt.push(`${m}`)
+      }
+    }
+  }
+  if (error) txt.push(error)
+  Zotero.debug(`{zotero-report-customizer} ${txt.join(' ').trim()}`)
 }
 
 const marker = 'ReportCustomizerMonkeyPatched'
@@ -83,205 +107,15 @@ Zotero.Report.HTML.listGenerator = function*(_items, _combineChildItems) {
   yield pending
 }
 
-function* listGenerator(items, _combineChildItems) {
-  if (Zotero.Schema.schemaUpdatePromise.isPending()) {
-    yield pending
-    return
-  }
-
-  const fieldNames = {}
-  function fieldName(itemType, field) {
-    if (itemType !== 'attachment' && itemType !== 'note') {
-      switch (field) {
-        case 'citationKey':
-          return 'Citation key'
-        case 'citationKeyConflicts':
-          return 'Citation key conflicts'
-        case 'qualityReport':
-          return 'Quality report'
-        case 'bibliography':
-          return 'Bibliography'
-      }
-    }
-
-    const id = `${itemType}.${field}`
-    if (typeof fieldNames[id] === 'undefined') {
-      try {
-        fieldNames[id] = Zotero.ItemFields.getLocalizedString(field) || ''
-      }
-      catch (err) {
-        debug(`Localized string not available for '${id}'`)
-        fieldNames[id] = ''
-      }
-    }
-    return fieldNames[id]
-  }
-
-  const bibliography = Zotero.Prefs.get('report-customizer.bibliography') ? Zotero.ReportCustomizer.bibliography : {}
-
-  debug(`listGenerator.bibliography = ${JSON.stringify(bibliography, null, 2)}`)
-
-  const tagCount: { [key: string]: number } = {}
-  for (const item of items) {
-    if (item.tags) {
-      // tag count
-      item.tags.sort((a, b) => a.tag.localeCompare(b.tag, undefined, { sensitivity: 'base' }))
-      for (const tag of item.tags) {
-        tagCount[tag.tag] = (tagCount[tag.tag] || 0) + 1
-      }
-    }
-
-    if (item.itemType === 'attachment' || item.itemType === 'note') continue
-
-    // citation key
-    if (Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) {
-      const citekey = Zotero.BetterBibTeX.KeyManager.keys.findOne({ itemKey: item.key}) || {}
-      item.citationKey = citekey.citekey
-      if (item.citationKey) {
-        const conflicts = Zotero.BetterBibTeX.KeyManager.keys.find({
-          itemKey: { $ne: item.key },
-          citekey: item.citationKey,
-          libraryID: getLibraryIDFromkey(item.key),
-        })
-        item.citationKeyConflicts = conflicts.length || ''
-      }
-    }
-    else {
-      if (item.extra) {
-        item.extra = item.extra.replace(/(?:^|\n)citation key\s*:\s*([^\s]+)(?:\n|$)/i, (m, citationKey) => {
-          item.citationKey = citationKey
-          return '\n'
-        }).trim()
-      }
-    }
-
-    if (item.key) item.bibliography = bibliography[item.key]
-
-    debug(JSON.stringify(item, null, 2))
-
-    if (item.creators) {
-      for (const creator of item.creators) {
-        if (typeof creator.name !== 'undefined') continue
-        creator.name = `${creator.firstName} ${creator.lastName}`.trim()
-      }
-    }
-
-    if (item.attachments) {
-      item.attachments.sort((a, b) => (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' }))
-    }
-
-    // quality report
-    const qualityReport = []
-    const nonSpaceWhiteSpace = /[\u00A0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u200B\u202F\u205F\u3000\uFEFF]/
-    if (!item.creators || !item.creators.length) {
-      qualityReport.push('Item has no authors')
-    }
-    else {
-      const creators = item.creators.filter(creator => creator.name.match(nonSpaceWhiteSpace))
-      if (creators.length) qualityReport.push(`Creators with non-space whitespace: ${creators.map(creator => creator.name).join(', ')}`)
-    }
-
-    const publicationTitle = {
-      field: publicationTitleAlias.find(alias => item[alias]) || 'publicationTitle',
-      value: '',
-    }
-    if (publicationTitle.field) publicationTitle.value = item[publicationTitle.field] || ''
-    if (item.journalAbbrev && publicationTitle.value && item.journalAbbrev.length >= publicationTitle.value.length) {
-      qualityReport.push(`${fieldName(item.itemType, publicationTitle.field)} is shorter than the journal abbreviation')}`)
-    }
-    if (publicationTitle.value.indexOf('.') >= 0) {
-      qualityReport.push(`${fieldName(item.itemType, publicationTitle.field)} contains a period -- is it a journal abbreviation?`)
-    }
-    if (qualityReport.length) item.qualityReport = qualityReport
-
-    // optionally single creators field
-    const joiner = Zotero.Prefs.get('report-customizer.join-authors')
-    if (item.creators && joiner) {
-      item.creators = [ { creatorType: item.creators[0].creatorType, name: item.creators.map(creator => creator.name).join(joiner) } ]
-    }
-
-    // pre-fetch relations because pug doesn't do async
-    if (item.reportSearchMatch && item.relations[Zotero.Relations.relatedItemPredicate]) {
-      let relations = item.relations[Zotero.Relations.relatedItemPredicate]
-      if (!Array.isArray(relations)) relations = [ relations ]
-
-      const item_relations = []
-      for (const relation of relations) {
-        const item_relation = yield Zotero.URI.getURIItem(relation)
-        if (item_relation) item_relations.push({ key: item_relation.key, title: item_relation.getDisplayTitle() })
-      }
-      item.relations = item_relations.length ? item_relations : null
-
-    }
-    else {
-      item.relations = null
-
-    }
-  }
-
-  debug('getting report-customizer.config...')
-  let serialized = null
-  try {
-    serialized = Zotero.Prefs.get('report-customizer.config')
-  }
-  catch (err) {
-    Zotero.logError(`Cannot retrieve report-customizer.config: ${err}`)
-  }
-  let config = defaults
-  if (serialized) {
-    try {
-      config = JSON.parse(serialized)
-    }
-    catch (err) {
-      Zotero.logError(`Cannot parse report-customizer.config ${JSON.stringify(serialized)}: ${err}`)
-    }
-  }
-  if (!validate(config)) {
-    Zotero.logError(`Config does not conform to schema, resetting: ${validate.errors}`)
-    config = defaults
-  }
-  debug(`report-customizer.config: ${JSON.stringify(config)}`)
-
-  for (const field of defaultFieldOrder) {
-    if (!config.fields.order.includes(field)) config.fields.order.push(field)
-  }
-  debug(`fieldOrder: ${defaultFieldOrder.join(',')} vs ${config.fields.order.join(',')}`)
-
-  // Zotero doesn't save the document as it is displayed... make it so that the default load is as displayed... oy.
-  if (config.items.sort) {
-    const sort = config.items.sort.replace(/^-/, '')
-    const order = config.items.sort[0] === '-' ? 1 : 0
-    const onISODate = ['accessDate', 'dateAdded', 'dateModified'].includes(sort)
-    items.sort((a, b) => {
-      const t = [a, b].map(item => {
-        if (!item[sort]) return '\u10FFFF' // maximum unicode codepoint, will put this item last in sort
-        if (sort === 'creator' && !item.creators.length) return '\u10FFFF'
-        if (onISODate) return item[sort].replace(/T.*/, '')
-        if (sort === 'date') return normalizeDate(item[sort])
-        return item[sort]
-      })
-
-      return t[order].localeCompare(t[1 - order])
-    })
-  }
-
-  const mathJax = Zotero.Prefs.get('report-customizer.MathJax')
-  const saved = Zotero.ReportCustomizer.load()
-  const html = report({ inline, saved, defaults, backend, mathJax, fieldName, items, fieldAlias, tagCount, normalizeDate })
-  // if (Zotero.Prefs.get('report-customizer.dump'))
-  debug(`report-customizer-report:\n${html}`)
-  debug(`report-customizer-save:\n${save}`)
-  yield html
-}
-
-const ReportCustomizer = Zotero.ReportCustomizer || new class {
+Zotero.ReportCustomizer = Zotero.ReportCustomizer || new class {
   public bibliography: { [key: string]: string } = {}
 
   private initialized = false
 
   constructor() {
+    debug('loading')
     window.addEventListener('load', _event => {
-      this.init().catch(err => Zotero.logError(err))
+      this.init().catch(err => debug(err))
     }, false)
   }
 
@@ -303,8 +137,9 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class {
   private async init() {
     if (this.initialized) return
     this.initialized = true
+    debug('initializing')
 
-    Zotero.Report.HTML.listGenerator = listGenerator
+    Zotero.Report.HTML.listGenerator = this.listGenerator.bind(this)
 
     // await Zotero.Schema.initializationPromise
     await Zotero.Schema.schemaUpdatePromise
@@ -342,7 +177,7 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class {
               return [200, 'text/plain', 'config saved']
             }
             catch (err) {
-              Zotero.logError(`error saving report-customizer data: ${err}`)
+              debug('error saving report-customizer data:', err)
             }
             return [500, `error saving report-customizer data ${JSON.stringify(req.data)}`, 'text/plain']
 
@@ -359,7 +194,7 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class {
       return JSON.parse(Zotero.Prefs.get('report-customizer.config'))
     }
     catch (err) {
-      Zotero.debug('report-customizer.load:', err.message)
+      debug('report-customizer.load:', err)
       return defaults
     }
   }
@@ -367,9 +202,198 @@ const ReportCustomizer = Zotero.ReportCustomizer || new class {
   public save(config) {
     Zotero.Prefs.set('report-customizer.config', JSON.stringify(config))
   }
-}
 
-export = ReportCustomizer
+  public *listGenerator(items, _combineChildItems) {
+    if (Zotero.Schema.schemaUpdatePromise.isPending()) {
+      yield pending
+      return
+    }
+
+    const fieldNames = {}
+    function fieldName(itemType, field) {
+      if (itemType !== 'attachment' && itemType !== 'note') {
+        switch (field) {
+          case 'citationKey':
+            return 'Citation key'
+          case 'citationKeyConflicts':
+            return 'Citation key conflicts'
+          case 'qualityReport':
+            return 'Quality report'
+          case 'bibliography':
+            return 'Bibliography'
+        }
+      }
+
+      const id = `${itemType}.${field}`
+      if (typeof fieldNames[id] === 'undefined') {
+        try {
+          fieldNames[id] = Zotero.ItemFields.getLocalizedString(field) || ''
+        }
+        catch (err) {
+          debug(`Localized string not available for '${id}'`)
+          fieldNames[id] = ''
+        }
+      }
+      return fieldNames[id]
+    }
+
+    const bibliography = Zotero.Prefs.get('report-customizer.bibliography') ? this.bibliography : {}
+
+    debug(`listGenerator.bibliography = ${JSON.stringify(bibliography, null, 2)}`)
+
+    const tagCount: { [key: string]: number } = {}
+    for (const item of items) {
+      if (item.tags) {
+        // tag count
+        item.tags.sort((a, b) => a.tag.localeCompare(b.tag, undefined, { sensitivity: 'base' }))
+        for (const tag of item.tags) {
+          tagCount[tag.tag] = (tagCount[tag.tag] || 0) + 1
+        }
+      }
+
+      if (item.itemType === 'attachment' || item.itemType === 'note') continue
+
+      // citation key
+      if (Zotero.BetterBibTeX && Zotero.BetterBibTeX.KeyManager.keys) {
+        const citekey = Zotero.BetterBibTeX.KeyManager.keys.findOne({ itemKey: item.key}) || {}
+        item.citationKey = citekey.citekey
+        if (item.citationKey) {
+          const conflicts = Zotero.BetterBibTeX.KeyManager.keys.find({
+            itemKey: { $ne: item.key },
+            citekey: item.citationKey,
+            libraryID: getLibraryIDFromkey(item.key),
+          })
+          item.citationKeyConflicts = conflicts.length || ''
+        }
+      }
+      else {
+        if (item.extra) {
+          item.extra = item.extra.replace(/(?:^|\n)citation key\s*:\s*([^\s]+)(?:\n|$)/i, (m, citationKey) => {
+            item.citationKey = citationKey
+            return '\n'
+          }).trim()
+        }
+      }
+
+      if (item.key) item.bibliography = bibliography[item.key]
+
+      debug(JSON.stringify(item, null, 2))
+
+      if (item.creators) {
+        for (const creator of item.creators) {
+          if (typeof creator.name !== 'undefined') continue
+          creator.name = `${creator.firstName} ${creator.lastName}`.trim()
+        }
+      }
+
+      if (item.attachments) {
+        item.attachments.sort((a, b) => (a.title || '').localeCompare(b.title || '', undefined, { sensitivity: 'base' }))
+      }
+
+      // quality report
+      const qualityReport = []
+      const nonSpaceWhiteSpace = /[\u00A0\u1680\u180E\u2000\u2001\u2002\u2003\u2004\u2005\u2006\u2007\u2008\u2009\u200A\u200B\u202F\u205F\u3000\uFEFF]/
+      if (!item.creators || !item.creators.length) {
+        qualityReport.push('Item has no authors')
+      }
+      else {
+        const creators = item.creators.filter(creator => creator.name.match(nonSpaceWhiteSpace))
+        if (creators.length) qualityReport.push(`Creators with non-space whitespace: ${creators.map(creator => creator.name).join(', ')}`)
+      }
+
+      const publicationTitle = {
+        field: publicationTitleAlias.find(alias => item[alias]) || 'publicationTitle',
+        value: '',
+      }
+      if (publicationTitle.field) publicationTitle.value = item[publicationTitle.field] || ''
+      if (item.journalAbbrev && publicationTitle.value && item.journalAbbrev.length >= publicationTitle.value.length) {
+        qualityReport.push(`${fieldName(item.itemType, publicationTitle.field)} is shorter than the journal abbreviation')}`)
+      }
+      if (publicationTitle.value.indexOf('.') >= 0) {
+        qualityReport.push(`${fieldName(item.itemType, publicationTitle.field)} contains a period -- is it a journal abbreviation?`)
+      }
+      if (qualityReport.length) item.qualityReport = qualityReport
+
+      // optionally single creators field
+      const joiner = Zotero.Prefs.get('report-customizer.join-authors')
+      if (item.creators && joiner) {
+        item.creators = [ { creatorType: item.creators[0].creatorType, name: item.creators.map(creator => creator.name).join(joiner) } ]
+      }
+
+      // pre-fetch relations because pug doesn't do async
+      if (item.reportSearchMatch && item.relations[Zotero.Relations.relatedItemPredicate]) {
+        let relations = item.relations[Zotero.Relations.relatedItemPredicate]
+        if (!Array.isArray(relations)) relations = [ relations ]
+
+        const item_relations = []
+        for (const relation of relations) {
+          const item_relation = yield Zotero.URI.getURIItem(relation)
+          if (item_relation) item_relations.push({ key: item_relation.key, title: item_relation.getDisplayTitle() })
+        }
+        item.relations = item_relations.length ? item_relations : null
+
+      }
+      else {
+        item.relations = null
+
+      }
+    }
+
+    debug('getting report-customizer.config...')
+    let serialized = null
+    try {
+      serialized = Zotero.Prefs.get('report-customizer.config')
+    }
+    catch (err) {
+      debug('Cannot retrieve report-customizer.config:', err)
+    }
+    let config = defaults
+    if (serialized) {
+      try {
+        config = JSON.parse(serialized)
+      }
+      catch (err) {
+        debug(`Cannot parse report-customizer.config ${JSON.stringify(serialized)}:`, err)
+      }
+    }
+    if (!validate(config)) {
+      debug(`Config does not conform to schema, resetting: ${validate.errors}`)
+      config = defaults
+    }
+    debug(`report-customizer.config: ${JSON.stringify(config)}`)
+
+    for (const field of defaultFieldOrder) {
+      if (!config.fields.order.includes(field)) config.fields.order.push(field)
+    }
+    debug(`fieldOrder: ${defaultFieldOrder.join(',')} vs ${config.fields.order.join(',')}`)
+
+    // Zotero doesn't save the document as it is displayed... make it so that the default load is as displayed... oy.
+    if (config.items.sort) {
+      const sort = config.items.sort.replace(/^-/, '')
+      const order = config.items.sort[0] === '-' ? 1 : 0
+      const onISODate = ['accessDate', 'dateAdded', 'dateModified'].includes(sort)
+      items.sort((a, b) => {
+        const t = [a, b].map(item => {
+          if (!item[sort]) return '\u10FFFF' // maximum unicode codepoint, will put this item last in sort
+          if (sort === 'creator' && !item.creators.length) return '\u10FFFF'
+          if (onISODate) return item[sort].replace(/T.*/, '')
+          if (sort === 'date') return normalizeDate(item[sort])
+          return item[sort]
+        })
+
+        return t[order].localeCompare(t[1 - order])
+      })
+    }
+
+    const mathJax = Zotero.Prefs.get('report-customizer.MathJax')
+    const saved = this.load()
+    const html = report({ inline, saved, defaults, backend, mathJax, fieldName, items, fieldAlias, tagCount, normalizeDate })
+    // if (Zotero.Prefs.get('report-customizer.dump'))
+    debug(`report-customizer-report:\n${html}`)
+    debug(`report-customizer-save:\n${save}`)
+    yield html
+  }
+}
 
 patch(Zotero_Report_Interface, 'loadCollectionReport', original => function loadCollectionReport(event) {
   try {
@@ -387,10 +411,10 @@ patch(Zotero_Report_Interface, 'loadCollectionReport', original => function load
       items = []
     }
 
-    ReportCustomizer.get_bibliography(items)
+    Zotero.ReportCustomizer.get_bibliography(items)
   }
   catch (err) {
-    Zotero.logError(err)
+    debug(err)
   }
 
   return original(event)
@@ -398,14 +422,11 @@ patch(Zotero_Report_Interface, 'loadCollectionReport', original => function load
 
 patch(Zotero_Report_Interface, 'loadItemReport', original => function loadItemReport(event) {
   try {
-    ReportCustomizer.get_bibliography(ZoteroPane_Local.getSelectedItems() || [])
+    Zotero.ReportCustomizer.get_bibliography(ZoteroPane_Local.getSelectedItems() || [])
   }
   catch (err) {
-    Zotero.logError(err)
+    debug(err)
   }
 
   return original(event)
 })
-
-// otherwise this entry point won't be reloaded: https://github.com/webpack/webpack/issues/156
-delete require.cache[module.id]
