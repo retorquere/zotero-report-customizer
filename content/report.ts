@@ -30,7 +30,7 @@ function equal(a, b) {
   }
   else {
     if ((a === null) !== (b === null)) return false
-    if (Object.keys(a).length !== Object.keys(b).length) return false
+    if (Object.keys(a as Record<string, any>).length !== Object.keys(b as Record<string, any>).length) return false
   }
 
   for (const i in a) {
@@ -40,8 +40,7 @@ function equal(a, b) {
   return true
 }
 
-// @ts-ignore
-const report = location.href.startsWith('zotero://') && new class Report { // eslint-disable-line @typescript-eslint/no-unused-vars
+export const report = location.href.startsWith('zotero://') && new class Report { // eslint-disable-line @typescript-eslint/no-unused-vars
   public saved = false
   public backend: Window
 
@@ -92,7 +91,7 @@ const report = location.href.startsWith('zotero://') && new class Report { // es
         // this will prevent the onbeforeunload complaining
         window.onbeforeunload = undefined
         if (e.data?.kind === 'error') alert(e.data.message)
-        location.reload(true)
+        location.reload()
         break
     }
   }
@@ -116,7 +115,7 @@ const report = location.href.startsWith('zotero://') && new class Report { // es
   private push(): ReportConfig {
     this.log(`push: ${this.history.length - 1} => ${this.state + 1}`)
     this.history.splice(this.state + 1)
-    this.history.push(JSON.parse(JSON.stringify(this.config())))
+    this.history.push(JSON.parse(JSON.stringify(this.config())) as ReportConfig)
     this.state += 1
     return this.config()
   }
@@ -125,7 +124,7 @@ const report = location.href.startsWith('zotero://') && new class Report { // es
     return this.history[this.state]
   }
 
-  public deleteField(field) {
+  public deleteField(field: HTMLElement) {
     if (this.config().fields.remove.indexOf(field.dataset.type) < 0) {
       this.push().fields.remove.push(field.dataset.type)
     }
@@ -133,7 +132,7 @@ const report = location.href.startsWith('zotero://') && new class Report { // es
     return false
   }
 
-  public moveUp(field) {
+  public moveUp(field: HTMLElement) {
     if (field.dataset.type && field.dataset.pred && this.config().fields.remove.indexOf(field.dataset.type) < 0) {
 
       const order = []
@@ -157,7 +156,7 @@ const report = location.href.startsWith('zotero://') && new class Report { // es
     return false
   }
 
-  public moveDown(field) {
+  public moveDown(field: HTMLElement) {
     if (field.dataset.type && field.dataset.next && this.config().fields.remove.indexOf(field.dataset.type) < 0) {
 
       const order = []
@@ -181,7 +180,7 @@ const report = location.href.startsWith('zotero://') && new class Report { // es
     return false
   }
 
-  public setSort(field) {
+  public setSort(field: HTMLElement) {
     const config = this.config()
 
     if (config.fields.remove.includes(field.dataset.type)) {

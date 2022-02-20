@@ -75,7 +75,7 @@ const defaultFieldOrder: string[] = ['itemType', 'citationKey', 'citationKeyConf
 const publicationTitleAlias: string[] = []
 
 function getLibraryIDFromkey(key) {
-  for (const [libraryID, keys] of Object.entries(Zotero.Items._objectIDs)) { // eslint-disable-line no-underscore-dangle
+  for (const [libraryID, keys] of Object.entries(Zotero.Items._objectIDs as Record<string, Record<string, any>>)) { // eslint-disable-line no-underscore-dangle
     if (keys[key]) return parseInt(libraryID)
   }
   return undefined
@@ -145,7 +145,7 @@ Zotero.ReportCustomizer = Zotero.ReportCustomizer || new class {
     await Zotero.Schema.schemaUpdatePromise
 
     const defaultFieldOrderEnd = ['selectLink', 'dateAdded', 'dateModified']
-    for (const row of await Zotero.DB.queryAsync(fields)) {
+    for (const row of (await Zotero.DB.queryAsync(fields)) as { typeName: string, fieldName: string, fieldAlias: string }[]) {
       fieldAlias[`${row.typeName}.${row.fieldAlias}`] = row.fieldName
       if (row.fieldName === 'title' && !publicationTitleAlias.includes(row.fieldAlias)) publicationTitleAlias.push(row.fieldAlias)
 
@@ -191,7 +191,7 @@ Zotero.ReportCustomizer = Zotero.ReportCustomizer || new class {
 
   public load() {
     try {
-      return JSON.parse(Zotero.Prefs.get('report-customizer.config'))
+      return JSON.parse(Zotero.Prefs.get('report-customizer.config') as string)
     }
     catch (err) {
       debug('report-customizer.load:', err)
@@ -340,7 +340,7 @@ Zotero.ReportCustomizer = Zotero.ReportCustomizer || new class {
     }
 
     debug('getting report-customizer.config...')
-    let serialized = null
+    let serialized: string = null
     try {
       serialized = Zotero.Prefs.get('report-customizer.config')
     }
@@ -369,7 +369,7 @@ Zotero.ReportCustomizer = Zotero.ReportCustomizer || new class {
 
     // Zotero doesn't save the document as it is displayed... make it so that the default load is as displayed... oy.
     if (config.items.sort) {
-      const sort = config.items.sort.replace(/^-/, '')
+      const sort: string = config.items.sort.replace(/^-/, '')
       const order = config.items.sort[0] === '-' ? 1 : 0
       const onISODate = ['accessDate', 'dateAdded', 'dateModified'].includes(sort)
       items.sort((a, b) => {
