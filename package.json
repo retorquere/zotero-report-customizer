@@ -1,6 +1,6 @@
 {
   "name": "zotero-report-customizer",
-  "version": "5.0.36",
+  "version": "5.0.37",
   "description": "Zotero Report Customizer",
   "scripts": {
     "lint": "eslint . --ext .ts --cache --cache-location .eslintcache/",
