@@ -22,9 +22,9 @@
     "email": "emiliano.heyns@iris-advies.com"
   },
   "bugs": {
-    "url": "https://github.com/Emiliano Heyns/zotero-report-customizer/issues"
+    "url": "https://github.com/retorquere/zotero-report-customizer/issues"
   },
-  "homepage": "https://github.com/Emiliano Heyns/zotero-report-customizer",
+  "homepage": "https://github.com/retorquere/zotero-report-customizer",
   "dependencies": {
     "@mdi/font": "^6.5.95",
     "ajv": "^8.10.0",
