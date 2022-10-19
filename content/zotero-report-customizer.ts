@@ -9,9 +9,6 @@ import Ajv from 'ajv'
 const backend = `http://127.0.0.1:${Zotero.Prefs.get('httpServer.port')}/report-customizer`
 const report = require('./report.pug')
 const inline = {
-  js: {
-    report: require('!!inline-ts!./report.ts'),
-  },
   css: {
     detail: require('./detail.css'),
     detail_screen: require('./detail_screen.css'),
@@ -22,7 +19,6 @@ const inline = {
     material: require('@mdi/font/fonts/materialdesignicons-webfont.woff2'),
   },
 }
-const save = require('./save.pug')({ backend })
 
 function debug(...msg) {
   const txt: string[] = []

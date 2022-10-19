@@ -3,6 +3,7 @@
 const path = require('path')
 const fs = require('fs')
 const esbuild = require('esbuild')
+const rmrf = require('rimraf')
 
 const loader = require('./loaders')
 
@@ -21,23 +22,12 @@ async function bundle(config) {
 
   config.metafile = true
 
-  if (config.globalThis || config.prepend) {
-    if (!config.banner) config.banner = {}
-    if (!config.banner.js) config.banner.js = ''
-  }
-
   if (config.prepend) {
     if (!Array.isArray(config.prepend)) config.prepend = [config.prepend]
     for (const source of config.prepend.reverse()) {
       config.banner.js = `${await fs.promises.readFile(source, 'utf-8')}\n${config.banner.js}`
     }
     delete config.prepend
-  }
-
-  if (config.globalThis) {
-    // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/globalThis
-    config.banner.js = `var global = Function("return this")();\n${config.banner.js}`
-    delete config.globalThis
   }
 
   let target
@@ -55,6 +45,7 @@ async function bundle(config) {
 }
 
 (async function() {
+  rmrf.sync('gen')
   await fs.promises.writeFile(
     'gen/materialdesignicons.css',
     (await fs.promises.readFile('node_modules/@mdi/font/css/materialdesignicons.css', 'utf-8')).replace(/@font-face\s*\{(.|\r|\n)*?\}/, ''),
@@ -64,12 +55,9 @@ async function bundle(config) {
   // plugin code
   await bundle({
     entryPoints: [ 'content/zotero-report-customizer.ts' ],
-    plugins: [loader.pug, loader.inline_ts, loader.css, loader.__dirname],
+    plugins: [loader.pug, loader.css, loader.__dirname],
     loader: { '.woff': 'dataurl', '.woff2': 'dataurl' },
     outdir: 'build/content',
-    banner: { js: 'if (!Zotero.ReportCustomizer) {\n' },
-    footer: { js: '\n}' },
-    globalThis: true,
   })
 })().catch(err => {
   console.log(err)
