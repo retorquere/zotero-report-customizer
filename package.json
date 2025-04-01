@@ -6,12 +6,13 @@
     "lint": "dprint fmt *.ts && dprint check *.ts",
     "tsc": "tsc -noEmit",
     "esbuild": "node esbuild.js",
+    "prebuild": "rm -rf build && mkdir build && cp -r content build && cp node_modules/ankareport/dist/* build/content",
     "build": "npm-run-all -p --aggregate-output lint esbuild tsc",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags",
-    "prestart": "npm run build && rm -f ~/.BBTZ5TEST/extensions.json && rm -f ~/.BBTZ5TEST/extensions/*report-customizer*xpi && echo `pwd`/build/ > ~/.BBTZ5TEST/extensions/report-customizer@iris-advies.com",
-    "start": "/Applications/Zotero.app/Contents/MacOS/zotero -P BBTZ5TEST -jsconsole -ZoteroDebugText -datadir profile > ~/.BBTZ5TEST.log &"
+    "prestart": "npm run build && rm -f ~/.BBTTEST/extensions.json && rm -f ~/.BBTTEST/extensions/*report-customizer*xpi && echo `pwd`/build/ > ~/.BBTTEST/extensions/report-customizer@iris-advies.com",
+    "start": "zotero-start"
   },
   "repository": {
     "type": "git",
@@ -37,6 +38,10 @@
     "rimraf": "^6.0.1",
     "typescript": "^5.8.2",
     "zotero-plugin": "^5.0.14",
-    "zotero-types": "^4.0.0-beta.5"
+    "zotero-types": "^4.0.0-beta.6"
+  },
+  "dependencies": {
+    "ankareport": "^0.1.0-beta.17",
+    "zotero-plugin-toolkit": "^5.0.0-1"
   }
 }
