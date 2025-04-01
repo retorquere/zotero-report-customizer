@@ -1,33 +1,26 @@
-// tslint:disable:no-console
-
 const path = require('path')
 const fs = require('fs')
 const esbuild = require('esbuild')
 const rmrf = require('rimraf')
+rmrf.sync('gen')
 
-const loader = require('./loaders')
-
-require('zotero-plugin/make-dirs')
 require('zotero-plugin/copy-assets')
 require('zotero-plugin/rdf')
 require('zotero-plugin/version')
 
+function js(src) {
+  return src.replace(/[.]ts$/, '.js')
+}
+
 async function bundle(config) {
   config = {
-    ...config,
     bundle: true,
     format: 'iife',
-  }
-  if (!config.platform) config.target = ['firefox60']
-
-  config.metafile = true
-
-  if (config.prepend) {
-    if (!Array.isArray(config.prepend)) config.prepend = [config.prepend]
-    for (const source of config.prepend.reverse()) {
-      config.banner.js = `${await fs.promises.readFile(source, 'utf-8')}\n${config.banner.js}`
-    }
-    delete config.prepend
+    target: ['firefox60'],
+    inject: [],
+    treeShaking: true,
+    keepNames: true,
+    ...config,
   }
 
   let target
@@ -35,31 +28,46 @@ async function bundle(config) {
     target = config.outfile
   }
   else if (config.entryPoints.length === 1 && config.outdir) {
-    target = path.join(config.outdir, path.basename(config.entryPoints[0]).replace(/\.ts$/, '.js'))
+    target = path.join(config.outdir, js(path.basename(config.entryPoints[0])))
   }
   else {
-    target = `${config.outdir} [${config.entryPoints.join(', ')}]`
+    target = `${config.outdir} [${config.entryPoints.map(js).join(', ')}]`
   }
-  console.log('** bundling', target)
+
+  const exportGlobals = config.exportGlobals
+  delete config.exportGlobals
+  if (exportGlobals) {
+    const esm = await esbuild.build({ ...config, logLevel: 'silent', format: 'esm', metafile: true, write: false })
+    if (Object.values(esm.metafile.outputs).length !== 1) throw new Error('exportGlobals not supported for multiple outputs')
+
+    for (const output of Object.values(esm.metafile.outputs)) {
+      if (output.entryPoint) {
+        config.globalName = escape(`{ ${output.exports.sort().join(', ')} }`).replace(/%/g, '$')
+        // make these var, not const, so they get hoisted and are available in the global scope.
+      }
+    }
+  }
+
+  console.log('* bundling', target)
   await esbuild.build(config)
+  if (exportGlobals) {
+    await fs.promises.writeFile(
+      target,
+      (await fs.promises.readFile(target, 'utf-8')).replace(config.globalName, unescape(config.globalName.replace(/[$]/g, '%')))
+    )
+  }
 }
 
-(async function() {
-  rmrf.sync('gen')
-  await fs.promises.writeFile(
-    'gen/materialdesignicons.css',
-    (await fs.promises.readFile('node_modules/@mdi/font/css/materialdesignicons.css', 'utf-8')).replace(/@font-face\s*\{(.|\r|\n)*?\}/, ''),
-    'utf-8'
-  )
-
-  // plugin code
+async function build() {
   await bundle({
-    entryPoints: [ 'content/zotero-report-customizer.ts' ],
-    plugins: [loader.pug, loader.css, loader.__dirname],
-    loader: { '.woff': 'dataurl', '.woff2': 'dataurl' },
-    outdir: 'build/content',
+    exportGlobals: true,
+    entryPoints: [ 'bootstrap.ts' ],
+    outdir: 'build',
+    banner: { js: 'var Zotero;\n' },
   })
-})().catch(err => {
+}
+
+build().catch(err => {
   console.log(err)
   process.exit(1)
 })

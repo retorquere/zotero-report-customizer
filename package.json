@@ -3,10 +3,10 @@
   "version": "5.0.38",
   "description": "Zotero Report Customizer",
   "scripts": {
-    "lint": "eslint . --ext .ts --cache --cache-location .eslintcache/",
+    "lint": "dprint fmt *.ts && dprint check *.ts",
     "tsc": "tsc -noEmit",
     "esbuild": "node esbuild.js",
-    "build": "parallel --ungroup ::: 'npm run lint' 'npm run esbuild' 'npm run tsc'",
+    "build": "npm-run-all -p --aggregate-output lint esbuild tsc",
     "postbuild": "zotero-plugin-zipup build zotero-report-customizer",
     "release": "zotero-plugin-release",
     "postversion": "git push --follow-tags",
@@ -25,37 +25,18 @@
     "url": "https://github.com/retorquere/zotero-report-customizer/issues"
   },
   "homepage": "https://github.com/retorquere/zotero-report-customizer",
-  "dependencies": {
-    "@mdi/font": "^7.4.47",
-    "ajv": "^8.17.1",
-    "apply-loader": "^2.0.0",
-    "circular-dependency-plugin": "^5.2.2",
-    "dedent": "^1.5.3",
-    "eslint": "^9.23.0",
-    "fs-extra": "^11.3.0",
-    "grapesjs": "^0.22.6",
-    "grapesjs-preset-newsletter": "^1.0.2",
-    "handlebars": "^4.7.8",
-    "indent-string": "^5.0.0",
-    "install": "^0.13.0",
-    "json-schema-defaults": "^0.4.0",
-    "json-schema-to-typescript": "^15.0.4",
-    "nunjucks": "^3.2.4",
-    "pug": "^3.0.3",
-    "pug-cli": "^1.0.0-alpha6",
-    "rimraf": "^6.0.1",
-    "ts-node": "^10.9.2",
-    "typescript": "^5.8.2",
-    "zotero-plugin": "^5.0.14"
-  },
   "xpi": {
     "name": "Zotero Report Customizer",
     "updateLink": "https://github.com/retorquere/zotero-report-customizer/releases/download/v{version}/zotero-report-customizer-{version}.xpi",
     "releaseURL": "https://github.com/retorquere/zotero-report-customizer/releases/download/release/"
   },
   "devDependencies": {
+    "dprint": "^0.49.1",
     "esbuild": "^0.25.2",
-    "jsesc": "^3.1.0",
-    "to-string-loader": "^1.2.0"
+    "npm-run-all": "^4.1.5",
+    "rimraf": "^6.0.1",
+    "typescript": "^5.8.2",
+    "zotero-plugin": "^5.0.14",
+    "zotero-types": "^4.0.0-beta.5"
   }
 }

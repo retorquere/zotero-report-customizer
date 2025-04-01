@@ -2,6 +2,8 @@
   "compilerOptions": {
     "allowUnreachableCode": false,
     "noUnusedLocals": true,
+    "isolatedModules": true,
+    "esModuleInterop": true,
     "noUnusedParameters": false,
     "importHelpers": true,
     "target": "es2017",
@@ -9,27 +11,20 @@
     "module": "commonjs",
     "noImplicitAny": false,
     "removeComments": false,
-    "preserveConstEnums": false,
+    "preserveConstEnums": true,
     "sourceMap": false,
     "downlevelIteration": true,
-    "lib": [ "es2017", "dom", "dom.iterable" ],
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
     "typeRoots": [
-      "./content/typings",
-      "./translators/typings",
-      "./gen/typings",
+      "./node_modules",
       "./node_modules/@types"
-    ]
+    ],
+    "skipDefaultLibCheck": true,
+    "types": ["zotero-types"],
+    "lib": [ "es2017", "dom", "dom.iterable", "webworker", "ES2021.WeakRef" ]
   },
   "include": [
-    "content/**/*",
-    "translators/**/*",
-    "zotero-webpack/**/*",
-    "setup/**/*",
-    "gen/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "**/*.spec.ts",
-    "typings"
+    "*.ts"
   ]
 }
