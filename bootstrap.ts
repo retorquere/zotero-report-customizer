@@ -6,12 +6,14 @@ declare const dump: (msg: string) => void
 declare const Components: any
 declare const ChromeUtils: any
 declare var Services: any
+/*
 const {
   interfaces: Ci,
   results: Cr,
   utils: Cu,
   Constructor: Cc,
 } = Components
+*/
 
 if (typeof Zotero == 'undefined') {
   var Zotero
